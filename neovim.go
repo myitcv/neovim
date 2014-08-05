@@ -1,0 +1,194 @@
+package neovim
+
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"net"
+	"sync"
+
+	"github.com/juju/errgo"
+	"github.com/vmihailenco/msgpack"
+)
+
+// TODO the uniqueness of the request ID is specific to this
+// instance of neovim. How does this work with multiple plugins
+// making requests?
+
+type sync_map struct {
+	lock    *sync.Mutex
+	the_map map[uint32]*response_holder
+}
+
+func (c *Client) nextReqId() uint32 {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	res := c.next_req
+	c.next_req++
+	return res
+}
+
+func newSyncMap() *sync_map {
+	return &sync_map{
+		lock:    new(sync.Mutex),
+		the_map: make(map[uint32]*response_holder),
+	}
+}
+
+func (this *sync_map) Put(k uint32, v *response_holder) error {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+
+	if _, present := this.the_map[k]; present {
+		return errgo.Newf("Key already exists for key %v", k)
+	}
+
+	this.the_map[k] = v
+	return nil
+}
+
+func (this *sync_map) Get(k uint32) (*response_holder, error) {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+
+	if res, present := this.the_map[k]; !present {
+		return nil, errgo.Newf("Key does not exist for %v", k)
+	} else {
+		delete(this.the_map, k)
+		return res, nil
+	}
+}
+
+type response_holder struct {
+	dec Decoder
+	ch  chan *response
+}
+
+type response struct {
+	obj interface{}
+	err error
+}
+
+func NewUnixClient(ua_name, ua_net string) (*Client, error) {
+	a := &net.UnixAddr{Name: ua_name, Net: ua_net}
+	c, err := net.DialUnix(a.Net, nil, a)
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not establish connection")
+	}
+	res := &Client{conn: c}
+	res.func_map = make(map[string]uint32)
+	res.resp_map = newSyncMap()
+	res.func_map["vim_get_buffers"] = 39
+	res.lock = new(sync.Mutex)
+	go res.doListen()
+	return res, nil
+}
+
+func (c *Client) doListen() {
+	// TODO need kill channel
+	r := bufio.NewReader(c.conn)
+	dec := msgpack.NewDecoder(r)
+	for {
+		_, err := dec.DecodeSliceLen()
+		if err != nil {
+			log.Fatalf("Could not decode message array length: %v", err)
+		}
+
+		t, err := dec.DecodeInt()
+		if err != nil {
+			log.Fatalf("Could not decode message type: %v", err)
+		}
+
+		if t == 0 {
+			log.Fatalln("Got a request on the listen channel")
+		}
+
+		if t == 2 {
+			log.Fatalln("Got a notification on the listen channel; don't know about this yet")
+		}
+
+		if t != 1 {
+			log.Fatalf("Got %v, expected 1", t)
+		}
+
+		// we have a response - get the req_id
+
+		req_id, err := dec.DecodeUint32()
+		if err != nil {
+			log.Fatalf("Could not decode request id: %v", err)
+		}
+
+		// do we have an error?
+		re, err := dec.DecodeInterface()
+		if err != nil {
+			log.Fatalf("Could not decode response error: %v", err)
+		}
+		if re != nil {
+			log.Fatalf("Got a response error: %v", re)
+		}
+
+		// no, carry on
+		rh, err := c.resp_map.Get(req_id)
+		if err != nil {
+			log.Fatalf("Could not get response holder for %v: %v", req_id, err)
+		}
+
+		// we have a valid response, dispatch to our decoder for the response
+		res, err := rh.dec(dec)
+		if err != nil {
+			log.Fatalf("Could not decode response: %v", err)
+		}
+
+		resp := &response{obj: res, err: nil}
+		rh.ch <- resp
+	}
+
+}
+
+func (c *Client) makeCall(method string, args interface{}, e Encoder, d Decoder) (chan *response, error) {
+	req_type := 0
+	req_id := c.nextReqId()
+	req_meth_id := c.func_map[method]
+	w := bufio.NewWriter(c.conn)
+	enc := msgpack.NewEncoder(w)
+
+	err := enc.EncodeSliceLen(4)
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not encode request length")
+	}
+
+	err = enc.EncodeInt(req_type)
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not encode request type")
+	}
+
+	err = enc.EncodeUint32(req_id)
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not encode request ID")
+	}
+
+	err = enc.EncodeUint32(req_meth_id)
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not encode request method ID")
+	}
+
+	err = e(enc, args)
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not encode method args")
+	}
+
+	fmt.Printf("Making call: %v, %v, %v, %v", req_type, req_id, req_meth_id, args)
+
+	err = w.Flush()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not flush writer")
+	}
+
+	res := make(chan *response)
+
+	rh := &response_holder{dec: d, ch: res}
+	c.resp_map.Put(req_id, rh)
+
+	return res, nil
+}
