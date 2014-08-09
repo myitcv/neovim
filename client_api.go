@@ -1,13 +1,9 @@
 package neovim
 
-import (
-	"fmt"
+import "github.com/juju/errgo"
 
-	"github.com/juju/errgo"
-)
-
-func (c *Client) GetBuffers() ([]Buffer, error) {
-	resp_chan, err := c.makeCall("vim_get_buffers", nil, encodeNoArgs, decodeBufferArray)
+func (c *Client) VimGetBuffers() ([]Buffer, error) {
+	resp_chan, err := c.makeCall(40, nil, encodeNoArgs, decodeBufferSlice)
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not make call to GetBuffers")
 	}
@@ -19,6 +15,5 @@ func (c *Client) GetBuffers() ([]Buffer, error) {
 		return nil, errgo.NoteMask(err, "We got a non-nil error in our response")
 	}
 	ba := resp.obj.([]Buffer)
-	fmt.Printf("We got: %v\n", ba)
 	return ba, nil
 }

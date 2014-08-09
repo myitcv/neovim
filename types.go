@@ -13,6 +13,30 @@ type Client struct {
 	lock     *sync.Mutex
 }
 
+// neovim types
+
 type Buffer struct {
-	id uint32
+	Id uint32
+}
+
+type API struct {
+	Classes   []APIClass
+	Functions []APIFunction
+}
+
+type APIClass struct {
+	Name string
+}
+
+type APIFunction struct {
+	Name              string
+	ReturnType        string
+	Id                uint32
+	CanFail           bool
+	ReceivesChannelId bool
+	Parameters        []APIFunctionParameter
+}
+
+type APIFunctionParameter struct {
+	Type, Name string
 }

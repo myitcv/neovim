@@ -2,7 +2,6 @@ package neovim
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"net"
 	"sync"
@@ -79,7 +78,8 @@ func NewUnixClient(ua_name, ua_net string) (*Client, error) {
 	res := &Client{conn: c}
 	res.func_map = make(map[string]uint32)
 	res.resp_map = newSyncMap()
-	res.func_map["vim_get_buffers"] = 39
+	res.func_map["vim_get_buffers"] = 40
+	res.func_map["api"] = 0
 	res.lock = new(sync.Mutex)
 	go res.doListen()
 	return res, nil
@@ -87,12 +87,11 @@ func NewUnixClient(ua_name, ua_net string) (*Client, error) {
 
 func (c *Client) doListen() {
 	// TODO need kill channel
-	r := bufio.NewReader(c.conn)
-	dec := msgpack.NewDecoder(r)
+	dec := msgpack.NewDecoder(c.conn)
 	for {
 		_, err := dec.DecodeSliceLen()
 		if err != nil {
-			log.Fatalf("Could not decode message array length: %v", err)
+			log.Fatalf("Could not decode message slice length: %v", err)
 		}
 
 		t, err := dec.DecodeInt()
@@ -146,14 +145,20 @@ func (c *Client) doListen() {
 
 }
 
-func (c *Client) makeCall(method string, args interface{}, e Encoder, d Decoder) (chan *response, error) {
+func (c *Client) makeCall(req_meth_id uint32, args interface{}, e Encoder, d Decoder) (chan *response, error) {
 	req_type := 0
 	req_id := c.nextReqId()
-	req_meth_id := c.func_map[method]
 	w := bufio.NewWriter(c.conn)
 	enc := msgpack.NewEncoder(w)
 
-	err := enc.EncodeSliceLen(4)
+	res := make(chan *response)
+	rh := &response_holder{dec: d, ch: res}
+	err := c.resp_map.Put(req_id, rh)
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not store response holder")
+	}
+
+	err = enc.EncodeSliceLen(4)
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not encode request length")
 	}
@@ -178,17 +183,26 @@ func (c *Client) makeCall(method string, args interface{}, e Encoder, d Decoder)
 		return nil, errgo.NoteMask(err, "Could not encode method args")
 	}
 
-	fmt.Printf("Making call: %v, %v, %v, %v", req_type, req_id, req_meth_id, args)
-
 	err = w.Flush()
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not flush writer")
 	}
 
-	res := make(chan *response)
-
-	rh := &response_holder{dec: d, ch: res}
-	c.resp_map.Put(req_id, rh)
-
 	return res, nil
+}
+
+func (c *Client) API() (*API, error) {
+	resp_chan, err := c.makeCall(0, nil, encodeNoArgs, decodeAPI)
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not make call to GetBuffers")
+	}
+	resp := <-resp_chan
+	if resp == nil {
+		return nil, errgo.New("We got a nil response on resp_chan")
+	}
+	if resp.err != nil {
+		return nil, errgo.NoteMask(err, "We got a non-nil error in our response")
+	}
+	ba := resp.obj
+	return ba.(*API), nil
 }

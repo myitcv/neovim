@@ -1,0 +1,979 @@
+{
+  "Classes": [
+    {
+      "Name": "Buffer"
+    },
+    {
+      "Name": "Window"
+    },
+    {
+      "Name": "Tabpage"
+    }
+  ],
+  "Functions": [
+    {
+      "Name": "tabpage_get_windows",
+      "ReturnType": "WindowArray",
+      "Id": 1,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Tabpage",
+          "Name": "tabpage"
+        }
+      ]
+    },
+    {
+      "Name": "tabpage_get_var",
+      "ReturnType": "Object",
+      "Id": 2,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Tabpage",
+          "Name": "tabpage"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "tabpage_set_var",
+      "ReturnType": "Object",
+      "Id": 3,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Tabpage",
+          "Name": "tabpage"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        },
+        {
+          "Type": "Object",
+          "Name": "value"
+        }
+      ]
+    },
+    {
+      "Name": "tabpage_get_window",
+      "ReturnType": "Window",
+      "Id": 4,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Tabpage",
+          "Name": "tabpage"
+        }
+      ]
+    },
+    {
+      "Name": "tabpage_is_valid",
+      "ReturnType": "Boolean",
+      "Id": 5,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Tabpage",
+          "Name": "tabpage"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_get_length",
+      "ReturnType": "Integer",
+      "Id": 6,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_get_line",
+      "ReturnType": "String",
+      "Id": 7,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "Integer",
+          "Name": "index"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_set_line",
+      "ReturnType": "void",
+      "Id": 8,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "Integer",
+          "Name": "index"
+        },
+        {
+          "Type": "String",
+          "Name": "line"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_del_line",
+      "ReturnType": "void",
+      "Id": 9,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "Integer",
+          "Name": "index"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_get_slice",
+      "ReturnType": "StringArray",
+      "Id": 10,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "Integer",
+          "Name": "start"
+        },
+        {
+          "Type": "Integer",
+          "Name": "end"
+        },
+        {
+          "Type": "Boolean",
+          "Name": "include_start"
+        },
+        {
+          "Type": "Boolean",
+          "Name": "include_end"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_set_slice",
+      "ReturnType": "void",
+      "Id": 11,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "Integer",
+          "Name": "start"
+        },
+        {
+          "Type": "Integer",
+          "Name": "end"
+        },
+        {
+          "Type": "Boolean",
+          "Name": "include_start"
+        },
+        {
+          "Type": "Boolean",
+          "Name": "include_end"
+        },
+        {
+          "Type": "StringArray",
+          "Name": "replacement"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_get_var",
+      "ReturnType": "Object",
+      "Id": 12,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_set_var",
+      "ReturnType": "Object",
+      "Id": 13,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        },
+        {
+          "Type": "Object",
+          "Name": "value"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_get_option",
+      "ReturnType": "Object",
+      "Id": 14,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_set_option",
+      "ReturnType": "void",
+      "Id": 15,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        },
+        {
+          "Type": "Object",
+          "Name": "value"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_get_number",
+      "ReturnType": "Integer",
+      "Id": 16,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_get_name",
+      "ReturnType": "String",
+      "Id": 17,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_set_name",
+      "ReturnType": "void",
+      "Id": 18,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_is_valid",
+      "ReturnType": "Boolean",
+      "Id": 19,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_insert",
+      "ReturnType": "void",
+      "Id": 20,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "Integer",
+          "Name": "lnum"
+        },
+        {
+          "Type": "StringArray",
+          "Name": "lines"
+        }
+      ]
+    },
+    {
+      "Name": "buffer_get_mark",
+      "ReturnType": "Position",
+      "Id": 21,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "vim_push_keys",
+      "ReturnType": "void",
+      "Id": 22,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "str"
+        }
+      ]
+    },
+    {
+      "Name": "vim_command",
+      "ReturnType": "void",
+      "Id": 23,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "str"
+        }
+      ]
+    },
+    {
+      "Name": "vim_feedkeys",
+      "ReturnType": "void",
+      "Id": 24,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "keys"
+        },
+        {
+          "Type": "String",
+          "Name": "mode"
+        }
+      ]
+    },
+    {
+      "Name": "vim_replace_termcodes",
+      "ReturnType": "String",
+      "Id": 25,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "str"
+        },
+        {
+          "Type": "Boolean",
+          "Name": "from_part"
+        },
+        {
+          "Type": "Boolean",
+          "Name": "do_lt"
+        },
+        {
+          "Type": "Boolean",
+          "Name": "special"
+        }
+      ]
+    },
+    {
+      "Name": "vim_eval",
+      "ReturnType": "Object",
+      "Id": 26,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "str"
+        }
+      ]
+    },
+    {
+      "Name": "vim_strwidth",
+      "ReturnType": "Integer",
+      "Id": 27,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "str"
+        }
+      ]
+    },
+    {
+      "Name": "vim_list_runtime_paths",
+      "ReturnType": "StringArray",
+      "Id": 28,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": []
+    },
+    {
+      "Name": "vim_change_directory",
+      "ReturnType": "void",
+      "Id": 29,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "dir"
+        }
+      ]
+    },
+    {
+      "Name": "vim_get_current_line",
+      "ReturnType": "String",
+      "Id": 30,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": []
+    },
+    {
+      "Name": "vim_set_current_line",
+      "ReturnType": "void",
+      "Id": 31,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "line"
+        }
+      ]
+    },
+    {
+      "Name": "vim_del_current_line",
+      "ReturnType": "void",
+      "Id": 32,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": []
+    },
+    {
+      "Name": "vim_get_var",
+      "ReturnType": "Object",
+      "Id": 33,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "vim_set_var",
+      "ReturnType": "Object",
+      "Id": 34,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "name"
+        },
+        {
+          "Type": "Object",
+          "Name": "value"
+        }
+      ]
+    },
+    {
+      "Name": "vim_get_vvar",
+      "ReturnType": "Object",
+      "Id": 35,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "vim_get_option",
+      "ReturnType": "Object",
+      "Id": 36,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "vim_set_option",
+      "ReturnType": "void",
+      "Id": 37,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "name"
+        },
+        {
+          "Type": "Object",
+          "Name": "value"
+        }
+      ]
+    },
+    {
+      "Name": "vim_out_write",
+      "ReturnType": "void",
+      "Id": 38,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "str"
+        }
+      ]
+    },
+    {
+      "Name": "vim_err_write",
+      "ReturnType": "void",
+      "Id": 39,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "str"
+        }
+      ]
+    },
+    {
+      "Name": "vim_get_buffers",
+      "ReturnType": "BufferArray",
+      "Id": 40,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": []
+    },
+    {
+      "Name": "vim_get_current_buffer",
+      "ReturnType": "Buffer",
+      "Id": 41,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": []
+    },
+    {
+      "Name": "vim_set_current_buffer",
+      "ReturnType": "void",
+      "Id": 42,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Buffer",
+          "Name": "buffer"
+        }
+      ]
+    },
+    {
+      "Name": "vim_get_windows",
+      "ReturnType": "WindowArray",
+      "Id": 43,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": []
+    },
+    {
+      "Name": "vim_get_current_window",
+      "ReturnType": "Window",
+      "Id": 44,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": []
+    },
+    {
+      "Name": "vim_set_current_window",
+      "ReturnType": "void",
+      "Id": 45,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        }
+      ]
+    },
+    {
+      "Name": "vim_get_tabpages",
+      "ReturnType": "TabpageArray",
+      "Id": 46,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": []
+    },
+    {
+      "Name": "vim_get_current_tabpage",
+      "ReturnType": "Tabpage",
+      "Id": 47,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": []
+    },
+    {
+      "Name": "vim_set_current_tabpage",
+      "ReturnType": "void",
+      "Id": 48,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Tabpage",
+          "Name": "tabpage"
+        }
+      ]
+    },
+    {
+      "Name": "vim_subscribe",
+      "ReturnType": "void",
+      "Id": 49,
+      "CanFail": false,
+      "ReceivesChannelId": true,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "event"
+        }
+      ]
+    },
+    {
+      "Name": "vim_unsubscribe",
+      "ReturnType": "void",
+      "Id": 50,
+      "CanFail": false,
+      "ReceivesChannelId": true,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "event"
+        }
+      ]
+    },
+    {
+      "Name": "vim_register_provider",
+      "ReturnType": "void",
+      "Id": 51,
+      "CanFail": true,
+      "ReceivesChannelId": true,
+      "Parameters": [
+        {
+          "Type": "String",
+          "Name": "method"
+        }
+      ]
+    },
+    {
+      "Name": "window_get_buffer",
+      "ReturnType": "Buffer",
+      "Id": 52,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        }
+      ]
+    },
+    {
+      "Name": "window_get_cursor",
+      "ReturnType": "Position",
+      "Id": 53,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        }
+      ]
+    },
+    {
+      "Name": "window_set_cursor",
+      "ReturnType": "void",
+      "Id": 54,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        },
+        {
+          "Type": "Position",
+          "Name": "pos"
+        }
+      ]
+    },
+    {
+      "Name": "window_get_height",
+      "ReturnType": "Integer",
+      "Id": 55,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        }
+      ]
+    },
+    {
+      "Name": "window_set_height",
+      "ReturnType": "void",
+      "Id": 56,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        },
+        {
+          "Type": "Integer",
+          "Name": "height"
+        }
+      ]
+    },
+    {
+      "Name": "window_get_width",
+      "ReturnType": "Integer",
+      "Id": 57,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        }
+      ]
+    },
+    {
+      "Name": "window_set_width",
+      "ReturnType": "void",
+      "Id": 58,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        },
+        {
+          "Type": "Integer",
+          "Name": "width"
+        }
+      ]
+    },
+    {
+      "Name": "window_get_var",
+      "ReturnType": "Object",
+      "Id": 59,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "window_set_var",
+      "ReturnType": "Object",
+      "Id": 60,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        },
+        {
+          "Type": "Object",
+          "Name": "value"
+        }
+      ]
+    },
+    {
+      "Name": "window_get_option",
+      "ReturnType": "Object",
+      "Id": 61,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        }
+      ]
+    },
+    {
+      "Name": "window_set_option",
+      "ReturnType": "void",
+      "Id": 62,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        },
+        {
+          "Type": "String",
+          "Name": "name"
+        },
+        {
+          "Type": "Object",
+          "Name": "value"
+        }
+      ]
+    },
+    {
+      "Name": "window_get_position",
+      "ReturnType": "Position",
+      "Id": 63,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        }
+      ]
+    },
+    {
+      "Name": "window_get_tabpage",
+      "ReturnType": "Tabpage",
+      "Id": 64,
+      "CanFail": true,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        }
+      ]
+    },
+    {
+      "Name": "window_is_valid",
+      "ReturnType": "Boolean",
+      "Id": 65,
+      "CanFail": false,
+      "ReceivesChannelId": false,
+      "Parameters": [
+        {
+          "Type": "Window",
+          "Name": "window"
+        }
+      ]
+    }
+  ]
+}
