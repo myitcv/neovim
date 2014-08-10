@@ -161,6 +161,11 @@ func (t *NeovimTest) TestBufferSetGetLine(c *C) {
 	l, err := b.GetLine(0)
 	c.Assert(err, IsNil)
 	c.Assert(l, Equals, val)
+	err = b.DelLine(0)
+	c.Assert(err, IsNil)
+	length, err := b.GetLength()
+	c.Assert(err, IsNil)
+	c.Assert(length, Equals, 1)
 }
 
 func (t *NeovimTest) TestAPI(c *C) {

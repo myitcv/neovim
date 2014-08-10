@@ -131,6 +131,48 @@ func (recv *Buffer) SetLine(i_index int, i_line string) (ret_err error) {
 
 }
 
+func (recv *Buffer) DelLine(i_index int) (ret_err error) {
+	enc := func() (_err error) {
+		_err = recv.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = recv.encode()
+		if _err != nil {
+			return
+		}
+
+		_err = recv.client.enc.EncodeInt(i_index)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = recv.client.dec.DecodeBytes()
+
+		return
+	}
+	resp_chan, err := recv.client.makeCall(9, enc, dec)
+	if err != nil {
+		return errgo.NoteMask(err, "Could not make call to Buffer.DelLine")
+	}
+	resp := <-resp_chan
+	if resp == nil {
+		return errgo.New("We got a nil response on resp_chan")
+	}
+	if resp.err != nil {
+		return errgo.NoteMask(err, "We got a non-nil error in our response")
+	}
+
+	return ret_err
+
+}
+
 func (recv *Client) GetBuffers() (ret_val []Buffer, ret_err error) {
 	enc := func() (_err error) {
 		_err = recv.enc.EncodeSliceLen(0)
