@@ -7,36 +7,44 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-type Encoder func(*msgpack.Encoder, interface{}) error
-type Decoder func(*msgpack.Decoder) (interface{}, error)
+func (c *Client) encodeArgs(a ...Encoder) Encoder {
+	res := func() error {
+		l := len(a)
+		err := c.enc.EncodeSliceLen(l)
+		if err != nil {
+			return errgo.Notef(err, "Could not encode slice len")
+		}
 
-func encodeNoArgs(e *msgpack.Encoder, args interface{}) error {
-	err := e.Encode([]string{})
-	if err != nil {
-		return errgo.NoteMask(err, "Could not encode nil")
+		for i, v := range a {
+			err := v()
+			if err != nil {
+				return errgo.Notef(err, "Could not encode at index %v", i)
+			}
+		}
+
+		return nil
 	}
-	return nil
+	return res
 }
 
-func decodeBuffer(d *msgpack.Decoder) (ret_b Buffer, ret_err error) {
-	b, err := d.DecodeUint32()
+func (c *Client) decodeBuffer() (ret_b Buffer, ret_err error) {
+	b, err := c.dec.DecodeUint32()
 	if err != nil {
 		return ret_b, errgo.Notef(err, "Could not decode Buffer")
 	}
-	return Buffer{Id: b}, ret_err
+	return Buffer{Id: b, client: c}, ret_err
 }
 
-func encodeBuffer(e *msgpack.Encoder, b Buffer) error {
-	err := e.EncodeUint32(b.Id)
+func (b *Buffer) encode() error {
+	err := b.client.enc.EncodeUint32(b.Id)
 	if err != nil {
 		return errgo.Notef(err, "Could not encode Buffer")
 	}
-
 	return nil
 }
 
-func decodeBufferSlice(d *msgpack.Decoder) (interface{}, error) {
-	l, err := d.DecodeSliceLen()
+func (c *Client) decodeBufferSlice() ([]Buffer, error) {
+	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not decode slice length")
 	}
@@ -44,17 +52,18 @@ func decodeBufferSlice(d *msgpack.Decoder) (interface{}, error) {
 	res := make([]Buffer, l)
 
 	for i := 0; i < l; i++ {
-		b, err := decodeBuffer(d)
+		b, err := c.decodeBuffer()
 		if err != nil {
 			return nil, errgo.Notef(err, "Could not decode Buffer at index %v", i)
 		}
-		res[i] = b.(Buffer)
+		res[i] = b
 	}
 
 	return res, nil
 }
 
-func decodeAPI(d *msgpack.Decoder) (interface{}, error) {
+func (c *Client) decodeAPI() (interface{}, error) {
+	d := c.dec
 	sl, err := d.DecodeSliceLen()
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not decode slice len")

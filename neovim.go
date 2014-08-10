@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"sync"
+	"sync/atomic"
 
 	"github.com/juju/errgo"
 	"github.com/vmihailenco/msgpack"
@@ -19,7 +20,7 @@ type sync_map struct {
 }
 
 func (c *Client) nextReqId() uint32 {
-	return sync.AddUnint(&c.next_req, 1)
+	return atomic.AddUint32(&c.next_req, 1)
 }
 
 func newSyncMap() *sync_map {
@@ -127,7 +128,7 @@ func (c *Client) doListen() {
 		}
 
 		// we have a valid response, dispatch to our decoder for the response
-		res, err := rh.dec(dec)
+		res, err := rh.dec()
 		if err != nil {
 			log.Fatalf("Could not decode response: %v", err)
 		}
@@ -138,14 +139,10 @@ func (c *Client) doListen() {
 
 }
 
-func (c *Client) makeCall(req_meth_id uint32, args []interface{}, encoders []Encoder, d Decoder) (chan *response, error) {
+func (c *Client) makeCall(req_meth_id uint32, e Encoder, d Decoder) (chan *response, error) {
 	req_type := 0
 	req_id := c.nextReqId()
 	enc := c.enc
-
-	if len(args) != len(encoders) || len(args) == 0 {
-		return nil, errgo.Newf("args and encoders not the same length > 0: %v and %v", args, encoders)
-	}
 
 	res := make(chan *response)
 	rh := &response_holder{dec: d, ch: res}
@@ -174,23 +171,18 @@ func (c *Client) makeCall(req_meth_id uint32, args []interface{}, encoders []Enc
 		return nil, errgo.NoteMask(err, "Could not encode request method ID")
 	}
 
-	for i, _ := range encoders {
-		err := encoders[i](enc, args[i])
-		if err != nil {
-			return nil, errgo.Notef(err, "Could not encode method args at index %v with args %v", i, args[i])
-		}
+	err = e()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not encode method args ")
 	}
 
-	err = w.Flush()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not flush writer")
-	}
+	// TODO need a flush here?
 
 	return res, nil
 }
 
 func (c *Client) API() (*API, error) {
-	resp_chan, err := c.makeCall(0, []interface{}{nil}, []Encoder{encodeNoArgs}, decodeAPI)
+	resp_chan, err := c.makeCall(0, c.encodeArgs(), c.decodeAPI)
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not make call")
 	}

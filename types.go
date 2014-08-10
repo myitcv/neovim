@@ -7,6 +7,9 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
+type Encoder func() error
+type Decoder func() (interface{}, error)
+
 type Client struct {
 	conn     net.Conn
 	dec      *msgpack.Decoder

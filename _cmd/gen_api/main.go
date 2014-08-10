@@ -71,30 +71,89 @@ func main() {
 	}
 }
 
-type variable struct {
-	Name      string
-	Type      string
-	Enc       string
-	Dec       string
-	EncNeeded bool
-}
-
 type methodTemplate struct {
+	Id     uint32
 	Name   string
 	Rec    variable
 	Ret    *variable
 	Params []variable
 }
 
+type _type struct {
+	name      string
+	enc       string
+	dec       string
+	primitive bool
+}
+
+func (t *_type) Name() string {
+	return t.name
+}
+
+func (t *_type) CanEnc() bool {
+	return t.enc != ""
+}
+
+func (t *_type) Enc() string {
+	if t.enc == "" {
+		elog.Fatalln("Tried to get Enc method for type that can't be encoded")
+	}
+	return t.enc
+}
+
+func (t *_type) CanDec() bool {
+	return t.dec != ""
+}
+
+func (t *_type) Dec() string {
+	if t.dec == "" {
+		elog.Fatalln("Tried to get Dec method for type that can't be decoded")
+	}
+	return t.dec
+}
+
+func (t *_type) Primitive() bool {
+	return t.primitive
+}
+
+type variable struct {
+	name string
+	Type _type
+}
+
+func (v *variable) Name() string {
+	return v.name
+}
+
+func (v *variable) Client() string {
+	switch v.Type.Name() {
+	case "Client":
+		return v.Name()
+	case "Buffer", "Window", "Tabpage":
+		return v.Name() + ".client"
+	default:
+		log.Fatalf("Don't know how to handle a client request for type %v", v.Type.Name())
+	}
+	return ""
+}
+
 type api struct {
 	Methods []methodTemplate
+}
+
+func getType(s string) _type {
+	res, ok := type_map[s]
+	if !ok {
+		log.Fatalf("Could not find type for %v", s)
+	}
+	return res
 }
 
 func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 	res := make([]methodTemplate, len(fs))
 
 	for i, f := range fs {
-		r := methodTemplate{}
+		m := methodTemplate{}
 		splits := strings.SplitN(f.Name, "_", 2)
 
 		if len(splits) != 2 {
@@ -102,97 +161,52 @@ func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 		}
 
 		// name
-		r.Name = sstrings.Camelize(splits[1])
+		m.Name = sstrings.Camelize(splits[1])
+		m.Id = f.Id
 
 		// receiver
-		switch splits[0] {
+		rec_id := splits[0]
+		var rec_type _type
+		switch rec_id {
 		case "vim":
-			r.Rec = variable{
-				EncNeeded: false,
-				Name:      "rec_c",
-				Type:      "*Client",
-			}
-		case "buffer":
-			r.Rec = variable{
-				EncNeeded: true,
-				Name:      "rec_b",
-				Type:      "*Buffer",
-				Enc:       "encodeBuffer",
-				Dec:       "decodeBuffer",
-			}
-		case "window":
-			r.Rec = variable{
-				EncNeeded: true,
-				Name:      "rec_w",
-				Type:      "*Window",
-				Enc:       "encodeWindow",
-				Dec:       "decodeWindow",
-			}
+			rec_type = getType("Client")
+		case "buffer", "window", "tabpage":
+			rec_type = getType(sstrings.Camelize(rec_id))
 		default:
-			elog.Fatalf("Do not know how to deal with %v\n", splits[0])
+			elog.Fatalf("Do not know how to deal with receiver type %v\n", rec_id)
+		}
+		m.Rec = variable{
+			Type: rec_type,
+			name: "recv",
 		}
 
 		// return
-		switch f.ReturnType {
-		case "Buffer":
-			r.Ret = &variable{
-				EncNeeded: true,
-				Name:      "ret_b",
-				Type:      "Buffer",
-				Enc:       "encodeBuffer",
-				Dec:       "decodeBuffer",
-			}
-		case "BufferArray":
-			r.Ret = &variable{
-				EncNeeded: true,
-				Name:      "ret_b",
-				Type:      "[]Buffer",
-				Enc:       "encodeBufferSlice",
-				Dec:       "decodeBufferSlice",
-			}
-		case "void":
-			// we do nothing; Ret is nil
-		default:
-			elog.Fatalf("Do not know how to deal with %v\n", f.ReturnType)
+		ret_type := getType(f.ReturnType)
+		m.Ret = &variable{
+			Type: ret_type,
+			name: "ret_val",
 		}
 
 		// params
+		// TODO this could be improved
 		var of_interest []neovim.APIFunctionParameter
-		switch r.Rec.Type {
-		case "*Client":
+		switch m.Rec.Type.Name() {
+		case "Client":
 			of_interest = f.Parameters
-		case "*Buffer", "*Window":
-			// we don't need the receiver
+		case "Buffer", "Window", "Tabpage":
 			of_interest = f.Parameters[1:]
 		default:
-			elog.Fatalf("Don't know how to handle receiver of type %v\n", r.Rec.Type)
+			elog.Fatalf("Don't know how to handle receiver of type %v\n", m.Rec.Type.Name())
 		}
 
-		r.Params = make([]variable, len(of_interest))
+		m.Params = make([]variable, len(of_interest))
 		for i, v := range of_interest {
-			switch v.Type {
-			case "String":
-				r.Params[i] = variable{
-					EncNeeded: true,
-					Name:      v.Name,
-					Type:      "string",
-					Enc:       "encodeString",
-					Dec:       "decodeString",
-				}
-			case "Integer":
-				r.Params[i] = variable{
-					EncNeeded: true,
-					Name:      v.Name,
-					Type:      "int",
-					Enc:       "encodeInt",
-					Dec:       "decodeInt",
-				}
-			default:
-				elog.Fatalf("Do not know how to handle parameter type %v\n", v.Type)
-			}
+			p := getType(v.Type)
+			m.Params[i].name = "i_" + v.Name
+			m.Params[i].Type = p
 		}
 
-		res[i] = r
+		res[i] = m
 	}
 
 	return res
@@ -214,7 +228,7 @@ func genAPI(a *neovim.API) {
 	funcs_of_interest := make([]neovim.APIFunction, 0)
 	for i, _ := range a.Functions {
 		switch a.Functions[i].Name {
-		case "vim_get_buffers", "vim_err_write", "window_set_height":
+		case "vim_get_buffers", "vim_get_current_buffer", "buffer_get_length":
 			funcs_of_interest = append(funcs_of_interest, a.Functions[i])
 		}
 	}
@@ -252,17 +266,42 @@ import "github.com/juju/errgo"
 
 {{define "meth"}}
 func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {{template "meth_ret" .Ret}} {
-	{{if .Rec.EncNeeded}}
+	{{if .Ret}}
+	dec := func() (_i interface{}, _err error) {
+		{{if .Ret.Type.Primitive}} _i, _err = {{.Rec.Client}}.dec.{{.Ret.Type.Dec}}()
+		{{else}} _i, _err = {{.Rec.Client}}.{{.Ret.Type.Dec}}(){{end}}
+		return
+	}
+	{{end}}
+	resp_chan, err := c.makeCall({{.Id}}, c.encodeArgs(
+		{{if .Rec.Type.CanEnc}}{{.Rec.Name}}.encode,{{end}}
+		{{range .Params}}{{.Name}}.{{.Type.Enc}}{{end}}
+	), dec)
+	if err != nil {
+		return ret_b, errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
+	}
+	resp := <-resp_chan
+	if resp == nil {
+		return ret_b, errgo.New("We got a nil response on resp_chan")
+	}
+	if resp.err != nil {
+		return ret_b, errgo.NoteMask(err, "We got a non-nil error in our response")
+	}
+	{{if .Ret}}
+	{{.Ret.Name}} = resp.obj.({{.Ret.Type.Name}})
+	return {{.Ret.Name}}, ret_err
+	{{else}}
+	return ret_err
 	{{end}}
 
 }
 {{end}}
 
-{{define "meth_rec"}}({{.Rec.Name}} {{.Rec.Type}}){{end}}
+{{define "meth_rec"}}({{.Rec.Name}} *{{.Rec.Type.Name}}){{end}}
 
 {{define "meth_params"}}{{$join := ""}}{{range .}}{{ $join }}{{ .Name }} {{.Type}}{{$join := ", "}}{{end}}{{end}}
 
-{{define "meth_ret"}}({{if .}}{{.Type}}, {{end}}error){{end}}
+{{define "meth_ret"}}({{if .}}{{.Name}} {{.Type.Name}}, {{end}}ret_err error){{end}}
 `
 
 /*
@@ -277,3 +316,36 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
    },
 
 */
+
+var type_map = map[string]_type{
+	"String": {
+		name:      "string",
+		enc:       "EncodeString",
+		dec:       "DecodeString",
+		primitive: true,
+	},
+	"Integer": {
+		name:      "int",
+		enc:       "EncodeInt",
+		dec:       "DecodeInt",
+		primitive: true,
+	},
+	"Buffer": {
+		name: "Buffer",
+		enc:  "encode",
+		dec:  "decodeBuffer",
+	},
+	"Window": {
+		name: "Window",
+		enc:  "encode",
+		dec:  "decodeWindow",
+	},
+	"Client": {
+		name: "Client",
+	},
+	"BufferArray": {
+		name: "[]Buffer",
+		enc:  "encode",
+		dec:  "decodeBufferSlice",
+	},
+}
