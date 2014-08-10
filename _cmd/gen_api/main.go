@@ -13,6 +13,13 @@ import (
 	sstrings "github.com/myitcv/strings"
 )
 
+var generated_functions = map[string]bool{
+	"vim_get_buffers":        true,
+	"vim_get_current_buffer": true,
+	"buffer_get_length":      true,
+	"buffer_get_line":        true,
+}
+
 var log = _log.New(os.Stdout, "", _log.Lshortfile)
 var elog = _log.New(os.Stderr, "", _log.Lshortfile)
 
@@ -224,11 +231,9 @@ func genAPI(a *neovim.API) {
 		}
 	}
 
-	// gen vim_get_buffers for now
 	funcs_of_interest := make([]neovim.APIFunction, 0)
 	for i, _ := range a.Functions {
-		switch a.Functions[i].Name {
-		case "vim_get_buffers", "vim_get_current_buffer", "buffer_get_length":
+		if _, ok := generated_functions[a.Functions[i].Name]; ok {
 			funcs_of_interest = append(funcs_of_interest, a.Functions[i])
 		}
 	}
@@ -256,6 +261,7 @@ func genAPI(a *neovim.API) {
 }
 
 var clientAPITemplate = `
+// **** THIS FILE IS GENERATED - DO NOT EDIT BY HAND
 package neovim
 
 import "github.com/juju/errgo"
@@ -273,19 +279,20 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 		return
 	}
 	{{end}}
-	resp_chan, err := c.makeCall({{.Id}}, c.encodeArgs(
+	resp_chan, err := {{.Rec.Client}}.makeCall({{.Id}}, {{.Rec.Client}}.encodeArgs(
 		{{if .Rec.Type.CanEnc}}{{.Rec.Name}}.encode,{{end}}
-		{{range .Params}}{{.Name}}.{{.Type.Enc}}{{end}}
+		{{ $client := .Rec.Client }}
+		{{range .Params}}{{if .Type.Primitive}}{{$client}}.enc.{{.Type.Enc}}{{else}}{{.Name}}.{{.Type.Enc}}{{end}},{{end}}
 	), dec)
 	if err != nil {
-		return ret_b, errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
+		return {{.Ret.Name}}, errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
 	}
 	resp := <-resp_chan
 	if resp == nil {
-		return ret_b, errgo.New("We got a nil response on resp_chan")
+		return {{.Ret.Name}}, errgo.New("We got a nil response on resp_chan")
 	}
 	if resp.err != nil {
-		return ret_b, errgo.NoteMask(err, "We got a non-nil error in our response")
+		return {{.Ret.Name}}, errgo.NoteMask(err, "We got a non-nil error in our response")
 	}
 	{{if .Ret}}
 	{{.Ret.Name}} = resp.obj.({{.Ret.Type.Name}})
@@ -299,23 +306,10 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 
 {{define "meth_rec"}}({{.Rec.Name}} *{{.Rec.Type.Name}}){{end}}
 
-{{define "meth_params"}}{{$join := ""}}{{range .}}{{ $join }}{{ .Name }} {{.Type}}{{$join := ", "}}{{end}}{{end}}
+{{define "meth_params"}}{{$join := ""}}{{range .}}{{ $join }}{{ .Name }} {{.Type.Name}}{{$join := ", "}}{{end}}{{end}}
 
 {{define "meth_ret"}}({{if .}}{{.Name}} {{.Type.Name}}, {{end}}ret_err error){{end}}
 `
-
-/*
-
-   {
-     "Name": "vim_get_buffers",
-     "ReturnType": "BufferArray",
-     "Id": 40,
-     "CanFail": false,
-     "ReceivesChannelId": false,
-     "Parameters": []
-   },
-
-*/
 
 var type_map = map[string]_type{
 	"String": {
