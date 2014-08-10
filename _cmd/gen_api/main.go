@@ -272,6 +272,28 @@ import "github.com/juju/errgo"
 
 {{define "meth"}}
 func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {{template "meth_ret" .Ret}} {
+	enc := func() (_err error) {
+		{{if .Rec.Type.CanEnc}}
+		_err = {{.Rec.Name}}.encode()
+		if _err != nil {
+			return
+		}
+		{{end}}
+		{{ $client := .Rec.Client }}
+
+		{{range .Params}}
+		{{if .Type.Primitive}}
+		_err = {{$client}}.enc.{{.Type.Enc}}({{.Name}})
+		{{else}}
+		_err = {{.Name}}.{{.Type.Enc}}
+		{{end}}
+		if _err != nil {
+			return
+		}
+		{{end}}
+
+		return
+	}
 	{{if .Ret}}
 	dec := func() (_i interface{}, _err error) {
 		{{if .Ret.Type.Primitive}} _i, _err = {{.Rec.Client}}.dec.{{.Ret.Type.Dec}}()
@@ -279,11 +301,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 		return
 	}
 	{{end}}
-	resp_chan, err := {{.Rec.Client}}.makeCall({{.Id}}, {{.Rec.Client}}.encodeArgs(
-		{{if .Rec.Type.CanEnc}}{{.Rec.Name}}.encode,{{end}}
-		{{ $client := .Rec.Client }}
-		{{range .Params}}{{if .Type.Primitive}}{{$client}}.enc.{{.Type.Enc}}{{else}}{{.Name}}.{{.Type.Enc}}{{end}},{{end}}
-	), dec)
+	resp_chan, err := {{.Rec.Client}}.makeCall({{.Id}}, enc, dec)
 	if err != nil {
 		return {{.Ret.Name}}, errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
 	}
