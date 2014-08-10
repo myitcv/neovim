@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -13,12 +14,7 @@ import (
 	sstrings "github.com/myitcv/strings"
 )
 
-var generated_functions = map[string]bool{
-	"vim_get_buffers":        true,
-	"vim_get_current_buffer": true,
-	"buffer_get_length":      true,
-	"buffer_get_line":        true,
-}
+var generated_functions map[string]bool
 
 var log = _log.New(os.Stdout, "", _log.Lshortfile)
 var elog = _log.New(os.Stderr, "", _log.Lshortfile)
@@ -28,12 +24,32 @@ var known_classes = []string{"Buffer", "Window", "Tabpage"}
 var f_cprint = flag.Bool("c", false, "custom print")
 var f_print = flag.Bool("p", false, "print the API")
 var f_gen = flag.Bool("g", false, "generate code from the API")
+var f_fgen = flag.String("f", "", "file containing the list of API functions to generate")
 
 func showUsage() {
-	fmt.Fprintf(os.Stderr, "Usage: %v [-p] [-g]\n\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Usage: %v [-p] [-g] [-f filename]\n\n", os.Args[0])
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, "\nOne of -p or -g must be supplied\n")
+	fmt.Fprintf(os.Stderr, "\nIf -g is supplied, -f may also be supplied to provide a list of functions to generate\n")
 	os.Exit(1)
+}
+
+func loadGeneratedFunctions() {
+	if *f_fgen != "" {
+		generated_functions = make(map[string]bool)
+		f, err := os.Open(*f_fgen)
+		if err != nil {
+			elog.Fatalf("Could not open -f supplied file to read list of API functions: %v\n", err)
+		}
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			fn := strings.TrimSpace(scanner.Text())
+			generated_functions[fn] = true
+		}
+		if err := scanner.Err(); err != nil {
+			elog.Fatalf("Error reading from the -f supplied file: %v\n", err)
+		}
+	}
 }
 
 func main() {
@@ -63,6 +79,7 @@ func main() {
 		os.Stdout.Write(j)
 		os.Stdout.WriteString("\n")
 	case *f_gen:
+		loadGeneratedFunctions()
 		genAPI(api)
 	case *f_cprint:
 		for _, v := range api.Functions {
@@ -84,6 +101,14 @@ type methodTemplate struct {
 	Rec    variable
 	Ret    *variable
 	Params []variable
+}
+
+func (m *methodTemplate) NumParams() (res int) {
+	if m.Rec.Type.CanEnc() {
+		res++
+	}
+	res += len(m.Params)
+	return
 }
 
 type _type struct {
@@ -188,10 +213,12 @@ func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 		}
 
 		// return
-		ret_type := getType(f.ReturnType)
-		m.Ret = &variable{
-			Type: ret_type,
-			name: "ret_val",
+		if f.ReturnType != "void" {
+			ret_type := getType(f.ReturnType)
+			m.Ret = &variable{
+				Type: ret_type,
+				name: "ret_val",
+			}
 		}
 
 		// params
@@ -231,11 +258,16 @@ func genAPI(a *neovim.API) {
 		}
 	}
 
-	funcs_of_interest := make([]neovim.APIFunction, 0)
-	for i, _ := range a.Functions {
-		if _, ok := generated_functions[a.Functions[i].Name]; ok {
-			funcs_of_interest = append(funcs_of_interest, a.Functions[i])
+	var funcs_of_interest []neovim.APIFunction
+	if generated_functions != nil {
+		funcs_of_interest = make([]neovim.APIFunction, 0)
+		for i, _ := range a.Functions {
+			if _, ok := generated_functions[a.Functions[i].Name]; ok {
+				funcs_of_interest = append(funcs_of_interest, a.Functions[i])
+			}
 		}
+	} else {
+		funcs_of_interest = a.Functions
 	}
 
 	if funcs_of_interest == nil {
@@ -273,6 +305,10 @@ import "github.com/juju/errgo"
 {{define "meth"}}
 func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {{template "meth_ret" .Ret}} {
 	enc := func() (_err error) {
+		_err = {{.Rec.Client}}.enc.EncodeSliceLen({{.NumParams}})
+		if _err != nil {
+			return
+		}
 		{{if .Rec.Type.CanEnc}}
 		_err = {{.Rec.Name}}.encode()
 		if _err != nil {
@@ -294,23 +330,27 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 
 		return
 	}
-	{{if .Ret}}
 	dec := func() (_i interface{}, _err error) {
+		{{if .Ret}}
+		{{if .Ret.Type.CanDec}}
 		{{if .Ret.Type.Primitive}} _i, _err = {{.Rec.Client}}.dec.{{.Ret.Type.Dec}}()
 		{{else}} _i, _err = {{.Rec.Client}}.{{.Ret.Type.Dec}}(){{end}}
+		{{end}}
+		{{else}}
+		_, _err = {{.Rec.Client}}.dec.DecodeBytes()
+		{{end}}
 		return
 	}
-	{{end}}
 	resp_chan, err := {{.Rec.Client}}.makeCall({{.Id}}, enc, dec)
 	if err != nil {
-		return {{.Ret.Name}}, errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
 	}
 	resp := <-resp_chan
 	if resp == nil {
-		return {{.Ret.Name}}, errgo.New("We got a nil response on resp_chan")
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.New("We got a nil response on resp_chan")
 	}
 	if resp.err != nil {
-		return {{.Ret.Name}}, errgo.NoteMask(err, "We got a non-nil error in our response")
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.NoteMask(err, "We got a non-nil error in our response")
 	}
 	{{if .Ret}}
 	{{.Ret.Name}} = resp.obj.({{.Ret.Type.Name}})
@@ -324,7 +364,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 
 {{define "meth_rec"}}({{.Rec.Name}} *{{.Rec.Type.Name}}){{end}}
 
-{{define "meth_params"}}{{$join := ""}}{{range .}}{{ $join }}{{ .Name }} {{.Type.Name}}{{$join := ", "}}{{end}}{{end}}
+{{define "meth_params"}}{{range $index, $element := .}}{{if gt $index 0}}, {{end}}{{ .Name }} {{.Type.Name}}{{end}}{{end}}
 
 {{define "meth_ret"}}({{if .}}{{.Name}} {{.Type.Name}}, {{end}}ret_err error){{end}}
 `
