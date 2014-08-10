@@ -18,6 +18,23 @@ func encodeNoArgs(e *msgpack.Encoder, args interface{}) error {
 	return nil
 }
 
+func decodeBuffer(d *msgpack.Decoder) (ret_b Buffer, ret_err error) {
+	b, err := d.DecodeUint32()
+	if err != nil {
+		return ret_b, errgo.Notef(err, "Could not decode Buffer")
+	}
+	return Buffer{Id: b}, ret_err
+}
+
+func encodeBuffer(e *msgpack.Encoder, b Buffer) error {
+	err := e.EncodeUint32(b.Id)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Buffer")
+	}
+
+	return nil
+}
+
 func decodeBufferSlice(d *msgpack.Decoder) (interface{}, error) {
 	l, err := d.DecodeSliceLen()
 	if err != nil {
@@ -27,11 +44,11 @@ func decodeBufferSlice(d *msgpack.Decoder) (interface{}, error) {
 	res := make([]Buffer, l)
 
 	for i := 0; i < l; i++ {
-		b, err := d.DecodeUint32()
+		b, err := decodeBuffer(d)
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode Buffer int at index %v\n", i)
+			return nil, errgo.Notef(err, "Could not decode Buffer at index %v", i)
 		}
-		res[i] = Buffer{Id: b}
+		res[i] = b.(Buffer)
 	}
 
 	return res, nil

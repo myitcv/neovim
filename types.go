@@ -3,11 +3,14 @@ package neovim
 import (
 	"net"
 	"sync"
+
+	"github.com/vmihailenco/msgpack"
 )
 
 type Client struct {
 	conn     net.Conn
-	func_map map[string]uint32
+	dec      *msgpack.Decoder
+	enc      *msgpack.Encoder
 	next_req uint32
 	resp_map *sync_map
 	lock     *sync.Mutex
@@ -16,7 +19,8 @@ type Client struct {
 // neovim types
 
 type Buffer struct {
-	Id uint32
+	Id     uint32
+	client *Client
 }
 
 type API struct {

@@ -1,33 +1,279 @@
-/*
-
-{'functions': [{'can_fail': True, 'return_type': 'WindowArray', 'name': 'tabpage_get_windows', 'parameters': [['Tabpage', 'tabpage']], 'id': 1}, {'can_fail': True, 'return_type': 'Object', 'name': 'tabpage_get_var', 'parameters': [['Tabpage', 'tabpage'], ['String', 'name']], 'id': 2}, {'can_fail': True, 'return_type': 'Object', 'name': 'tabpage_set_var', 'parameters': [['Tabpage', 'tabpage'], ['String', 'name'], ['Object', 'value']], 'id': 3}, {'can_fail': True, 'return_type': 'Window', 'name': 'tabpage_get_window', 'parameters': [['Tabpage', 'tabpage']], 'id': 4}, {'return_type': 'Boolean', 'name': 'tabpage_is_valid', 'parameters': [['Tabpage', 'tabpage']], 'id': 5}, {'can_fail': True, 'return_type': 'Integer', 'name': 'buffer_get_length', 'parameters': [['Buffer', 'buffer']], 'id': 6}, {'can_fail': True, 'return_type': 'String', 'name': 'buffer_get_line', 'parameters': [['Buffer', 'buffer'], ['Integer', 'index']], 'id': 7}, {'can_fail': True, 'return_type': 'void', 'name': 'buffer_set_line', 'parameters': [['Buffer', 'buffer'], ['Integer', 'index'], ['String', 'line']], 'id': 8}, {'can_fail': True, 'return_type': 'void', 'name': 'buffer_del_line', 'parameters': [['Buffer', 'buffer'], ['Integer', 'index']], 'id': 9}, {'can_fail': True, 'return_type': 'StringArray', 'name': 'buffer_get_slice', 'parameters': [['Buffer', 'buffer'], ['Integer', 'start'], ['Integer', 'end'], ['Boolean', 'include_start'], ['Boolean', 'include_end']], 'id': 10}, {'can_fail': True, 'return_type': 'void', 'name': 'buffer_set_slice', 'parameters': [['Buffer', 'buffer'], ['Integer', 'start'], ['Integer', 'end'], ['Boolean', 'include_start'], ['Boolean', 'include_end'], ['StringArray', 'replacement']], 'id': 11}, {'can_fail': True, 'return_type': 'Object', 'name': 'buffer_get_var', 'parameters': [['Buffer', 'buffer'], ['String', 'name']], 'id': 12}, {'can_fail': True, 'return_type': 'Object', 'name': 'buffer_set_var', 'parameters': [['Buffer', 'buffer'], ['String', 'name'], ['Object', 'value']], 'id': 13}, {'can_fail': True, 'return_type': 'Object', 'name': 'buffer_get_option', 'parameters': [['Buffer', 'buffer'], ['String', 'name']], 'id': 14}, {'can_fail': True, 'return_type': 'void', 'name': 'buffer_set_option', 'parameters': [['Buffer', 'buffer'], ['String', 'name'], ['Object', 'value']], 'id': 15}, {'can_fail': True, 'return_type': 'Integer', 'name': 'buffer_get_number', 'parameters': [['Buffer', 'buffer']], 'id': 16}, {'can_fail': True, 'return_type': 'String', 'name': 'buffer_get_name', 'parameters': [['Buffer', 'buffer']], 'id': 17}, {'can_fail': True, 'return_type': 'void', 'name': 'buffer_set_name', 'parameters': [['Buffer', 'buffer'], ['String', 'name']], 'id': 18}, {'return_type': 'Boolean', 'name': 'buffer_is_valid', 'parameters': [['Buffer', 'buffer']], 'id': 19}, {'can_fail': True, 'return_type': 'void', 'name': 'buffer_insert', 'parameters': [['Buffer', 'buffer'], ['Integer', 'lnum'], ['StringArray', 'lines']], 'id': 20}, {'can_fail': True, 'return_type': 'Position', 'name': 'buffer_get_mark', 'parameters': [['Buffer', 'buffer'], ['String', 'name']], 'id': 21}, {'return_type': 'void', 'name': 'vim_push_keys', 'parameters': [['String', 'str']], 'id': 22}, {'can_fail': True, 'return_type': 'void', 'name': 'vim_command', 'parameters': [['String', 'str']], 'id': 23}, {'return_type': 'void', 'name': 'vim_feedkeys', 'parameters': [['String', 'keys'], ['String', 'mode']], 'id': 24}, {'return_type': 'String', 'name': 'vim_replace_termcodes', 'parameters': [['String', 'str'], ['Boolean', 'from_part'], ['Boolean', 'do_lt'], ['Boolean', 'special']], 'id': 25}, {'can_fail': True, 'return_type': 'Object', 'name': 'vim_eval', 'parameters': [['String', 'str']], 'id': 26}, {'can_fail': True, 'return_type': 'Integer', 'name': 'vim_strwidth', 'parameters': [['String', 'str']], 'id': 27}, {'return_type': 'StringArray', 'name': 'vim_list_runtime_paths', 'parameters': [], 'id': 28}, {'can_fail': True, 'return_type': 'void', 'name': 'vim_change_directory', 'parameters': [['String', 'dir']], 'id': 29}, {'can_fail': True, 'return_type': 'String', 'name': 'vim_get_current_line', 'parameters': [], 'id': 30}, {'can_fail': True, 'return_type': 'void', 'name': 'vim_set_current_line', 'parameters': [['String', 'line']], 'id': 31}, {'can_fail': True, 'return_type': 'void', 'name': 'vim_del_current_line', 'parameters': [], 'id': 32}, {'can_fail': True, 'return_type': 'Object', 'name': 'vim_get_var', 'parameters': [['String', 'name']], 'id': 33}, {'can_fail': True, 'return_type': 'Object', 'name': 'vim_set_var', 'parameters': [['String', 'name'], ['Object', 'value']], 'id': 34}, {'can_fail': True, 'return_type': 'Object', 'name': 'vim_get_vvar', 'parameters': [['String', 'name']], 'id': 35}, {'can_fail': True, 'return_type': 'Object', 'name': 'vim_get_option', 'parameters': [['String', 'name']], 'id': 36}, {'can_fail': True, 'return_type': 'void', 'name': 'vim_set_option', 'parameters': [['String', 'name'], ['Object', 'value']], 'id': 37}, {'return_type': 'void', 'name': 'vim_out_write', 'parameters': [['String', 'str']], 'id': 38}, {'return_type': 'void', 'name': 'vim_err_write', 'parameters': [['String', 'str']], 'id': 39}, {'return_type': 'BufferArray', 'name': 'vim_get_buffers', 'parameters': [], 'id': 40}, {'return_type': 'Buffer', 'name': 'vim_get_current_buffer', 'parameters': [], 'id': 41}, {'can_fail': True, 'return_type': 'void', 'name': 'vim_set_current_buffer', 'parameters': [['Buffer', 'buffer']], 'id': 42}, {'return_type': 'WindowArray', 'name': 'vim_get_windows', 'parameters': [], 'id': 43}, {'return_type': 'Window', 'name': 'vim_get_current_window', 'parameters': [], 'id': 44}, {'can_fail': True, 'return_type': 'void', 'name': 'vim_set_current_window', 'parameters': [['Window', 'window']], 'id': 45}, {'return_type': 'TabpageArray', 'name': 'vim_get_tabpages', 'parameters': [], 'id': 46}, {'return_type': 'Tabpage', 'name': 'vim_get_current_tabpage', 'parameters': [], 'id': 47}, {'can_fail': True, 'return_type': 'void', 'name': 'vim_set_current_tabpage', 'parameters': [['Tabpage', 'tabpage']], 'id': 48}, {'receives_channel_id': True, 'return_type': 'void', 'id': 49, 'parameters': [['String', 'event']], 'name': 'vim_subscribe'}, {'receives_channel_id': True, 'return_type': 'void', 'id': 50, 'parameters': [['String', 'event']], 'name': 'vim_unsubscribe'}, {'name': 'vim_register_provider', 'parameters': [['String', 'method']], 'receives_channel_id': True, 'can_fail': True, 'return_type': 'void', 'id': 51}, {'can_fail': True, 'return_type': 'Buffer', 'name': 'window_get_buffer', 'parameters': [['Window', 'window']], 'id': 52}, {'can_fail': True, 'return_type': 'Position', 'name': 'window_get_cursor', 'parameters': [['Window', 'window']], 'id': 53}, {'can_fail': True, 'return_type': 'void', 'name': 'window_set_cursor', 'parameters': [['Window', 'window'], ['Position', 'pos']], 'id': 54}, {'can_fail': True, 'return_type': 'Integer', 'name': 'window_get_height', 'parameters': [['Window', 'window']], 'id': 55}, {'can_fail': True, 'return_type': 'void', 'name': 'window_set_height', 'parameters': [['Window', 'window'], ['Integer', 'height']], 'id': 56}, {'can_fail': True, 'return_type': 'Integer', 'name': 'window_get_width', 'parameters': [['Window', 'window']], 'id': 57}, {'can_fail': True, 'return_type': 'void', 'name': 'window_set_width', 'parameters': [['Window', 'window'], ['Integer', 'width']], 'id': 58}, {'can_fail': True, 'return_type': 'Object', 'name': 'window_get_var', 'parameters': [['Window', 'window'], ['String', 'name']], 'id': 59}, {'can_fail': True, 'return_type': 'Object', 'name': 'window_set_var', 'parameters': [['Window', 'window'], ['String', 'name'], ['Object', 'value']], 'id': 60}, {'can_fail': True, 'return_type': 'Object', 'name': 'window_get_option', 'parameters': [['Window', 'window'], ['String', 'name']], 'id': 61}, {'can_fail': True, 'return_type': 'void', 'name': 'window_set_option', 'parameters': [['Window', 'window'], ['String', 'name'], ['Object', 'value']], 'id': 62}, {'can_fail': True, 'return_type': 'Position', 'name': 'window_get_position', 'parameters': [['Window', 'window']], 'id': 63}, {'can_fail': True, 'return_type': 'Tabpage', 'name': 'window_get_tabpage', 'parameters': [['Window', 'window']], 'id': 64}, {'return_type': 'Boolean', 'name': 'window_is_valid', 'parameters': [['Window', 'window']], 'id': 65}], 'classes': ['Buffer', 'Window', 'Tabpage']}
-
-*/
-
 package main
 
 import (
 	"encoding/json"
-	"log"
+	"flag"
+	"fmt"
+	_log "log"
 	"os"
+	"strings"
+	"text/template"
 
 	"github.com/myitcv/neovim"
+	sstrings "github.com/myitcv/strings"
 )
 
+var log = _log.New(os.Stdout, "", _log.Lshortfile)
+var elog = _log.New(os.Stderr, "", _log.Lshortfile)
+
+var known_classes = []string{"Buffer", "Window", "Tabpage"}
+
+var f_cprint = flag.Bool("c", false, "custom print")
+var f_print = flag.Bool("p", false, "print the API")
+var f_gen = flag.Bool("g", false, "generate code from the API")
+
+func showUsage() {
+	fmt.Fprintf(os.Stderr, "Usage: %v [-p] [-g]\n\n", os.Args[0])
+	flag.PrintDefaults()
+	fmt.Fprintf(os.Stderr, "\nOne of -p or -g must be supplied\n")
+	os.Exit(1)
+}
+
 func main() {
+	flag.Usage = showUsage
+	flag.Parse()
+
+	if !*f_print && !*f_gen && !*f_cprint {
+		showUsage()
+	}
+
 	client, err := neovim.NewUnixClient("/tmp/neovim", "unix")
 	if err != nil {
-		log.Fatalf("Could not create neovim client: %v\n", err)
+		elog.Fatalf("Could not create neovim client: %v\n", err)
 	}
 	api, err := client.API()
 	if err != nil {
-		log.Fatalf("Could not get API from client: %v\n", err)
+		elog.Fatalf("Could not get API from client: %v\n", err)
 	}
 
-	j, err := json.MarshalIndent(api, "", "  ")
-	if err != nil {
-		log.Fatalf("Could not marshall JSON: %v\n", err)
-	}
+	switch {
+	case *f_print:
+		j, err := json.MarshalIndent(api, "", "  ")
+		if err != nil {
+			elog.Fatalf("Could not marshall JSON: %v\n", err)
+		}
 
-	os.Stdout.Write(j)
+		os.Stdout.Write(j)
+		os.Stdout.WriteString("\n")
+	case *f_gen:
+		genAPI(api)
+	case *f_cprint:
+		for _, v := range api.Functions {
+			splits := strings.SplitN(v.Name, "_", 2)
+			fmt.Printf("%v: ", splits[0])
+			if len(v.Parameters) > 0 {
+				fmt.Print(v.Parameters[0])
+			} else {
+				fmt.Print("nil")
+			}
+			fmt.Print("\n")
+		}
+	}
 }
+
+type variable struct {
+	Name      string
+	Type      string
+	Enc       string
+	Dec       string
+	EncNeeded bool
+}
+
+type methodTemplate struct {
+	Name   string
+	Rec    variable
+	Ret    *variable
+	Params []variable
+}
+
+type api struct {
+	Methods []methodTemplate
+}
+
+func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
+	res := make([]methodTemplate, len(fs))
+
+	for i, f := range fs {
+		r := methodTemplate{}
+		splits := strings.SplitN(f.Name, "_", 2)
+
+		if len(splits) != 2 {
+			elog.Fatalf("Function name not as expected: %v\n", f.Name)
+		}
+
+		// name
+		r.Name = sstrings.Camelize(splits[1])
+
+		// receiver
+		switch splits[0] {
+		case "vim":
+			r.Rec = variable{
+				EncNeeded: false,
+				Name:      "rec_c",
+				Type:      "*Client",
+			}
+		case "buffer":
+			r.Rec = variable{
+				EncNeeded: true,
+				Name:      "rec_b",
+				Type:      "*Buffer",
+				Enc:       "encodeBuffer",
+				Dec:       "decodeBuffer",
+			}
+		case "window":
+			r.Rec = variable{
+				EncNeeded: true,
+				Name:      "rec_w",
+				Type:      "*Window",
+				Enc:       "encodeWindow",
+				Dec:       "decodeWindow",
+			}
+		default:
+			elog.Fatalf("Do not know how to deal with %v\n", splits[0])
+		}
+
+		// return
+		switch f.ReturnType {
+		case "Buffer":
+			r.Ret = &variable{
+				EncNeeded: true,
+				Name:      "ret_b",
+				Type:      "Buffer",
+				Enc:       "encodeBuffer",
+				Dec:       "decodeBuffer",
+			}
+		case "BufferArray":
+			r.Ret = &variable{
+				EncNeeded: true,
+				Name:      "ret_b",
+				Type:      "[]Buffer",
+				Enc:       "encodeBufferSlice",
+				Dec:       "decodeBufferSlice",
+			}
+		case "void":
+			// we do nothing; Ret is nil
+		default:
+			elog.Fatalf("Do not know how to deal with %v\n", f.ReturnType)
+		}
+
+		// params
+		var of_interest []neovim.APIFunctionParameter
+		switch r.Rec.Type {
+		case "*Client":
+			of_interest = f.Parameters
+		case "*Buffer", "*Window":
+			// we don't need the receiver
+			of_interest = f.Parameters[1:]
+		default:
+			elog.Fatalf("Don't know how to handle receiver of type %v\n", r.Rec.Type)
+		}
+
+		r.Params = make([]variable, len(of_interest))
+		for i, v := range of_interest {
+			switch v.Type {
+			case "String":
+				r.Params[i] = variable{
+					EncNeeded: true,
+					Name:      v.Name,
+					Type:      "string",
+					Enc:       "encodeString",
+					Dec:       "decodeString",
+				}
+			case "Integer":
+				r.Params[i] = variable{
+					EncNeeded: true,
+					Name:      v.Name,
+					Type:      "int",
+					Enc:       "encodeInt",
+					Dec:       "decodeInt",
+				}
+			default:
+				elog.Fatalf("Do not know how to handle parameter type %v\n", v.Type)
+			}
+		}
+
+		res[i] = r
+	}
+
+	return res
+}
+
+func genAPI(a *neovim.API) {
+	// ensure we only have classes we know about
+	comp := make(map[string]int, len(known_classes))
+	for _, k := range known_classes {
+		comp[k] += 1
+	}
+	for _, k := range a.Classes {
+		if comp[k.Name] != 1 {
+			elog.Fatalf("We got an unexpected class: %v\n", k.Name)
+		}
+	}
+
+	// gen vim_get_buffers for now
+	funcs_of_interest := make([]neovim.APIFunction, 0)
+	for i, _ := range a.Functions {
+		switch a.Functions[i].Name {
+		case "vim_get_buffers", "vim_err_write", "window_set_height":
+			funcs_of_interest = append(funcs_of_interest, a.Functions[i])
+		}
+	}
+
+	if funcs_of_interest == nil {
+		elog.Fatalln("Could not find functions of interest")
+	}
+
+	t := template.New("api")
+	_, err := t.Parse(clientAPITemplate)
+	if err != nil {
+		elog.Fatalf("Could not parse client API template: %v\n", err)
+	}
+
+	api := api{}
+	api.Methods = genMethodTemplates(funcs_of_interest)
+
+	err = t.Execute(os.Stdout, api)
+	if err != nil {
+
+		// ensure we are on a newline
+		fmt.Println()
+		elog.Fatalf("Error generating API: %v\n", err)
+	}
+}
+
+var clientAPITemplate = `
+package neovim
+
+import "github.com/juju/errgo"
+
+{{range .Methods }}
+{{template "meth" .}}
+{{end}}
+
+{{define "meth"}}
+func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {{template "meth_ret" .Ret}} {
+	{{if .Rec.EncNeeded}}
+	{{end}}
+
+}
+{{end}}
+
+{{define "meth_rec"}}({{.Rec.Name}} {{.Rec.Type}}){{end}}
+
+{{define "meth_params"}}{{$join := ""}}{{range .}}{{ $join }}{{ .Name }} {{.Type}}{{$join := ", "}}{{end}}{{end}}
+
+{{define "meth_ret"}}({{if .}}{{.Type}}, {{end}}error){{end}}
+`
+
+/*
+
+   {
+     "Name": "vim_get_buffers",
+     "ReturnType": "BufferArray",
+     "Id": 40,
+     "CanFail": false,
+     "ReceivesChannelId": false,
+     "Parameters": []
+   },
+
+*/

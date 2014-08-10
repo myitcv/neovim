@@ -1,7 +1,6 @@
 package neovim
 
 import (
-	"bufio"
 	"log"
 	"net"
 	"sync"
@@ -20,12 +19,7 @@ type sync_map struct {
 }
 
 func (c *Client) nextReqId() uint32 {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	res := c.next_req
-	c.next_req++
-	return res
+	return sync.AddUnint(&c.next_req, 1)
 }
 
 func newSyncMap() *sync_map {
@@ -76,10 +70,9 @@ func NewUnixClient(ua_name, ua_net string) (*Client, error) {
 		return nil, errgo.NoteMask(err, "Could not establish connection")
 	}
 	res := &Client{conn: c}
-	res.func_map = make(map[string]uint32)
 	res.resp_map = newSyncMap()
-	res.func_map["vim_get_buffers"] = 40
-	res.func_map["api"] = 0
+	res.dec = msgpack.NewDecoder(c)
+	res.enc = msgpack.NewEncoder(c)
 	res.lock = new(sync.Mutex)
 	go res.doListen()
 	return res, nil
@@ -87,7 +80,7 @@ func NewUnixClient(ua_name, ua_net string) (*Client, error) {
 
 func (c *Client) doListen() {
 	// TODO need kill channel
-	dec := msgpack.NewDecoder(c.conn)
+	dec := c.dec
 	for {
 		_, err := dec.DecodeSliceLen()
 		if err != nil {
@@ -145,11 +138,14 @@ func (c *Client) doListen() {
 
 }
 
-func (c *Client) makeCall(req_meth_id uint32, args interface{}, e Encoder, d Decoder) (chan *response, error) {
+func (c *Client) makeCall(req_meth_id uint32, args []interface{}, encoders []Encoder, d Decoder) (chan *response, error) {
 	req_type := 0
 	req_id := c.nextReqId()
-	w := bufio.NewWriter(c.conn)
-	enc := msgpack.NewEncoder(w)
+	enc := c.enc
+
+	if len(args) != len(encoders) || len(args) == 0 {
+		return nil, errgo.Newf("args and encoders not the same length > 0: %v and %v", args, encoders)
+	}
 
 	res := make(chan *response)
 	rh := &response_holder{dec: d, ch: res}
@@ -178,9 +174,11 @@ func (c *Client) makeCall(req_meth_id uint32, args interface{}, e Encoder, d Dec
 		return nil, errgo.NoteMask(err, "Could not encode request method ID")
 	}
 
-	err = e(enc, args)
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not encode method args")
+	for i, _ := range encoders {
+		err := encoders[i](enc, args[i])
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not encode method args at index %v with args %v", i, args[i])
+		}
 	}
 
 	err = w.Flush()
@@ -192,9 +190,9 @@ func (c *Client) makeCall(req_meth_id uint32, args interface{}, e Encoder, d Dec
 }
 
 func (c *Client) API() (*API, error) {
-	resp_chan, err := c.makeCall(0, nil, encodeNoArgs, decodeAPI)
+	resp_chan, err := c.makeCall(0, []interface{}{nil}, []Encoder{encodeNoArgs}, decodeAPI)
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not make call to GetBuffers")
+		return nil, errgo.NoteMask(err, "Could not make call")
 	}
 	resp := <-resp_chan
 	if resp == nil {
