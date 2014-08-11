@@ -1,3 +1,7 @@
+// Copyright 2014 Paul Jolly <paul@myitcv.org.uk>. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package main
 
 import (
@@ -62,7 +66,7 @@ func main() {
 		showUsage()
 	}
 
-	client, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: "/tmp/neovim"})
+	client, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: os.Getenv("NEOVIM_LISTEN_ADDRESS")})
 	if err != nil {
 		elog.Fatalf("Could not create neovim client: %v\n", err)
 	}
