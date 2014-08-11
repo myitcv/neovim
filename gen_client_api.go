@@ -1,5 +1,6 @@
-// **** THIS FILE IS GENERATED - DO NOT EDIT BY HAND
 package neovim
+
+// **** THIS FILE IS GENERATED - DO NOT EDIT BY HAND
 
 import "github.com/juju/errgo"
 
@@ -2648,6 +2649,45 @@ func (c *Client) decodeWindowSlice() ([]Window, error) {
 	return res, nil
 }
 
+func (c *Client) encodeStringSlice(s []string) error {
+	err := c.enc.EncodeSliceLen(len(s))
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode slice length")
+	}
+
+	for i := 0; i < len(s); i++ {
+
+		err := c.enc.EncodeString(s[i])
+
+		if err != nil {
+			return errgo.Notef(err, "Could not encode string at index %v", i)
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) decodeStringSlice() ([]string, error) {
+	l, err := c.dec.DecodeSliceLen()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not decode slice length")
+	}
+
+	res := make([]string, l)
+
+	for i := 0; i < l; i++ {
+
+		b, err := c.dec.DecodeString()
+
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not decode string at index %v", i)
+		}
+		res[i] = b
+	}
+
+	return res, nil
+}
+
 func (c *Client) encodeBufferSlice(s []Buffer) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
@@ -2719,45 +2759,6 @@ func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
 
 		if err != nil {
 			return nil, errgo.Notef(err, "Could not decode Tabpage at index %v", i)
-		}
-		res[i] = b
-	}
-
-	return res, nil
-}
-
-func (c *Client) encodeStringSlice(s []string) error {
-	err := c.enc.EncodeSliceLen(len(s))
-	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
-	}
-
-	for i := 0; i < len(s); i++ {
-
-		err := c.enc.EncodeString(s[i])
-
-		if err != nil {
-			return errgo.Notef(err, "Could not encode string at index %v", i)
-		}
-	}
-
-	return nil
-}
-
-func (c *Client) decodeStringSlice() ([]string, error) {
-	l, err := c.dec.DecodeSliceLen()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
-	}
-
-	res := make([]string, l)
-
-	for i := 0; i < l; i++ {
-
-		b, err := c.dec.DecodeString()
-
-		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode string at index %v", i)
 		}
 		res[i] = b
 	}

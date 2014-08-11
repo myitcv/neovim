@@ -314,8 +314,9 @@ func genAPI(a *neovim.API) {
 }
 
 var clientAPITemplate = `
-// **** THIS FILE IS GENERATED - DO NOT EDIT BY HAND
 package neovim
+
+// **** THIS FILE IS GENERATED - DO NOT EDIT BY HAND
 
 import "github.com/juju/errgo"
 

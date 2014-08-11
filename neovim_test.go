@@ -197,6 +197,14 @@ func (t *NeovimTest) TestClientSubscribe(c *C) {
 	c.Assert(resp, NotNil)
 }
 
+func (t *NeovimTest) TestGetSlice(c *C) {
+	cb, err := t.client.GetCurrentBuffer()
+	c.Assert(err, IsNil)
+	lines, err := cb.GetSlice(0, -1, true, true)
+	c.Assert(err, IsNil)
+	c.Assert(lines, NotNil)
+}
+
 func (t *NeovimTest) TestAPI(c *C) {
 	api, err := t.client.API()
 	c.Assert(err, IsNil)
