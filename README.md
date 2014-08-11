@@ -1,6 +1,6 @@
 ## neovim
 
-Go package for writing [neovim](http://neovim.org/) plugins
+Go package for writing [Neovim](http://neovim.org/) plugins
 
 ```bash
 go get github.com/myitcv/neovim
@@ -54,6 +54,7 @@ place the generated source in `$GOPATH` as appropriate.
 
 ## Todo list
 
+* Add build to Travis (including re-gen against latest Neovim build)
 * Get full test coverage; can we auto-generate certain basic tests?
 * Cleanly handle Neovim instances quitting
 * Test on more platforms
