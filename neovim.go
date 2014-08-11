@@ -205,7 +205,7 @@ func (c *Client) doListen() {
 	}
 }
 
-func (c *Client) makeCall(req_meth_id uint32, e Encoder, d Decoder) (chan *response, error) {
+func (c *Client) makeCall(req_meth_id NeovimMethodId, e Encoder, d Decoder) (chan *response, error) {
 	req_type := 0
 	req_id := c.nextReqId()
 	enc := c.enc
@@ -232,7 +232,7 @@ func (c *Client) makeCall(req_meth_id uint32, e Encoder, d Decoder) (chan *respo
 		return nil, errgo.NoteMask(err, "Could not encode request ID")
 	}
 
-	err = enc.EncodeUint32(req_meth_id)
+	err = enc.EncodeUint32(uint32(req_meth_id))
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not encode request method ID")
 	}
@@ -256,7 +256,7 @@ func (c *Client) API() (*API, error) {
 
 		return
 	}
-	resp_chan, err := c.makeCall(0, enc, c.decodeAPI)
+	resp_chan, err := c.makeCall(Neovim_API, enc, c.decodeAPI)
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not make call")
 	}

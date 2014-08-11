@@ -320,12 +320,34 @@ package neovim
 
 import "github.com/juju/errgo"
 
+// constants representing method ids
+
+const (
+	Neovim_API NeovimMethodId  = 0
+	{{range .Methods }}{{.Rec.Type.Name}}_{{.Name}} = {{.Id}}
+	{{end}}
+)
+
+func (n NeovimMethodId) String() string {
+	switch n {
+	case Neovim_API:
+		return "API"
+	{{range .Methods }}case {{.Rec.Type.Name}}_{{.Name}}:
+		return "{{.Rec.Type.Name}}_{{.Name}}"
+	{{end}}
+	default:
+		return ""
+	}
+}
+
 // methods on the API
+
 {{range .Methods }}
 {{template "meth" .}}
 {{end}}
 
 // helper functions for types
+
 {{range .Types}}
 {{template "type" .}}
 {{end}}
@@ -414,7 +436,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 		{{end}}
 		return
 	}
-	resp_chan, err := {{.Rec.Client}}.makeCall({{.Id}}, enc, dec)
+	resp_chan, err := {{.Rec.Client}}.makeCall({{.Rec.Type.Name}}_{{.Name}}, enc, dec)
 	if err != nil {
 		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
 	}
