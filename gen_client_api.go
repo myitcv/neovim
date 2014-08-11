@@ -2610,45 +2610,6 @@ func (recv *Window) IsValid() (ret_val bool, ret_err error) {
 
 // helper functions for types
 
-func (c *Client) encodeWindowSlice(s []Window) error {
-	err := c.enc.EncodeSliceLen(len(s))
-	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
-	}
-
-	for i := 0; i < len(s); i++ {
-
-		err := c.encodeWindow(s[i])
-
-		if err != nil {
-			return errgo.Notef(err, "Could not encode Window at index %v", i)
-		}
-	}
-
-	return nil
-}
-
-func (c *Client) decodeWindowSlice() ([]Window, error) {
-	l, err := c.dec.DecodeSliceLen()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
-	}
-
-	res := make([]Window, l)
-
-	for i := 0; i < l; i++ {
-
-		b, err := c.decodeWindow()
-
-		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode Window at index %v", i)
-		}
-		res[i] = b
-	}
-
-	return res, nil
-}
-
 func (c *Client) encodeStringSlice(s []string) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
@@ -2681,6 +2642,45 @@ func (c *Client) decodeStringSlice() ([]string, error) {
 
 		if err != nil {
 			return nil, errgo.Notef(err, "Could not decode string at index %v", i)
+		}
+		res[i] = b
+	}
+
+	return res, nil
+}
+
+func (c *Client) encodeTabpageSlice(s []Tabpage) error {
+	err := c.enc.EncodeSliceLen(len(s))
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode slice length")
+	}
+
+	for i := 0; i < len(s); i++ {
+
+		err := c.encodeTabpage(s[i])
+
+		if err != nil {
+			return errgo.Notef(err, "Could not encode Tabpage at index %v", i)
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
+	l, err := c.dec.DecodeSliceLen()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not decode slice length")
+	}
+
+	res := make([]Tabpage, l)
+
+	for i := 0; i < l; i++ {
+
+		b, err := c.decodeTabpage()
+
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not decode Tabpage at index %v", i)
 		}
 		res[i] = b
 	}
@@ -2727,7 +2727,7 @@ func (c *Client) decodeBufferSlice() ([]Buffer, error) {
 	return res, nil
 }
 
-func (c *Client) encodeTabpageSlice(s []Tabpage) error {
+func (c *Client) encodeWindowSlice(s []Window) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
 		return errgo.NoteMask(err, "Could not encode slice length")
@@ -2735,30 +2735,30 @@ func (c *Client) encodeTabpageSlice(s []Tabpage) error {
 
 	for i := 0; i < len(s); i++ {
 
-		err := c.encodeTabpage(s[i])
+		err := c.encodeWindow(s[i])
 
 		if err != nil {
-			return errgo.Notef(err, "Could not encode Tabpage at index %v", i)
+			return errgo.Notef(err, "Could not encode Window at index %v", i)
 		}
 	}
 
 	return nil
 }
 
-func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
+func (c *Client) decodeWindowSlice() ([]Window, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not decode slice length")
 	}
 
-	res := make([]Tabpage, l)
+	res := make([]Window, l)
 
 	for i := 0; i < l; i++ {
 
-		b, err := c.decodeTabpage()
+		b, err := c.decodeWindow()
 
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode Tabpage at index %v", i)
+			return nil, errgo.Notef(err, "Could not decode Window at index %v", i)
 		}
 		res[i] = b
 	}
