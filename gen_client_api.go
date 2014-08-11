@@ -7,207 +7,207 @@ import "github.com/juju/errgo"
 // constants representing method ids
 
 const (
-	Neovim_API               NeovimMethodId = 0
-	Tabpage_GetWindows                      = 1
-	Tabpage_GetVar                          = 2
-	Tabpage_SetVar                          = 3
-	Tabpage_GetWindow                       = 4
-	Tabpage_IsValid                         = 5
-	Buffer_GetLength                        = 6
-	Buffer_GetLine                          = 7
-	Buffer_SetLine                          = 8
-	Buffer_DelLine                          = 9
-	Buffer_GetSlice                         = 10
-	Buffer_SetSlice                         = 11
-	Buffer_GetVar                           = 12
-	Buffer_SetVar                           = 13
-	Buffer_GetOption                        = 14
-	Buffer_SetOption                        = 15
-	Buffer_GetNumber                        = 16
-	Buffer_GetName                          = 17
-	Buffer_SetName                          = 18
-	Buffer_IsValid                          = 19
-	Buffer_Insert                           = 20
-	Buffer_GetMark                          = 21
-	Client_PushKeys                         = 22
-	Client_Command                          = 23
-	Client_Feedkeys                         = 24
-	Client_ReplaceTermcodes                 = 25
-	Client_Eval                             = 26
-	Client_Strwidth                         = 27
-	Client_ListRuntimePaths                 = 28
-	Client_ChangeDirectory                  = 29
-	Client_GetCurrentLine                   = 30
-	Client_SetCurrentLine                   = 31
-	Client_DelCurrentLine                   = 32
-	Client_GetVar                           = 33
-	Client_SetVar                           = 34
-	Client_GetVvar                          = 35
-	Client_GetOption                        = 36
-	Client_SetOption                        = 37
-	Client_OutWrite                         = 38
-	Client_ErrWrite                         = 39
-	Client_GetBuffers                       = 40
-	Client_GetCurrentBuffer                 = 41
-	Client_SetCurrentBuffer                 = 42
-	Client_GetWindows                       = 43
-	Client_GetCurrentWindow                 = 44
-	Client_SetCurrentWindow                 = 45
-	Client_GetTabpages                      = 46
-	Client_GetCurrentTabpage                = 47
-	Client_SetCurrentTabpage                = 48
-	Client_Subscribe                        = 49
-	Client_Unsubscribe                      = 50
-	Client_RegisterProvider                 = 51
-	Window_GetBuffer                        = 52
-	Window_GetCursor                        = 53
-	Window_SetCursor                        = 54
-	Window_GetHeight                        = 55
-	Window_SetHeight                        = 56
-	Window_GetWidth                         = 57
-	Window_SetWidth                         = 58
-	Window_GetVar                           = 59
-	Window_SetVar                           = 60
-	Window_GetOption                        = 61
-	Window_SetOption                        = 62
-	Window_GetPosition                      = 63
-	Window_GetTabpage                       = 64
-	Window_IsValid                          = 65
+	neovim_API               neovimMethodId = 0
+	tabpage_GetWindows                      = 1
+	tabpage_GetVar                          = 2
+	tabpage_SetVar                          = 3
+	tabpage_GetWindow                       = 4
+	tabpage_IsValid                         = 5
+	buffer_GetLength                        = 6
+	buffer_GetLine                          = 7
+	buffer_SetLine                          = 8
+	buffer_DelLine                          = 9
+	buffer_GetSlice                         = 10
+	buffer_SetSlice                         = 11
+	buffer_GetVar                           = 12
+	buffer_SetVar                           = 13
+	buffer_GetOption                        = 14
+	buffer_SetOption                        = 15
+	buffer_GetNumber                        = 16
+	buffer_GetName                          = 17
+	buffer_SetName                          = 18
+	buffer_IsValid                          = 19
+	buffer_Insert                           = 20
+	buffer_GetMark                          = 21
+	client_PushKeys                         = 22
+	client_Command                          = 23
+	client_Feedkeys                         = 24
+	client_ReplaceTermcodes                 = 25
+	client_Eval                             = 26
+	client_Strwidth                         = 27
+	client_ListRuntimePaths                 = 28
+	client_ChangeDirectory                  = 29
+	client_GetCurrentLine                   = 30
+	client_SetCurrentLine                   = 31
+	client_DelCurrentLine                   = 32
+	client_GetVar                           = 33
+	client_SetVar                           = 34
+	client_GetVvar                          = 35
+	client_GetOption                        = 36
+	client_SetOption                        = 37
+	client_OutWrite                         = 38
+	client_ErrWrite                         = 39
+	client_GetBuffers                       = 40
+	client_GetCurrentBuffer                 = 41
+	client_SetCurrentBuffer                 = 42
+	client_GetWindows                       = 43
+	client_GetCurrentWindow                 = 44
+	client_SetCurrentWindow                 = 45
+	client_GetTabpages                      = 46
+	client_GetCurrentTabpage                = 47
+	client_SetCurrentTabpage                = 48
+	client_Subscribe                        = 49
+	client_Unsubscribe                      = 50
+	client_RegisterProvider                 = 51
+	window_GetBuffer                        = 52
+	window_GetCursor                        = 53
+	window_SetCursor                        = 54
+	window_GetHeight                        = 55
+	window_SetHeight                        = 56
+	window_GetWidth                         = 57
+	window_SetWidth                         = 58
+	window_GetVar                           = 59
+	window_SetVar                           = 60
+	window_GetOption                        = 61
+	window_SetOption                        = 62
+	window_GetPosition                      = 63
+	window_GetTabpage                       = 64
+	window_IsValid                          = 65
 )
 
-func (n NeovimMethodId) String() string {
+func (n neovimMethodId) String() string {
 	switch n {
-	case Neovim_API:
+	case neovim_API:
 		return "API"
-	case Tabpage_GetWindows:
+	case tabpage_GetWindows:
 		return "Tabpage_GetWindows"
-	case Tabpage_GetVar:
+	case tabpage_GetVar:
 		return "Tabpage_GetVar"
-	case Tabpage_SetVar:
+	case tabpage_SetVar:
 		return "Tabpage_SetVar"
-	case Tabpage_GetWindow:
+	case tabpage_GetWindow:
 		return "Tabpage_GetWindow"
-	case Tabpage_IsValid:
+	case tabpage_IsValid:
 		return "Tabpage_IsValid"
-	case Buffer_GetLength:
+	case buffer_GetLength:
 		return "Buffer_GetLength"
-	case Buffer_GetLine:
+	case buffer_GetLine:
 		return "Buffer_GetLine"
-	case Buffer_SetLine:
+	case buffer_SetLine:
 		return "Buffer_SetLine"
-	case Buffer_DelLine:
+	case buffer_DelLine:
 		return "Buffer_DelLine"
-	case Buffer_GetSlice:
+	case buffer_GetSlice:
 		return "Buffer_GetSlice"
-	case Buffer_SetSlice:
+	case buffer_SetSlice:
 		return "Buffer_SetSlice"
-	case Buffer_GetVar:
+	case buffer_GetVar:
 		return "Buffer_GetVar"
-	case Buffer_SetVar:
+	case buffer_SetVar:
 		return "Buffer_SetVar"
-	case Buffer_GetOption:
+	case buffer_GetOption:
 		return "Buffer_GetOption"
-	case Buffer_SetOption:
+	case buffer_SetOption:
 		return "Buffer_SetOption"
-	case Buffer_GetNumber:
+	case buffer_GetNumber:
 		return "Buffer_GetNumber"
-	case Buffer_GetName:
+	case buffer_GetName:
 		return "Buffer_GetName"
-	case Buffer_SetName:
+	case buffer_SetName:
 		return "Buffer_SetName"
-	case Buffer_IsValid:
+	case buffer_IsValid:
 		return "Buffer_IsValid"
-	case Buffer_Insert:
+	case buffer_Insert:
 		return "Buffer_Insert"
-	case Buffer_GetMark:
+	case buffer_GetMark:
 		return "Buffer_GetMark"
-	case Client_PushKeys:
+	case client_PushKeys:
 		return "Client_PushKeys"
-	case Client_Command:
+	case client_Command:
 		return "Client_Command"
-	case Client_Feedkeys:
+	case client_Feedkeys:
 		return "Client_Feedkeys"
-	case Client_ReplaceTermcodes:
+	case client_ReplaceTermcodes:
 		return "Client_ReplaceTermcodes"
-	case Client_Eval:
+	case client_Eval:
 		return "Client_Eval"
-	case Client_Strwidth:
+	case client_Strwidth:
 		return "Client_Strwidth"
-	case Client_ListRuntimePaths:
+	case client_ListRuntimePaths:
 		return "Client_ListRuntimePaths"
-	case Client_ChangeDirectory:
+	case client_ChangeDirectory:
 		return "Client_ChangeDirectory"
-	case Client_GetCurrentLine:
+	case client_GetCurrentLine:
 		return "Client_GetCurrentLine"
-	case Client_SetCurrentLine:
+	case client_SetCurrentLine:
 		return "Client_SetCurrentLine"
-	case Client_DelCurrentLine:
+	case client_DelCurrentLine:
 		return "Client_DelCurrentLine"
-	case Client_GetVar:
+	case client_GetVar:
 		return "Client_GetVar"
-	case Client_SetVar:
+	case client_SetVar:
 		return "Client_SetVar"
-	case Client_GetVvar:
+	case client_GetVvar:
 		return "Client_GetVvar"
-	case Client_GetOption:
+	case client_GetOption:
 		return "Client_GetOption"
-	case Client_SetOption:
+	case client_SetOption:
 		return "Client_SetOption"
-	case Client_OutWrite:
+	case client_OutWrite:
 		return "Client_OutWrite"
-	case Client_ErrWrite:
+	case client_ErrWrite:
 		return "Client_ErrWrite"
-	case Client_GetBuffers:
+	case client_GetBuffers:
 		return "Client_GetBuffers"
-	case Client_GetCurrentBuffer:
+	case client_GetCurrentBuffer:
 		return "Client_GetCurrentBuffer"
-	case Client_SetCurrentBuffer:
+	case client_SetCurrentBuffer:
 		return "Client_SetCurrentBuffer"
-	case Client_GetWindows:
+	case client_GetWindows:
 		return "Client_GetWindows"
-	case Client_GetCurrentWindow:
+	case client_GetCurrentWindow:
 		return "Client_GetCurrentWindow"
-	case Client_SetCurrentWindow:
+	case client_SetCurrentWindow:
 		return "Client_SetCurrentWindow"
-	case Client_GetTabpages:
+	case client_GetTabpages:
 		return "Client_GetTabpages"
-	case Client_GetCurrentTabpage:
+	case client_GetCurrentTabpage:
 		return "Client_GetCurrentTabpage"
-	case Client_SetCurrentTabpage:
+	case client_SetCurrentTabpage:
 		return "Client_SetCurrentTabpage"
-	case Client_Subscribe:
+	case client_Subscribe:
 		return "Client_Subscribe"
-	case Client_Unsubscribe:
+	case client_Unsubscribe:
 		return "Client_Unsubscribe"
-	case Client_RegisterProvider:
+	case client_RegisterProvider:
 		return "Client_RegisterProvider"
-	case Window_GetBuffer:
+	case window_GetBuffer:
 		return "Window_GetBuffer"
-	case Window_GetCursor:
+	case window_GetCursor:
 		return "Window_GetCursor"
-	case Window_SetCursor:
+	case window_SetCursor:
 		return "Window_SetCursor"
-	case Window_GetHeight:
+	case window_GetHeight:
 		return "Window_GetHeight"
-	case Window_SetHeight:
+	case window_SetHeight:
 		return "Window_SetHeight"
-	case Window_GetWidth:
+	case window_GetWidth:
 		return "Window_GetWidth"
-	case Window_SetWidth:
+	case window_SetWidth:
 		return "Window_SetWidth"
-	case Window_GetVar:
+	case window_GetVar:
 		return "Window_GetVar"
-	case Window_SetVar:
+	case window_SetVar:
 		return "Window_SetVar"
-	case Window_GetOption:
+	case window_GetOption:
 		return "Window_GetOption"
-	case Window_SetOption:
+	case window_SetOption:
 		return "Window_SetOption"
-	case Window_GetPosition:
+	case window_GetPosition:
 		return "Window_GetPosition"
-	case Window_GetTabpage:
+	case window_GetTabpage:
 		return "Window_GetTabpage"
-	case Window_IsValid:
+	case window_IsValid:
 		return "Window_IsValid"
 
 	default:
@@ -237,7 +237,7 @@ func (recv *Tabpage) GetWindows() (ret_val []Window, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Tabpage_GetWindows, enc, dec)
+	resp_chan, err := recv.client.makeCall(tabpage_GetWindows, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Tabpage.GetWindows")
 	}
@@ -280,7 +280,7 @@ func (recv *Tabpage) GetVar(i_name string) (ret_val interface{}, ret_err error) 
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Tabpage_GetVar, enc, dec)
+	resp_chan, err := recv.client.makeCall(tabpage_GetVar, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Tabpage.GetVar")
 	}
@@ -329,7 +329,7 @@ func (recv *Tabpage) SetVar(i_name string, i_value interface{}) (ret_val interfa
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Tabpage_SetVar, enc, dec)
+	resp_chan, err := recv.client.makeCall(tabpage_SetVar, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Tabpage.SetVar")
 	}
@@ -366,7 +366,7 @@ func (recv *Tabpage) GetWindow() (ret_val Window, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Tabpage_GetWindow, enc, dec)
+	resp_chan, err := recv.client.makeCall(tabpage_GetWindow, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Tabpage.GetWindow")
 	}
@@ -403,7 +403,7 @@ func (recv *Tabpage) IsValid() (ret_val bool, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Tabpage_IsValid, enc, dec)
+	resp_chan, err := recv.client.makeCall(tabpage_IsValid, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Tabpage.IsValid")
 	}
@@ -440,7 +440,7 @@ func (recv *Buffer) GetLength() (ret_val int, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_GetLength, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_GetLength, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.GetLength")
 	}
@@ -483,7 +483,7 @@ func (recv *Buffer) GetLine(i_index int) (ret_val string, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_GetLine, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_GetLine, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.GetLine")
 	}
@@ -532,7 +532,7 @@ func (recv *Buffer) SetLine(i_index int, i_line string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_SetLine, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_SetLine, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Buffer.SetLine")
 	}
@@ -574,7 +574,7 @@ func (recv *Buffer) DelLine(i_index int) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_DelLine, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_DelLine, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Buffer.DelLine")
 	}
@@ -634,7 +634,7 @@ func (recv *Buffer) GetSlice(i_start int, i_end int, i_include_start bool, i_inc
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_GetSlice, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_GetSlice, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.GetSlice")
 	}
@@ -701,7 +701,7 @@ func (recv *Buffer) SetSlice(i_start int, i_end int, i_include_start bool, i_inc
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_SetSlice, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_SetSlice, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Buffer.SetSlice")
 	}
@@ -743,7 +743,7 @@ func (recv *Buffer) GetVar(i_name string) (ret_val interface{}, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_GetVar, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_GetVar, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.GetVar")
 	}
@@ -792,7 +792,7 @@ func (recv *Buffer) SetVar(i_name string, i_value interface{}) (ret_val interfac
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_SetVar, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_SetVar, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.SetVar")
 	}
@@ -835,7 +835,7 @@ func (recv *Buffer) GetOption(i_name string) (ret_val interface{}, ret_err error
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_GetOption, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_GetOption, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.GetOption")
 	}
@@ -884,7 +884,7 @@ func (recv *Buffer) SetOption(i_name string, i_value interface{}) (ret_err error
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_SetOption, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_SetOption, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Buffer.SetOption")
 	}
@@ -920,7 +920,7 @@ func (recv *Buffer) GetNumber() (ret_val int, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_GetNumber, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_GetNumber, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.GetNumber")
 	}
@@ -957,7 +957,7 @@ func (recv *Buffer) GetName() (ret_val string, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_GetName, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_GetName, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.GetName")
 	}
@@ -1000,7 +1000,7 @@ func (recv *Buffer) SetName(i_name string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_SetName, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_SetName, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Buffer.SetName")
 	}
@@ -1036,7 +1036,7 @@ func (recv *Buffer) IsValid() (ret_val bool, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_IsValid, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_IsValid, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.IsValid")
 	}
@@ -1085,7 +1085,7 @@ func (recv *Buffer) Insert(i_lnum int, i_lines []string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_Insert, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_Insert, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Buffer.Insert")
 	}
@@ -1127,7 +1127,7 @@ func (recv *Buffer) GetMark(i_name string) (ret_val uint32, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Buffer_GetMark, enc, dec)
+	resp_chan, err := recv.client.makeCall(buffer_GetMark, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Buffer.GetMark")
 	}
@@ -1165,7 +1165,7 @@ func (recv *Client) PushKeys(i_str string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_PushKeys, enc, dec)
+	resp_chan, err := recv.makeCall(client_PushKeys, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.PushKeys")
 	}
@@ -1202,7 +1202,7 @@ func (recv *Client) Command(i_str string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_Command, enc, dec)
+	resp_chan, err := recv.makeCall(client_Command, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.Command")
 	}
@@ -1245,7 +1245,7 @@ func (recv *Client) Feedkeys(i_keys string, i_mode string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_Feedkeys, enc, dec)
+	resp_chan, err := recv.makeCall(client_Feedkeys, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.Feedkeys")
 	}
@@ -1300,7 +1300,7 @@ func (recv *Client) ReplaceTermcodes(i_str string, i_from_part bool, i_do_lt boo
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_ReplaceTermcodes, enc, dec)
+	resp_chan, err := recv.makeCall(client_ReplaceTermcodes, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.ReplaceTermcodes")
 	}
@@ -1338,7 +1338,7 @@ func (recv *Client) Eval(i_str string) (ret_val interface{}, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_Eval, enc, dec)
+	resp_chan, err := recv.makeCall(client_Eval, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.Eval")
 	}
@@ -1376,7 +1376,7 @@ func (recv *Client) Strwidth(i_str string) (ret_val int, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_Strwidth, enc, dec)
+	resp_chan, err := recv.makeCall(client_Strwidth, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.Strwidth")
 	}
@@ -1408,7 +1408,7 @@ func (recv *Client) ListRuntimePaths() (ret_val []string, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_ListRuntimePaths, enc, dec)
+	resp_chan, err := recv.makeCall(client_ListRuntimePaths, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.ListRuntimePaths")
 	}
@@ -1446,7 +1446,7 @@ func (recv *Client) ChangeDirectory(i_dir string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_ChangeDirectory, enc, dec)
+	resp_chan, err := recv.makeCall(client_ChangeDirectory, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.ChangeDirectory")
 	}
@@ -1477,7 +1477,7 @@ func (recv *Client) GetCurrentLine() (ret_val string, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetCurrentLine, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetCurrentLine, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetCurrentLine")
 	}
@@ -1515,7 +1515,7 @@ func (recv *Client) SetCurrentLine(i_line string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_SetCurrentLine, enc, dec)
+	resp_chan, err := recv.makeCall(client_SetCurrentLine, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.SetCurrentLine")
 	}
@@ -1546,7 +1546,7 @@ func (recv *Client) DelCurrentLine() (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_DelCurrentLine, enc, dec)
+	resp_chan, err := recv.makeCall(client_DelCurrentLine, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.DelCurrentLine")
 	}
@@ -1583,7 +1583,7 @@ func (recv *Client) GetVar(i_name string) (ret_val interface{}, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetVar, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetVar, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetVar")
 	}
@@ -1627,7 +1627,7 @@ func (recv *Client) SetVar(i_name string, i_value interface{}) (ret_val interfac
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_SetVar, enc, dec)
+	resp_chan, err := recv.makeCall(client_SetVar, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.SetVar")
 	}
@@ -1665,7 +1665,7 @@ func (recv *Client) GetVvar(i_name string) (ret_val interface{}, ret_err error) 
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetVvar, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetVvar, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetVvar")
 	}
@@ -1703,7 +1703,7 @@ func (recv *Client) GetOption(i_name string) (ret_val interface{}, ret_err error
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetOption, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetOption, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetOption")
 	}
@@ -1747,7 +1747,7 @@ func (recv *Client) SetOption(i_name string, i_value interface{}) (ret_err error
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_SetOption, enc, dec)
+	resp_chan, err := recv.makeCall(client_SetOption, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.SetOption")
 	}
@@ -1784,7 +1784,7 @@ func (recv *Client) OutWrite(i_str string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_OutWrite, enc, dec)
+	resp_chan, err := recv.makeCall(client_OutWrite, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.OutWrite")
 	}
@@ -1821,7 +1821,7 @@ func (recv *Client) ErrWrite(i_str string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_ErrWrite, enc, dec)
+	resp_chan, err := recv.makeCall(client_ErrWrite, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.ErrWrite")
 	}
@@ -1852,7 +1852,7 @@ func (recv *Client) GetBuffers() (ret_val []Buffer, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetBuffers, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetBuffers, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetBuffers")
 	}
@@ -1884,7 +1884,7 @@ func (recv *Client) GetCurrentBuffer() (ret_val Buffer, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetCurrentBuffer, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetCurrentBuffer, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetCurrentBuffer")
 	}
@@ -1922,7 +1922,7 @@ func (recv *Client) SetCurrentBuffer(i_buffer Buffer) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_SetCurrentBuffer, enc, dec)
+	resp_chan, err := recv.makeCall(client_SetCurrentBuffer, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.SetCurrentBuffer")
 	}
@@ -1953,7 +1953,7 @@ func (recv *Client) GetWindows() (ret_val []Window, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetWindows, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetWindows, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetWindows")
 	}
@@ -1985,7 +1985,7 @@ func (recv *Client) GetCurrentWindow() (ret_val Window, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetCurrentWindow, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetCurrentWindow, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetCurrentWindow")
 	}
@@ -2023,7 +2023,7 @@ func (recv *Client) SetCurrentWindow(i_window Window) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_SetCurrentWindow, enc, dec)
+	resp_chan, err := recv.makeCall(client_SetCurrentWindow, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.SetCurrentWindow")
 	}
@@ -2054,7 +2054,7 @@ func (recv *Client) GetTabpages() (ret_val []Tabpage, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetTabpages, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetTabpages, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetTabpages")
 	}
@@ -2086,7 +2086,7 @@ func (recv *Client) GetCurrentTabpage() (ret_val Tabpage, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_GetCurrentTabpage, enc, dec)
+	resp_chan, err := recv.makeCall(client_GetCurrentTabpage, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Client.GetCurrentTabpage")
 	}
@@ -2124,7 +2124,7 @@ func (recv *Client) SetCurrentTabpage(i_tabpage Tabpage) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_SetCurrentTabpage, enc, dec)
+	resp_chan, err := recv.makeCall(client_SetCurrentTabpage, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.SetCurrentTabpage")
 	}
@@ -2161,7 +2161,7 @@ func (recv *Client) Subscribe(i_event string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_Subscribe, enc, dec)
+	resp_chan, err := recv.makeCall(client_Subscribe, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.Subscribe")
 	}
@@ -2198,7 +2198,7 @@ func (recv *Client) Unsubscribe(i_event string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_Unsubscribe, enc, dec)
+	resp_chan, err := recv.makeCall(client_Unsubscribe, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.Unsubscribe")
 	}
@@ -2235,7 +2235,7 @@ func (recv *Client) RegisterProvider(i_method string) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.makeCall(Client_RegisterProvider, enc, dec)
+	resp_chan, err := recv.makeCall(client_RegisterProvider, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Client.RegisterProvider")
 	}
@@ -2271,7 +2271,7 @@ func (recv *Window) GetBuffer() (ret_val Buffer, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_GetBuffer, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_GetBuffer, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.GetBuffer")
 	}
@@ -2308,7 +2308,7 @@ func (recv *Window) GetCursor() (ret_val uint32, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_GetCursor, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_GetCursor, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.GetCursor")
 	}
@@ -2351,7 +2351,7 @@ func (recv *Window) SetCursor(i_pos uint32) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_SetCursor, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_SetCursor, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Window.SetCursor")
 	}
@@ -2387,7 +2387,7 @@ func (recv *Window) GetHeight() (ret_val int, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_GetHeight, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_GetHeight, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.GetHeight")
 	}
@@ -2430,7 +2430,7 @@ func (recv *Window) SetHeight(i_height int) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_SetHeight, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_SetHeight, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Window.SetHeight")
 	}
@@ -2466,7 +2466,7 @@ func (recv *Window) GetWidth() (ret_val int, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_GetWidth, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_GetWidth, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.GetWidth")
 	}
@@ -2509,7 +2509,7 @@ func (recv *Window) SetWidth(i_width int) (ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_SetWidth, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_SetWidth, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Window.SetWidth")
 	}
@@ -2551,7 +2551,7 @@ func (recv *Window) GetVar(i_name string) (ret_val interface{}, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_GetVar, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_GetVar, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.GetVar")
 	}
@@ -2600,7 +2600,7 @@ func (recv *Window) SetVar(i_name string, i_value interface{}) (ret_val interfac
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_SetVar, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_SetVar, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.SetVar")
 	}
@@ -2643,7 +2643,7 @@ func (recv *Window) GetOption(i_name string) (ret_val interface{}, ret_err error
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_GetOption, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_GetOption, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.GetOption")
 	}
@@ -2692,7 +2692,7 @@ func (recv *Window) SetOption(i_name string, i_value interface{}) (ret_err error
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_SetOption, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_SetOption, enc, dec)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not make call to Window.SetOption")
 	}
@@ -2728,7 +2728,7 @@ func (recv *Window) GetPosition() (ret_val uint32, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_GetPosition, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_GetPosition, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.GetPosition")
 	}
@@ -2765,7 +2765,7 @@ func (recv *Window) GetTabpage() (ret_val Tabpage, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_GetTabpage, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_GetTabpage, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.GetTabpage")
 	}
@@ -2802,7 +2802,7 @@ func (recv *Window) IsValid() (ret_val bool, ret_err error) {
 
 		return
 	}
-	resp_chan, err := recv.client.makeCall(Window_IsValid, enc, dec)
+	resp_chan, err := recv.client.makeCall(window_IsValid, enc, dec)
 	if err != nil {
 		return ret_val, errgo.NoteMask(err, "Could not make call to Window.IsValid")
 	}
@@ -2899,45 +2899,6 @@ func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
 	return res, nil
 }
 
-func (c *Client) encodeStringSlice(s []string) error {
-	err := c.enc.EncodeSliceLen(len(s))
-	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
-	}
-
-	for i := 0; i < len(s); i++ {
-
-		err := c.enc.EncodeString(s[i])
-
-		if err != nil {
-			return errgo.Notef(err, "Could not encode string at index %v", i)
-		}
-	}
-
-	return nil
-}
-
-func (c *Client) decodeStringSlice() ([]string, error) {
-	l, err := c.dec.DecodeSliceLen()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
-	}
-
-	res := make([]string, l)
-
-	for i := 0; i < l; i++ {
-
-		b, err := c.dec.DecodeString()
-
-		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode string at index %v", i)
-		}
-		res[i] = b
-	}
-
-	return res, nil
-}
-
 func (c *Client) encodeWindowSlice(s []Window) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
@@ -2970,6 +2931,45 @@ func (c *Client) decodeWindowSlice() ([]Window, error) {
 
 		if err != nil {
 			return nil, errgo.Notef(err, "Could not decode Window at index %v", i)
+		}
+		res[i] = b
+	}
+
+	return res, nil
+}
+
+func (c *Client) encodeStringSlice(s []string) error {
+	err := c.enc.EncodeSliceLen(len(s))
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode slice length")
+	}
+
+	for i := 0; i < len(s); i++ {
+
+		err := c.enc.EncodeString(s[i])
+
+		if err != nil {
+			return errgo.Notef(err, "Could not encode string at index %v", i)
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) decodeStringSlice() ([]string, error) {
+	l, err := c.dec.DecodeSliceLen()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not decode slice length")
+	}
+
+	res := make([]string, l)
+
+	for i := 0; i < l; i++ {
+
+		b, err := c.dec.DecodeString()
+
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not decode string at index %v", i)
 		}
 		res[i] = b
 	}

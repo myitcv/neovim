@@ -3,12 +3,14 @@ package neovim_test
 import (
 	"fmt"
 	"log"
+	"net"
 	"os/exec"
 	"strings"
 	"sync"
 	"testing"
 
 	"github.com/go-fsnotify/fsnotify"
+	"github.com/juju/errgo"
 	"github.com/myitcv/neovim"
 
 	. "gopkg.in/check.v1"
@@ -107,9 +109,9 @@ func (t *NeovimTest) SetUpTest(c *C) {
 	// fmt.Println("Starting test")
 
 	// now we can create a new client
-	client, err := neovim.NewUnixClient(la, "unix")
+	client, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: la})
 	if err != nil {
-		log.Fatalf("Could not setup client: %v", err)
+		log.Fatalf("Could not setup client: %v", errgo.Details(err))
 	}
 	t.client = client
 }

@@ -14,7 +14,7 @@ func (c *Client) decodeAPI() (interface{}, error) {
 		return nil, errgo.NoteMask(err, "Could not decode slice len")
 	}
 
-	_, err = d.DecodeInt()
+	_, err = d.DecodeUint64()
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not decode channel id")
 	}
