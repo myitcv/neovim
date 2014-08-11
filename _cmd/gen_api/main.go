@@ -95,6 +95,10 @@ func main() {
 	}
 }
 
+type typeTemplate struct {
+	Name string
+}
+
 type methodTemplate struct {
 	Id     uint32
 	Name   string
@@ -171,6 +175,7 @@ func (v *variable) Client() string {
 
 type api struct {
 	Methods []methodTemplate
+	Types   []typeTemplate
 }
 
 func getType(s string) _type {
@@ -246,6 +251,14 @@ func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 	return res
 }
 
+func genTypeTemplates(ts []neovim.APIClass) []typeTemplate {
+	res := make([]typeTemplate, len(ts))
+	for i, _ := range ts {
+		res[i].Name = ts[i].Name
+	}
+	return res
+}
+
 func genAPI(a *neovim.API) {
 	// ensure we only have classes we know about
 	comp := make(map[string]int, len(known_classes))
@@ -282,6 +295,7 @@ func genAPI(a *neovim.API) {
 
 	api := api{}
 	api.Methods = genMethodTemplates(funcs_of_interest)
+	api.Types = genTypeTemplates(a.Classes)
 
 	err = t.Execute(os.Stdout, api)
 	if err != nil {
@@ -298,8 +312,35 @@ package neovim
 
 import "github.com/juju/errgo"
 
+// methods on the API
 {{range .Methods }}
 {{template "meth" .}}
+{{end}}
+
+// helper functions for types
+{{range .Types}}
+{{template "type" .}}
+{{end}}
+
+{{define "type"}}
+func (c *Client) decode{{.Name}}Slice() ([]{{.Name}}, error) {
+	l, err := c.dec.DecodeSliceLen()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not decode slice length")
+	}
+
+	res := make([]{{.Name}}, l)
+
+	for i := 0; i < l; i++ {
+		b, err := c.decode{{.Name}}()
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not decode {{.Name}} at index %v", i)
+		}
+		res[i] = b
+	}
+
+	return res, nil
+}
 {{end}}
 
 {{define "meth"}}
@@ -310,7 +351,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 			return
 		}
 		{{if .Rec.Type.CanEnc}}
-		_err = {{.Rec.Client}}.enc.{{.Rec.Type.Enc}}({{.Rec.Name}})
+		_err = {{.Rec.Client}}.{{.Rec.Type.Enc}}({{.Rec.Name}})
 		if _err != nil {
 			return
 		}

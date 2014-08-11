@@ -10,8 +10,8 @@ func (c *Client) decodeBuffer() (ret_b Buffer, ret_err error) {
 	return Buffer{Id: b, client: c}, ret_err
 }
 
-func (b *Buffer) encode() error {
-	err := b.client.enc.EncodeUint32(b.Id)
+func (c *Client) encodeBuffer(b *Buffer) error {
+	err := c.enc.EncodeUint32(b.Id)
 	if err != nil {
 		return errgo.Notef(err, "Could not encode Buffer")
 	}

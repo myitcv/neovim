@@ -10,7 +10,7 @@ func (recv *Buffer) GetLength() (ret_val int, ret_err error) {
 			return
 		}
 
-		_err = recv.encode()
+		_err = recv.client.encodeBuffer(recv)
 		if _err != nil {
 			return
 		}
@@ -47,7 +47,7 @@ func (recv *Buffer) GetLine(i_index int) (ret_val string, ret_err error) {
 			return
 		}
 
-		_err = recv.encode()
+		_err = recv.client.encodeBuffer(recv)
 		if _err != nil {
 			return
 		}
@@ -90,7 +90,7 @@ func (recv *Buffer) SetLine(i_index int, i_line string) (ret_err error) {
 			return
 		}
 
-		_err = recv.encode()
+		_err = recv.client.encodeBuffer(recv)
 		if _err != nil {
 			return
 		}
@@ -138,7 +138,7 @@ func (recv *Buffer) DelLine(i_index int) (ret_err error) {
 			return
 		}
 
-		_err = recv.encode()
+		_err = recv.client.encodeBuffer(recv)
 		if _err != nil {
 			return
 		}
