@@ -116,10 +116,11 @@ func (m *methodTemplate) NumParams() (res int) {
 }
 
 type _type struct {
-	name      string
-	enc       string
-	dec       string
-	primitive bool
+	name       string
+	enc        string
+	dec        string
+	primitive  bool
+	gen_helper bool
 }
 
 func (t *_type) Name() string {
@@ -252,9 +253,11 @@ func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 }
 
 func genTypeTemplates(ts []neovim.APIClass) []typeTemplate {
-	res := make([]typeTemplate, len(ts))
-	for i, _ := range ts {
-		res[i].Name = ts[i].Name
+	res := make([]typeTemplate, 0)
+	for k, v := range type_map {
+		if v.gen_helper {
+			res = append(res, typeTemplate{Name: k})
+		}
 	}
 	return res
 }
@@ -412,9 +415,21 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 
 var type_map = map[string]_type{
 	"String": {
-		name:      "string",
-		enc:       "EncodeString",
-		dec:       "DecodeString",
+		name:       "string",
+		enc:        "EncodeString",
+		dec:        "DecodeString",
+		primitive:  true,
+		gen_helper: true,
+	},
+	"StringArray": {
+		name: "[]string",
+		enc:  "encodeStringSlice",
+		dec:  "decodeStringSlice",
+	},
+	"Position": {
+		name:      "uint32",
+		enc:       "EncodeUint32",
+		dec:       "DecodeUint32",
 		primitive: true,
 	},
 	"Integer": {
@@ -423,22 +438,52 @@ var type_map = map[string]_type{
 		dec:       "DecodeInt",
 		primitive: true,
 	},
+	"Boolean": {
+		name:      "bool",
+		enc:       "EncodeBool",
+		dec:       "DecodeBool",
+		primitive: true,
+	},
+	"Object": {
+		name:      "interface{}",
+		enc:       "Encode",
+		dec:       "DecodeInterface",
+		primitive: true,
+	},
 	"Buffer": {
-		name: "Buffer",
-		enc:  "encodeBuffer",
-		dec:  "decodeBuffer",
-	},
-	"Window": {
-		name: "Window",
-		enc:  "encodeWindow",
-		dec:  "decodeWindow",
-	},
-	"Client": {
-		name: "Client",
+		name:       "Buffer",
+		enc:        "encodeBuffer",
+		dec:        "decodeBuffer",
+		gen_helper: true,
 	},
 	"BufferArray": {
 		name: "[]Buffer",
 		enc:  "encodeBufferSlice",
 		dec:  "decodeBufferSlice",
+	},
+	"Window": {
+		name:       "Window",
+		enc:        "encodeWindow",
+		dec:        "decodeWindow",
+		gen_helper: true,
+	},
+	"WindowArray": {
+		name: "[]Window",
+		enc:  "encodeWindowSlice",
+		dec:  "decodeWindowSlice",
+	},
+	"Tabpage": {
+		name:       "Window",
+		enc:        "encodeTabpage",
+		dec:        "decodeTabpage",
+		gen_helper: true,
+	},
+	"TabpageArray": {
+		name: "[]Tabpage",
+		enc:  "encodeTabpageSlice",
+		dec:  "decodeTabpageSlice",
+	},
+	"Client": {
+		name: "Client",
 	},
 }
