@@ -1,6 +1,0 @@
-vim_get_buffers
-vim_get_current_buffer
-buffer_get_length
-buffer_get_line
-buffer_set_line
-buffer_del_line

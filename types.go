@@ -2,7 +2,6 @@ package neovim
 
 import (
 	"net"
-	"sync"
 
 	"github.com/vmihailenco/msgpack"
 )
@@ -11,12 +10,24 @@ type Encoder func() error
 type Decoder func() (interface{}, error)
 
 type Client struct {
-	conn     net.Conn
-	dec      *msgpack.Decoder
-	enc      *msgpack.Encoder
-	next_req uint32
-	resp_map *sync_map
-	lock     *sync.Mutex
+	conn      net.Conn
+	dec       *msgpack.Decoder
+	enc       *msgpack.Encoder
+	next_req  uint32
+	resp_map  *sync_map
+	SubChan   chan Subscription
+	UnsubChan chan Subscription
+}
+
+type Subscription struct {
+	Topic  string
+	Error  chan error
+	Events chan SubscriptionEvent
+}
+
+type SubscriptionEvent struct {
+	Topic string
+	Value interface{}
 }
 
 // neovim types

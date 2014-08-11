@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/juju/errgo"
+	"github.com/juju/errors"
 	"github.com/vmihailenco/msgpack"
 )
 
@@ -74,13 +75,68 @@ func NewUnixClient(ua_name, ua_net string) (*Client, error) {
 	res.resp_map = newSyncMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
-	res.lock = new(sync.Mutex)
+	res.SubChan = make(chan Subscription)
+	res.UnsubChan = make(chan Subscription)
 	go res.doListen()
 	return res, nil
 }
 
+func (c *Client) doSubscriptionManager(se chan SubscriptionEvent) {
+	subs := make(map[string]map[chan SubscriptionEvent]struct{})
+
+	send_or_close := func(c chan error, e error) {
+		if c != nil {
+			if e != nil {
+				c <- e
+			} else {
+				close(c)
+			}
+		}
+	}
+
+	for {
+		select {
+		case event := <-se:
+			// TODO should we really swallow events on topics for which we have no subs?
+			if chans, ok := subs[event.Topic]; ok {
+				for k, _ := range chans {
+					k <- event
+				}
+			} else {
+				log.Printf("Got an event for which we have no subs on topic %v\n", event.Topic)
+			}
+		case sub := <-c.SubChan:
+			m, ok := subs[sub.Topic]
+			if !ok {
+				m = make(map[chan SubscriptionEvent]struct{})
+				subs[sub.Topic] = m
+			}
+			if _, ok := m[sub.Events]; ok {
+				send_or_close(sub.Error, errors.Errorf("Already have subscription for topic %v on this channel", sub.Topic))
+			}
+			m[sub.Events] = struct{}{}
+			send_or_close(sub.Error, nil)
+		case unsub := <-c.UnsubChan:
+			m, ok := subs[unsub.Topic]
+			if !ok {
+				send_or_close(unsub.Error, errors.Errorf("We don't have any subscriptions for topic %v", unsub.Topic))
+			}
+			if _, ok := m[unsub.Events]; !ok {
+				send_or_close(unsub.Error, errors.Errorf("We don't have a subscription on topic %v on this channel", unsub.Topic))
+			}
+			delete(m, unsub.Events)
+			send_or_close(unsub.Error, nil)
+		}
+	}
+}
+
 func (c *Client) doListen() {
 	// TODO need kill channel
+
+	// TODO look at the semantics of making this buffered...
+	sub_events := make(chan SubscriptionEvent, 10)
+	go c.doSubscriptionManager(sub_events)
+
 	dec := c.dec
 	for {
 		_, err := dec.DecodeSliceLen()
@@ -93,50 +149,60 @@ func (c *Client) doListen() {
 			log.Fatalf("Could not decode message type: %v", err)
 		}
 
-		if t == 0 {
-			log.Fatalln("Got a request on the listen channel")
-		}
+		switch t {
+		case 1:
+			// handle response
+			req_id, err := dec.DecodeUint32()
+			if err != nil {
+				log.Fatalf("Could not decode request id: %v", err)
+			}
 
-		if t == 2 {
-			log.Fatalln("Got a notification on the listen channel; don't know about this yet")
-		}
+			// do we have an error?
+			re, err := dec.DecodeInterface()
+			if err != nil {
+				log.Fatalf("Could not decode response error: %v", err)
+			}
+			if re != nil {
+				log.Fatalf("Got a response error: %v", re)
+			}
 
-		if t != 1 {
-			log.Fatalf("Got %v, expected 1", t)
-		}
+			// no, carry on
+			rh, err := c.resp_map.Get(req_id)
+			if err != nil {
+				log.Fatalf("Could not get response holder for %v: %v", req_id, err)
+			}
 
-		// we have a response - get the req_id
+			// we have a valid response, dispatch to our decoder for the response
+			res, err := rh.dec()
+			if err != nil {
+				log.Fatalf("Could not decode response: %v", err)
+			}
 
-		req_id, err := dec.DecodeUint32()
-		if err != nil {
-			log.Fatalf("Could not decode request id: %v", err)
-		}
+			resp := &response{obj: res, err: nil}
+			rh.ch <- resp
+		case 2:
+			// handle notification
+			topic, err := dec.DecodeString()
+			if err != nil {
+				log.Fatalf("Could not decode topic: %v", err)
+			}
 
-		// do we have an error?
-		re, err := dec.DecodeInterface()
-		if err != nil {
-			log.Fatalf("Could not decode response error: %v", err)
-		}
-		if re != nil {
-			log.Fatalf("Got a response error: %v", re)
-		}
+			// TODO this could be more efficient?
+			obj, err := dec.DecodeInterface()
+			if err != nil {
+				log.Fatalf("Could not decode obj payload: %v", err)
+			}
 
-		// no, carry on
-		rh, err := c.resp_map.Get(req_id)
-		if err != nil {
-			log.Fatalf("Could not get response holder for %v: %v", req_id, err)
-		}
+			ev := SubscriptionEvent{
+				Topic: topic,
+				Value: obj,
+			}
 
-		// we have a valid response, dispatch to our decoder for the response
-		res, err := rh.dec()
-		if err != nil {
-			log.Fatalf("Could not decode response: %v", err)
+			sub_events <- ev
+		default:
+			log.Fatalf("Unexpected type of message: %v\n", t)
 		}
-
-		resp := &response{obj: res, err: nil}
-		rh.ch <- resp
 	}
-
 }
 
 func (c *Client) makeCall(req_meth_id uint32, e Encoder, d Decoder) (chan *response, error) {

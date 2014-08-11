@@ -1,8 +1,10 @@
 package neovim_test
 
 import (
+	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 	"sync"
 	"testing"
 
@@ -166,6 +168,33 @@ func (t *NeovimTest) TestBufferSetGetLine(c *C) {
 	length, err := b.GetLength()
 	c.Assert(err, IsNil)
 	c.Assert(length, Equals, 1)
+}
+
+func (t *NeovimTest) TestClientSubscribe(c *C) {
+	resp_chan := make(chan neovim.SubscriptionEvent)
+	err_chan := make(chan error)
+	topic := "event1"
+	val := []interface{}{1, 2, 3}
+
+	vals := make([]string, len(val))
+	for i, _ := range val {
+		vals[i] = fmt.Sprintf("%v", val[i])
+	}
+
+	t.client.SubChan <- neovim.Subscription{
+		Topic:  topic,
+		Events: resp_chan,
+		Error:  err_chan,
+	}
+	err := <-err_chan
+	c.Assert(err, IsNil)
+	err = t.client.Subscribe(topic)
+	c.Assert(err, IsNil)
+	command := fmt.Sprintf(`call send_event(0, "%v", [%v])`, topic, strings.Join(vals, ","))
+	err = t.client.Command(command)
+	c.Assert(err, IsNil)
+	resp := <-resp_chan
+	c.Assert(resp, NotNil)
 }
 
 func (t *NeovimTest) TestAPI(c *C) {
