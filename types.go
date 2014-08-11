@@ -6,6 +6,8 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
+type NeovimMethodId uint32
+
 type Encoder func() error
 type Decoder func() (interface{}, error)
 
