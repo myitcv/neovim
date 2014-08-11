@@ -3,15 +3,26 @@
 // license that can be found in the LICENSE file.
 
 /*
-
 	Package neovim implements support for writing Neovim plugins in Go. It also
 	implements a tool for generating the MSGPACK-based API against a Neovim instance.
 
-	* Note on multiple go routines
-	* Blocking nature of API calls, example using go routine
-	* Notifications
-	* Note on generating the API
-	* Note on compatibility checking
+	All API methods are supported, as are notifications. See Subscription for an example
+	of how to register a subscription on a given topic
+
+	Concurrency
+
+	A Client may safely be used by multiple goroutines. Calls to API methods are blocking
+	by design
+
+	Generating the API
+
+	See the github repo for details on re-generating the API
+
+	Compatibility
+
+	There are currently no checks to verify a connected Neovim instance exposes the same API
+	against which the neovim package was generated. This is future work (and probably needs
+	some work on the Neovim side)
 
 */
 package neovim

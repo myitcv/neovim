@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -73,7 +74,7 @@ var _ = Suite(&NeovimTest{})
 // }
 
 func (t *NeovimTest) SetUpTest(c *C) {
-	la := "/tmp/neovim"
+	la := os.Getenv("NEOVIM_LISTEN_ADDRESS")
 
 	// cur_t := time.Now()
 	// la := fmt.Sprintf("/tmp/neovim.%v%v", cur_t.Unix(), cur_t.Nanosecond())
