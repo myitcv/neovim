@@ -1,6 +1,6 @@
 ## neovim
 
-Go package for writing [neovim](http://neovim.org/) plugins in Go
+Go package for writing [neovim](http://neovim.org/) plugins
 
 ```bash
 go get github.com/myitcv/neovim
@@ -56,6 +56,7 @@ place the generated source in `$GOPATH` as appropriate.
 
 * Get full test coverage; can we auto-generate certain basic tests?
 * Test on more platforms
+* Tidy up the API generator - it's very messy
 * Make the API generator optionally write the generated file into the appropriate place in `$GOPATH`
 * Improve example to make it more idiomatic
 * Check our use of types; e.g. what does `Integer` in the API really map to? `uint64`?

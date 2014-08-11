@@ -23,7 +23,6 @@ import (
 var generated_functions map[string]bool
 
 var log = _log.New(os.Stdout, "", _log.Lshortfile)
-var elog = _log.New(os.Stderr, "", _log.Lshortfile)
 
 var known_classes = []string{"Buffer", "Window", "Tabpage"}
 
@@ -40,24 +39,6 @@ func showUsage() {
 	os.Exit(1)
 }
 
-func loadGeneratedFunctions() {
-	if *f_fgen != "" {
-		generated_functions = make(map[string]bool)
-		f, err := os.Open(*f_fgen)
-		if err != nil {
-			elog.Fatalf("Could not open -f supplied file to read list of API functions: %v\n", err)
-		}
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			fn := strings.TrimSpace(scanner.Text())
-			generated_functions[fn] = true
-		}
-		if err := scanner.Err(); err != nil {
-			elog.Fatalf("Error reading from the -f supplied file: %v\n", err)
-		}
-	}
-}
-
 func main() {
 	flag.Usage = showUsage
 	flag.Parse()
@@ -68,18 +49,18 @@ func main() {
 
 	client, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: os.Getenv("NEOVIM_LISTEN_ADDRESS")})
 	if err != nil {
-		elog.Fatalf("Could not create neovim client: %v\n", err)
+		log.Fatalf("Could not create neovim client: %v\n", err)
 	}
 	api, err := client.API()
 	if err != nil {
-		elog.Fatalf("Could not get API from client: %v\n", err)
+		log.Fatalf("Could not get API from client: %v\n", err)
 	}
 
 	switch {
 	case *f_print:
 		j, err := json.MarshalIndent(api, "", "  ")
 		if err != nil {
-			elog.Fatalf("Could not marshall JSON: %v\n", err)
+			log.Fatalf("Could not marshall JSON: %v\n", err)
 		}
 
 		os.Stdout.Write(j)
@@ -97,6 +78,24 @@ func main() {
 				fmt.Print("nil")
 			}
 			fmt.Print("\n")
+		}
+	}
+}
+
+func loadGeneratedFunctions() {
+	if *f_fgen != "" {
+		generated_functions = make(map[string]bool)
+		f, err := os.Open(*f_fgen)
+		if err != nil {
+			log.Fatalf("Could not open -f supplied file to read list of API functions: %v\n", err)
+		}
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			fn := strings.TrimSpace(scanner.Text())
+			generated_functions[fn] = true
+		}
+		if err := scanner.Err(); err != nil {
+			log.Fatalf("Error reading from the -f supplied file: %v\n", err)
 		}
 	}
 }
@@ -139,7 +138,7 @@ func (t *_type) CanEnc() bool {
 
 func (t *_type) Enc() string {
 	if t.enc == "" {
-		elog.Fatalln("Tried to get Enc method for type that can't be encoded")
+		log.Fatalln("Tried to get Enc method for type that can't be encoded")
 	}
 	return t.enc
 }
@@ -150,7 +149,7 @@ func (t *_type) CanDec() bool {
 
 func (t *_type) Dec() string {
 	if t.dec == "" {
-		elog.Fatalln("Tried to get Dec method for type that can't be decoded")
+		log.Fatalln("Tried to get Dec method for type that can't be decoded")
 	}
 	return t.dec
 }
@@ -201,7 +200,7 @@ func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 		splits := strings.SplitN(f.Name, "_", 2)
 
 		if len(splits) != 2 {
-			elog.Fatalf("Function name not as expected: %v\n", f.Name)
+			log.Fatalf("Function name not as expected: %v\n", f.Name)
 		}
 
 		// name
@@ -217,7 +216,7 @@ func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 		case "buffer", "window", "tabpage":
 			rec_type = getType(sstrings.Camelize(rec_id))
 		default:
-			elog.Fatalf("Do not know how to deal with receiver type %v\n", rec_id)
+			log.Fatalf("Do not know how to deal with receiver type %v\n", rec_id)
 		}
 		m.Rec = variable{
 			Type: rec_type,
@@ -242,7 +241,7 @@ func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 		case "Buffer", "Window", "Tabpage":
 			of_interest = f.Parameters[1:]
 		default:
-			elog.Fatalf("Don't know how to handle receiver of type %v\n", m.Rec.Type.Name())
+			log.Fatalf("Don't know how to handle receiver of type %v\n", m.Rec.Type.Name())
 		}
 
 		m.Params = make([]variable, len(of_interest))
@@ -283,7 +282,7 @@ func genAPI(a *neovim.API) {
 	}
 	for _, k := range a.Classes {
 		if comp[k.Name] != 1 {
-			elog.Fatalf("We got an unexpected class: %v\n", k.Name)
+			log.Fatalf("We got an unexpected class: %v\n", k.Name)
 		}
 	}
 
@@ -300,7 +299,7 @@ func genAPI(a *neovim.API) {
 	}
 
 	if funcs_of_interest == nil {
-		elog.Fatalln("Could not find functions of interest")
+		log.Fatalln("Could not find functions of interest")
 	}
 
 	fm := make(template.FuncMap)
@@ -311,7 +310,7 @@ func genAPI(a *neovim.API) {
 	t.Funcs(fm)
 	_, err := t.Parse(clientAPITemplate)
 	if err != nil {
-		elog.Fatalf("Could not parse client API template: %v\n", err)
+		log.Fatalf("Could not parse client API template: %v\n", err)
 	}
 
 	api := api{}
@@ -323,7 +322,7 @@ func genAPI(a *neovim.API) {
 
 		// ensure we are on a newline
 		fmt.Println()
-		elog.Fatalf("Error generating API: %v\n", err)
+		log.Fatalf("Error generating API: %v\n", err)
 	}
 }
 
