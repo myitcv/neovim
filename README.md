@@ -51,6 +51,10 @@ If -g is supplied, -f may also be supplied to provide a list of functions to gen
 The `-g` flag currently outputs to stdout; future work will provide a flag to have it
 place the generated source in `$GOPATH` as appropriate.
 
+## Credit
+
+* @tarruda for leading the way with his [python-client](https://github.com/neovim/python-client)
+* @vmihailenco for [msgpack](https://github.com/vmihailenco/msgpack)
 
 ## Todo list
 
