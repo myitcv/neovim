@@ -176,7 +176,7 @@ func (v *variable) Client() string {
 
 type api struct {
 	Methods []methodTemplate
-	Types   []typeTemplate
+	Types   []_type
 }
 
 func getType(s string) _type {
@@ -252,11 +252,11 @@ func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 	return res
 }
 
-func genTypeTemplates(ts []neovim.APIClass) []typeTemplate {
-	res := make([]typeTemplate, 0)
-	for k, v := range type_map {
+func genTypeTemplates(ts []neovim.APIClass) []_type {
+	res := make([]_type, 0)
+	for _, v := range type_map {
 		if v.gen_helper {
-			res = append(res, typeTemplate{Name: k})
+			res = append(res, v)
 		}
 	}
 	return res
@@ -326,6 +326,26 @@ import "github.com/juju/errgo"
 {{end}}
 
 {{define "type"}}
+func (c *Client) encode{{.Name}}Slice(s []{{.Name}}) error {
+	err := c.enc.EncodeSliceLen(len(s))
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode slice length")
+	}
+
+	for i := 0; i < len(s); i++ {
+		{{if .Primitive}}
+		err := c.enc.{{.Enc}}(s[i])
+		{{else}}
+		err := c.{{.Enc}}(s[i])
+		{{end}}
+		if err != nil {
+			return errgo.Notef(err, "Could not encode {{.Name}} at index %v", i)
+		}
+	}
+
+	return  nil
+}
+
 func (c *Client) decode{{.Name}}Slice() ([]{{.Name}}, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
@@ -335,7 +355,11 @@ func (c *Client) decode{{.Name}}Slice() ([]{{.Name}}, error) {
 	res := make([]{{.Name}}, l)
 
 	for i := 0; i < l; i++ {
-		b, err := c.decode{{.Name}}()
+		{{if .Primitive}}
+		b, err := c.dec.{{.Dec}}()
+		{{else}}
+		b, err := c.{{.Dec}}()
+		{{end}}
 		if err != nil {
 			return nil, errgo.Notef(err, "Could not decode {{.Name}} at index %v", i)
 		}
@@ -354,7 +378,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 			return
 		}
 		{{if .Rec.Type.CanEnc}}
-		_err = {{.Rec.Client}}.{{.Rec.Type.Enc}}({{.Rec.Name}})
+		_err = {{.Rec.Client}}.{{.Rec.Type.Enc}}(*{{.Rec.Name}})
 		if _err != nil {
 			return
 		}
@@ -365,7 +389,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 		{{if .Type.Primitive}}
 		_err = {{$client}}.enc.{{.Type.Enc}}({{.Name}})
 		{{else}}
-		_err = {{.Name}}.{{.Type.Enc}}
+		_err = {{$client}}.{{.Type.Enc}}({{.Name}})
 		{{end}}
 		if _err != nil {
 			return
@@ -473,7 +497,7 @@ var type_map = map[string]_type{
 		dec:  "decodeWindowSlice",
 	},
 	"Tabpage": {
-		name:       "Window",
+		name:       "Tabpage",
 		enc:        "encodeTabpage",
 		dec:        "decodeTabpage",
 		gen_helper: true,
