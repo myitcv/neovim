@@ -11,7 +11,7 @@
 
 	Concurrency
 
-	A Client may safely be used by multiple goroutines. Calls to API methods are blocking
+	A single Client may safely be used by multiple goroutines. Calls to API methods are blocking
 	by design
 
 	Generating the API
@@ -23,6 +23,16 @@
 	There are currently no checks to verify a connected Neovim instance exposes the same API
 	against which the neovim package was generated. This is future work (and probably needs
 	some work on the Neovim side)
+
+	Errors
+
+	Errors returned by this package are created using errgo at http://godoc.org/github.com/juju/errgo.
+	Hence errors may be inspected using functions like errgo.Details for example:
+
+		_, err := client.GetCurrentBuffer()
+		if err != nil {
+			log.Fatalf("Could not get current buffer: %v", errgo.Details(err))
+		}
 
 */
 package neovim
