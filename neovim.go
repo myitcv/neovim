@@ -1,9 +1,24 @@
+// Copyright 2014 Paul Jolly <paul@myitcv.org.uk>. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+/*
+
+	Package neovim implements support for writing Neovim plugins in Go. It also
+	implements a tool for generating the MSGPACK-based API against a Neovim instance.
+
+	* Note on multiple go routines
+	* Blocking nature of API calls, example using go routine
+	* Notifications
+	* Note on generating the API
+	* Note on compatibility checking
+
+*/
 package neovim
 
 import (
 	"log"
 	"net"
-	"sync"
 	"sync/atomic"
 
 	"github.com/juju/errgo"
@@ -11,66 +26,18 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-// TODO the uniqueness of the request ID is specific to this
-// instance of neovim. How does this work with multiple plugins
-// making requests?
-
-type sync_map struct {
-	lock    *sync.Mutex
-	the_map map[uint32]*response_holder
-}
-
-func (c *Client) nextReqId() uint32 {
-	return atomic.AddUint32(&c.next_req, 1)
-}
-
-func newSyncMap() *sync_map {
-	return &sync_map{
-		lock:    new(sync.Mutex),
-		the_map: make(map[uint32]*response_holder),
-	}
-}
-
-func (this *sync_map) Put(k uint32, v *response_holder) error {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-
-	if _, present := this.the_map[k]; present {
-		return errgo.Newf("Key already exists for key %v", k)
-	}
-
-	this.the_map[k] = v
-	return nil
-}
-
-func (this *sync_map) Get(k uint32) (*response_holder, error) {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-
-	if res, present := this.the_map[k]; !present {
-		return nil, errgo.Newf("Key does not exist for %v", k)
-	} else {
-		delete(this.the_map, k)
-		return res, nil
-	}
-}
-
-type response_holder struct {
-	dec Decoder
-	ch  chan *response
-}
-
-type response struct {
-	obj interface{}
-	err error
-}
-
-func NewUnixClient(ua_name, ua_net string) (*Client, error) {
-	a := &net.UnixAddr{Name: ua_name, Net: ua_net}
-	c, err := net.DialUnix(a.Net, nil, a)
+// Convenience method for creating a new *Client. Method signature matches
+// that of net.DialUnix
+func NewUnixClient(_net string, laddr, raddr *net.UnixAddr) (*Client, error) {
+	c, err := net.DialUnix(_net, laddr, raddr)
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not establish connection")
+		return nil, errgo.Notef(err, "Could not establish connection to Neovim, _net %v, laddr %v, %v", _net, laddr, raddr)
 	}
+	return NewClient(c)
+}
+
+// Create a new Client
+func NewClient(c net.Conn) (*Client, error) {
 	res := &Client{conn: c}
 	res.resp_map = newSyncMap()
 	res.dec = msgpack.NewDecoder(c)
@@ -81,53 +48,30 @@ func NewUnixClient(ua_name, ua_net string) (*Client, error) {
 	return res, nil
 }
 
-func (c *Client) doSubscriptionManager(se chan SubscriptionEvent) {
-	subs := make(map[string]map[chan SubscriptionEvent]struct{})
-
-	send_or_close := func(c chan error, e error) {
-		if c != nil {
-			if e != nil {
-				c <- e
-			} else {
-				close(c)
-			}
+// API returns the parsed API as returned by the Neovim instance
+// represented by the Client receiver
+func (c *Client) API() (*API, error) {
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(0)
+		if _err != nil {
+			return
 		}
-	}
 
-	for {
-		select {
-		case event := <-se:
-			// TODO should we really swallow events on topics for which we have no subs?
-			if chans, ok := subs[event.Topic]; ok {
-				for k, _ := range chans {
-					k <- event
-				}
-			} else {
-				log.Printf("Got an event for which we have no subs on topic %v\n", event.Topic)
-			}
-		case sub := <-c.SubChan:
-			m, ok := subs[sub.Topic]
-			if !ok {
-				m = make(map[chan SubscriptionEvent]struct{})
-				subs[sub.Topic] = m
-			}
-			if _, ok := m[sub.Events]; ok {
-				send_or_close(sub.Error, errors.Errorf("Already have subscription for topic %v on this channel", sub.Topic))
-			}
-			m[sub.Events] = struct{}{}
-			send_or_close(sub.Error, nil)
-		case unsub := <-c.UnsubChan:
-			m, ok := subs[unsub.Topic]
-			if !ok {
-				send_or_close(unsub.Error, errors.Errorf("We don't have any subscriptions for topic %v", unsub.Topic))
-			}
-			if _, ok := m[unsub.Events]; !ok {
-				send_or_close(unsub.Error, errors.Errorf("We don't have a subscription on topic %v on this channel", unsub.Topic))
-			}
-			delete(m, unsub.Events)
-			send_or_close(unsub.Error, nil)
-		}
+		return
 	}
+	resp_chan, err := c.makeCall(neovim_API, enc, c.decodeAPI)
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not make call")
+	}
+	resp := <-resp_chan
+	if resp == nil {
+		return nil, errgo.New("We got a nil response on resp_chan")
+	}
+	if resp.err != nil {
+		return nil, errgo.NoteMask(err, "We got a non-nil error in our response")
+	}
+	ba := resp.obj
+	return ba.(*API), nil
 }
 
 func (c *Client) doListen() {
@@ -205,7 +149,56 @@ func (c *Client) doListen() {
 	}
 }
 
-func (c *Client) makeCall(req_meth_id NeovimMethodId, e Encoder, d Decoder) (chan *response, error) {
+func (c *Client) doSubscriptionManager(se chan SubscriptionEvent) {
+	subs := make(map[string]map[chan SubscriptionEvent]struct{})
+
+	send_or_close := func(c chan error, e error) {
+		if c != nil {
+			if e != nil {
+				c <- e
+			} else {
+				close(c)
+			}
+		}
+	}
+
+	for {
+		select {
+		case event := <-se:
+			// TODO should we really swallow events on topics for which we have no subs?
+			if chans, ok := subs[event.Topic]; ok {
+				for k, _ := range chans {
+					k <- event
+				}
+			} else {
+				log.Printf("Got an event for which we have no subs on topic %v\n", event.Topic)
+			}
+		case sub := <-c.SubChan:
+			m, ok := subs[sub.Topic]
+			if !ok {
+				m = make(map[chan SubscriptionEvent]struct{})
+				subs[sub.Topic] = m
+			}
+			if _, ok := m[sub.Events]; ok {
+				send_or_close(sub.Error, errors.Errorf("Already have subscription for topic %v on this channel", sub.Topic))
+			}
+			m[sub.Events] = struct{}{}
+			send_or_close(sub.Error, nil)
+		case unsub := <-c.UnsubChan:
+			m, ok := subs[unsub.Topic]
+			if !ok {
+				send_or_close(unsub.Error, errors.Errorf("We don't have any subscriptions for topic %v", unsub.Topic))
+			}
+			if _, ok := m[unsub.Events]; !ok {
+				send_or_close(unsub.Error, errors.Errorf("We don't have a subscription on topic %v on this channel", unsub.Topic))
+			}
+			delete(m, unsub.Events)
+			send_or_close(unsub.Error, nil)
+		}
+	}
+}
+
+func (c *Client) makeCall(req_meth_id neovimMethodId, e encoder, d decoder) (chan *response, error) {
 	req_type := 0
 	req_id := c.nextReqId()
 	enc := c.enc
@@ -247,26 +240,6 @@ func (c *Client) makeCall(req_meth_id NeovimMethodId, e Encoder, d Decoder) (cha
 	return res, nil
 }
 
-func (c *Client) API() (*API, error) {
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	resp_chan, err := c.makeCall(Neovim_API, enc, c.decodeAPI)
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not make call")
-	}
-	resp := <-resp_chan
-	if resp == nil {
-		return nil, errgo.New("We got a nil response on resp_chan")
-	}
-	if resp.err != nil {
-		return nil, errgo.NoteMask(err, "We got a non-nil error in our response")
-	}
-	ba := resp.obj
-	return ba.(*API), nil
+func (c *Client) nextReqId() uint32 {
+	return atomic.AddUint32(&c.next_req, 1)
 }

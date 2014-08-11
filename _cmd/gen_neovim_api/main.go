@@ -6,7 +6,9 @@ import (
 	"flag"
 	"fmt"
 	_log "log"
+	"net"
 	"os"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -60,7 +62,7 @@ func main() {
 		showUsage()
 	}
 
-	client, err := neovim.NewUnixClient("/tmp/neovim", "unix")
+	client, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: "/tmp/neovim"})
 	if err != nil {
 		elog.Fatalf("Could not create neovim client: %v\n", err)
 	}
@@ -252,6 +254,12 @@ func genMethodTemplates(fs []neovim.APIFunction) []methodTemplate {
 	return res
 }
 
+type byType []_type
+
+func (a byType) Len() int           { return len(a) }
+func (a byType) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byType) Less(i, j int) bool { return a[i].name < a[j].name }
+
 func genTypeTemplates(ts []neovim.APIClass) []_type {
 	res := make([]_type, 0)
 	for _, v := range type_map {
@@ -259,6 +267,7 @@ func genTypeTemplates(ts []neovim.APIClass) []_type {
 			res = append(res, v)
 		}
 	}
+	sort.Sort(byType(res))
 	return res
 }
 
@@ -292,6 +301,7 @@ func genAPI(a *neovim.API) {
 
 	fm := make(template.FuncMap)
 	fm["camelize"] = sstrings.Camelize
+	fm["to_lower"] = strings.ToLower
 
 	t := template.New("api")
 	t.Funcs(fm)
@@ -323,16 +333,16 @@ import "github.com/juju/errgo"
 // constants representing method ids
 
 const (
-	Neovim_API NeovimMethodId  = 0
-	{{range .Methods }}{{.Rec.Type.Name}}_{{.Name}} = {{.Id}}
+	neovim_API neovimMethodId  = 0
+	{{range .Methods }}{{.Rec.Type.Name | to_lower}}_{{.Name}} = {{.Id}}
 	{{end}}
 )
 
-func (n NeovimMethodId) String() string {
+func (n neovimMethodId) String() string {
 	switch n {
-	case Neovim_API:
+	case neovim_API:
 		return "API"
-	{{range .Methods }}case {{.Rec.Type.Name}}_{{.Name}}:
+	{{range .Methods }}case {{.Rec.Type.Name | to_lower}}_{{.Name}}:
 		return "{{.Rec.Type.Name}}_{{.Name}}"
 	{{end}}
 	default:
@@ -436,7 +446,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 		{{end}}
 		return
 	}
-	resp_chan, err := {{.Rec.Client}}.makeCall({{.Rec.Type.Name}}_{{.Name}}, enc, dec)
+	resp_chan, err := {{.Rec.Client}}.makeCall({{.Rec.Type.Name | to_lower}}_{{.Name}}, enc, dec)
 	if err != nil {
 		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
 	}
