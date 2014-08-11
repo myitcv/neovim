@@ -55,6 +55,7 @@ place the generated source in `$GOPATH` as appropriate.
 ## Todo list
 
 * Get full test coverage; can we auto-generate certain basic tests?
+* Cleanly handle Neovim instances quitting
 * Test on more platforms
 * Tidy up the API generator - it's very messy
 * Make the API generator optionally write the generated file into the appropriate place in `$GOPATH`
