@@ -3,6 +3,8 @@ package neovim
 
 import "github.com/juju/errgo"
 
+// methods on the API
+
 func (recv *Buffer) GetLength() (ret_val int, ret_err error) {
 	enc := func() (_err error) {
 		_err = recv.client.enc.EncodeSliceLen(1)
@@ -235,4 +237,63 @@ func (recv *Client) GetCurrentBuffer() (ret_val Buffer, ret_err error) {
 	ret_val = resp.obj.(Buffer)
 	return ret_val, ret_err
 
+}
+
+// helper functions for types
+
+func (c *Client) decodeBufferSlice() ([]Buffer, error) {
+	l, err := c.dec.DecodeSliceLen()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not decode slice length")
+	}
+
+	res := make([]Buffer, l)
+
+	for i := 0; i < l; i++ {
+		b, err := c.decodeBuffer()
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not decode Buffer at index %v", i)
+		}
+		res[i] = b
+	}
+
+	return res, nil
+}
+
+func (c *Client) decodeWindowSlice() ([]Window, error) {
+	l, err := c.dec.DecodeSliceLen()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not decode slice length")
+	}
+
+	res := make([]Window, l)
+
+	for i := 0; i < l; i++ {
+		b, err := c.decodeWindow()
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not decode Window at index %v", i)
+		}
+		res[i] = b
+	}
+
+	return res, nil
+}
+
+func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
+	l, err := c.dec.DecodeSliceLen()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not decode slice length")
+	}
+
+	res := make([]Tabpage, l)
+
+	for i := 0; i < l; i++ {
+		b, err := c.decodeTabpage()
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not decode Tabpage at index %v", i)
+		}
+		res[i] = b
+	}
+
+	return res, nil
 }

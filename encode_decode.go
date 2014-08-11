@@ -17,3 +17,35 @@ func (c *Client) encodeBuffer(b *Buffer) error {
 	}
 	return nil
 }
+
+func (c *Client) decodeWindow() (ret_b Window, ret_err error) {
+	b, err := c.dec.DecodeUint32()
+	if err != nil {
+		return ret_b, errgo.Notef(err, "Could not decode Window")
+	}
+	return Window{Id: b, client: c}, ret_err
+}
+
+func (c *Client) encodeWindow(b *Window) error {
+	err := c.enc.EncodeUint32(b.Id)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Window")
+	}
+	return nil
+}
+
+func (c *Client) decodeTabpage() (ret_b Tabpage, ret_err error) {
+	b, err := c.dec.DecodeUint32()
+	if err != nil {
+		return ret_b, errgo.Notef(err, "Could not decode Tabpage")
+	}
+	return Tabpage{Id: b, client: c}, ret_err
+}
+
+func (c *Client) encodeTabpage(b *Tabpage) error {
+	err := c.enc.EncodeUint32(b.Id)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Tabpage")
+	}
+	return nil
+}
