@@ -10,6 +10,8 @@ go get github.com/myitcv/neovim
 
 A very rudimentary example can be found [here](https://github.com/myitcv/neovim_example)
 
+![The example](https://www.dropbox.com/s/ki17cdqff03g7u8/Untitled-2.gif)
+
 ## Supported platforms
 
 At the time of writing this package has only been written for/tested against Linux.
