@@ -310,7 +310,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 			return
 		}
 		{{if .Rec.Type.CanEnc}}
-		_err = {{.Rec.Name}}.encode()
+		_err = {{.Rec.Client}}.enc.{{.Rec.Type.Enc}}({{.Rec.Name}})
 		if _err != nil {
 			return
 		}
@@ -384,12 +384,12 @@ var type_map = map[string]_type{
 	},
 	"Buffer": {
 		name: "Buffer",
-		enc:  "encode",
+		enc:  "encodeBuffer",
 		dec:  "decodeBuffer",
 	},
 	"Window": {
 		name: "Window",
-		enc:  "encode",
+		enc:  "encodeWindow",
 		dec:  "decodeWindow",
 	},
 	"Client": {
@@ -397,7 +397,7 @@ var type_map = map[string]_type{
 	},
 	"BufferArray": {
 		name: "[]Buffer",
-		enc:  "encode",
+		enc:  "encodeBufferSlice",
 		dec:  "decodeBufferSlice",
 	},
 }

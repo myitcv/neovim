@@ -182,7 +182,15 @@ func (c *Client) makeCall(req_meth_id uint32, e Encoder, d Decoder) (chan *respo
 }
 
 func (c *Client) API() (*API, error) {
-	resp_chan, err := c.makeCall(0, c.encodeArgs(), c.decodeAPI)
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	resp_chan, err := c.makeCall(0, enc, c.decodeAPI)
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not make call")
 	}

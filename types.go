@@ -26,6 +26,16 @@ type Buffer struct {
 	client *Client
 }
 
+type Window struct {
+	Id     uint32
+	client *Client
+}
+
+type Tabpage struct {
+	Id     uint32
+	client *Client
+}
+
 type API struct {
 	Classes   []APIClass
 	Functions []APIFunction
