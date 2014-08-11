@@ -2609,6 +2609,45 @@ func (recv *Window) IsValid() (ret_val bool, ret_err error) {
 
 // helper functions for types
 
+func (c *Client) encodeWindowSlice(s []Window) error {
+	err := c.enc.EncodeSliceLen(len(s))
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode slice length")
+	}
+
+	for i := 0; i < len(s); i++ {
+
+		err := c.encodeWindow(s[i])
+
+		if err != nil {
+			return errgo.Notef(err, "Could not encode Window at index %v", i)
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) decodeWindowSlice() ([]Window, error) {
+	l, err := c.dec.DecodeSliceLen()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not decode slice length")
+	}
+
+	res := make([]Window, l)
+
+	for i := 0; i < l; i++ {
+
+		b, err := c.decodeWindow()
+
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not decode Window at index %v", i)
+		}
+		res[i] = b
+	}
+
+	return res, nil
+}
+
 func (c *Client) encodeBufferSlice(s []Buffer) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
@@ -2687,7 +2726,7 @@ func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
 	return res, nil
 }
 
-func (c *Client) encodestringSlice(s []string) error {
+func (c *Client) encodeStringSlice(s []string) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
 		return errgo.NoteMask(err, "Could not encode slice length")
@@ -2705,7 +2744,7 @@ func (c *Client) encodestringSlice(s []string) error {
 	return nil
 }
 
-func (c *Client) decodestringSlice() ([]string, error) {
+func (c *Client) decodeStringSlice() ([]string, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not decode slice length")
@@ -2719,45 +2758,6 @@ func (c *Client) decodestringSlice() ([]string, error) {
 
 		if err != nil {
 			return nil, errgo.Notef(err, "Could not decode string at index %v", i)
-		}
-		res[i] = b
-	}
-
-	return res, nil
-}
-
-func (c *Client) encodeWindowSlice(s []Window) error {
-	err := c.enc.EncodeSliceLen(len(s))
-	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
-	}
-
-	for i := 0; i < len(s); i++ {
-
-		err := c.encodeWindow(s[i])
-
-		if err != nil {
-			return errgo.Notef(err, "Could not encode Window at index %v", i)
-		}
-	}
-
-	return nil
-}
-
-func (c *Client) decodeWindowSlice() ([]Window, error) {
-	l, err := c.dec.DecodeSliceLen()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
-	}
-
-	res := make([]Window, l)
-
-	for i := 0; i < l; i++ {
-
-		b, err := c.decodeWindow()
-
-		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode Window at index %v", i)
 		}
 		res[i] = b
 	}

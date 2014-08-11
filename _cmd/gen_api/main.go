@@ -290,7 +290,11 @@ func genAPI(a *neovim.API) {
 		elog.Fatalln("Could not find functions of interest")
 	}
 
+	fm := make(template.FuncMap)
+	fm["camelize"] = sstrings.Camelize
+
 	t := template.New("api")
+	t.Funcs(fm)
 	_, err := t.Parse(clientAPITemplate)
 	if err != nil {
 		elog.Fatalf("Could not parse client API template: %v\n", err)
@@ -326,7 +330,7 @@ import "github.com/juju/errgo"
 {{end}}
 
 {{define "type"}}
-func (c *Client) encode{{.Name}}Slice(s []{{.Name}}) error {
+func (c *Client) encode{{.Name | camelize }}Slice(s []{{.Name}}) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
 		return errgo.NoteMask(err, "Could not encode slice length")
@@ -346,7 +350,7 @@ func (c *Client) encode{{.Name}}Slice(s []{{.Name}}) error {
 	return  nil
 }
 
-func (c *Client) decode{{.Name}}Slice() ([]{{.Name}}, error) {
+func (c *Client) decode{{.Name | camelize }}Slice() ([]{{.Name}}, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not decode slice length")
