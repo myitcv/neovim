@@ -24,10 +24,39 @@ Tests currently rely on the `NEOVIM_LISTEN_ADDRESS` environment variable being s
 NEOVIM_LISTEN_ADDRESS=/tmp/neovim go test
 ```
 
+## Regenerating the API
+
+First get the generator:
+
+```bash
+go get github.com/myitcv/neovim/_cmd/gen_neovim_api
+```
+
+The API generator also relies on `NEOVIM_LISTEN_ADDRESS` being set appropriately:
+
+```bash
+$ NEOVIM_LISTEN_ADDRESS=/tmp/neovim ./gen_neovim_api -h
+Usage: ./gen_neovim_api [-p] [-g] [-f filename]
+
+  -c=false: custom print
+  -f="": file containing the list of API functions to generate
+  -g=false: generate code from the API
+  -p=false: print the API
+
+One of -p or -g must be supplied
+
+If -g is supplied, -f may also be supplied to provide a list of functions to generate
+```
+
+The `-g` flag currently outputs to stdout; future work will provide a flag to have it
+place the generated source in `$GOPATH` as appropriate.
+
+
 ## Todo list
 
 * Get full test coverage; can we auto-generate certain basic tests?
 * Test on more platforms
+* Make the API generator optionally write the generated file into the appropriate place in `$GOPATH`
 * Improve example to make it more idiomatic
 * Check our use of types; e.g. what does `Integer` in the API really map to? `uint64`?
 * More tests around concurrent use of a `Client`
