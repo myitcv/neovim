@@ -53,8 +53,8 @@ place the generated source in `$GOPATH` as appropriate.
 
 ## Credit
 
-* @tarruda for leading the way with his [python-client](https://github.com/neovim/python-client)
-* @vmihailenco for [msgpack](https://github.com/vmihailenco/msgpack)
+* [@tarruda](https://github.com/tarruda) for leading the way with his [python-client](https://github.com/neovim/python-client)
+* [@vmihailenco](https://github.com/vmihailenco) for [msgpack](https://github.com/vmihailenco/msgpack)
 
 ## Todo list
 
