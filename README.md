@@ -32,10 +32,10 @@ First get the generator:
 go get github.com/myitcv/neovim/_cmd/gen_neovim_api
 ```
 
-The API generator also relies on `NEOVIM_LISTEN_ADDRESS` being set appropriately:
+The API generator relies on `nvim` being in your `$PATH`. Here are the various options:
 
 ```bash
-$ NEOVIM_LISTEN_ADDRESS=/tmp/neovim ./gen_neovim_api -h
+$ ./gen_neovim_api -h
 Usage: ./gen_neovim_api [-p] [-g] [-f filename]
 
   -c=false: custom print
@@ -49,7 +49,7 @@ If -g is supplied, -f may also be supplied to provide a list of functions to gen
 ```
 
 The `-g` flag currently outputs to stdout; future work will provide a flag to have it
-place the generated source in `$GOPATH` as appropriate.
+place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Credit
 
