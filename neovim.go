@@ -7,22 +7,33 @@
 	implements a tool for generating the MSGPACK-based API against a Neovim instance.
 
 	All API methods are supported, as are notifications. See Subscription for an example
-	of how to register a subscription on a given topic
+	of how to register a subscription on a given topic.
+
+	Client
+
+	Everything starts from Client:
+
+		_, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: "/tmp/neovim"})
+		if err != nil {
+			log.Fatalf("Could not create new Unix client: %v", errgo.Details(err))
+		}
+
+	See the examples for further usage patterns.
 
 	Concurrency
 
 	A single Client may safely be used by multiple goroutines. Calls to API methods are blocking
-	by design
+	by design.
 
 	Generating the API
 
-	See the github repo for details on re-generating the API
+	See the github repo for details on re-generating the API.
 
 	Compatibility
 
 	There are currently no checks to verify a connected Neovim instance exposes the same API
 	against which the neovim package was generated. This is future work (and probably needs
-	some work on the Neovim side)
+	some work on the Neovim side).
 
 	Errors
 
@@ -67,32 +78,6 @@ func NewClient(c net.Conn) (*Client, error) {
 	res.UnsubChan = make(chan Subscription)
 	go res.doListen()
 	return res, nil
-}
-
-// API returns the parsed API as returned by the Neovim instance
-// represented by the Client receiver
-func (c *Client) API() (*API, error) {
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	resp_chan, err := c.makeCall(neovim_API, enc, c.decodeAPI)
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not make call")
-	}
-	resp := <-resp_chan
-	if resp == nil {
-		return nil, errgo.New("We got a nil response on resp_chan")
-	}
-	if resp.err != nil {
-		return nil, errgo.NoteMask(err, "We got a non-nil error in our response")
-	}
-	ba := resp.obj
-	return ba.(*API), nil
 }
 
 func (c *Client) doListen() {

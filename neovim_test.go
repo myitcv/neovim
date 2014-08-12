@@ -211,9 +211,3 @@ func (t *NeovimTest) TestGetSlice(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(lines, NotNil)
 }
-
-func (t *NeovimTest) TestAPI(c *C) {
-	api, err := t.client.API()
-	c.Assert(err, IsNil)
-	c.Assert(api, NotNil)
-}
