@@ -66,29 +66,6 @@ type Tabpage struct {
 	client *Client
 }
 
-// A representation of the API advertised by Neovim
-type API struct {
-	Classes   []APIClass
-	Functions []APIFunction
-}
-
-type APIClass struct {
-	Name string
-}
-
-type APIFunction struct {
-	Name              string
-	ReturnType        string
-	Id                uint32
-	CanFail           bool
-	ReceivesChannelId bool
-	Parameters        []APIFunctionParameter
-}
-
-type APIFunctionParameter struct {
-	Type, Name string
-}
-
 type response_holder struct {
 	dec decoder
 	ch  chan *response
