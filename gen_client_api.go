@@ -218,7 +218,9 @@ func (n neovimMethodID) String() string {
 // methods on the API
 
 // GetWindows waiting for documentation from Neovim
-func (t *Tabpage) GetWindows() (retVal []Window, retErr error) {
+func (t *Tabpage) GetWindows() ([]Window, error) {
+	var retVal []Window
+	var retErr error
 	enc := func() (_err error) {
 		_err = t.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -256,7 +258,9 @@ func (t *Tabpage) GetWindows() (retVal []Window, retErr error) {
 }
 
 // GetVar waiting for documentation from Neovim
-func (t *Tabpage) GetVar(name string) (retVal interface{}, retErr error) {
+func (t *Tabpage) GetVar(name string) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = t.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -300,7 +304,9 @@ func (t *Tabpage) GetVar(name string) (retVal interface{}, retErr error) {
 }
 
 // SetVar waiting for documentation from Neovim
-func (t *Tabpage) SetVar(name string, value interface{}) (retVal interface{}, retErr error) {
+func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = t.client.enc.EncodeSliceLen(3)
 		if _err != nil {
@@ -350,7 +356,9 @@ func (t *Tabpage) SetVar(name string, value interface{}) (retVal interface{}, re
 }
 
 // GetWindow waiting for documentation from Neovim
-func (t *Tabpage) GetWindow() (retVal Window, retErr error) {
+func (t *Tabpage) GetWindow() (Window, error) {
+	var retVal Window
+	var retErr error
 	enc := func() (_err error) {
 		_err = t.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -388,7 +396,9 @@ func (t *Tabpage) GetWindow() (retVal Window, retErr error) {
 }
 
 // IsValid waiting for documentation from Neovim
-func (t *Tabpage) IsValid() (retVal bool, retErr error) {
+func (t *Tabpage) IsValid() (bool, error) {
+	var retVal bool
+	var retErr error
 	enc := func() (_err error) {
 		_err = t.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -426,7 +436,9 @@ func (t *Tabpage) IsValid() (retVal bool, retErr error) {
 }
 
 // GetLength waiting for documentation from Neovim
-func (b *Buffer) GetLength() (retVal int, retErr error) {
+func (b *Buffer) GetLength() (int, error) {
+	var retVal int
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -464,7 +476,9 @@ func (b *Buffer) GetLength() (retVal int, retErr error) {
 }
 
 // GetLine waiting for documentation from Neovim
-func (b *Buffer) GetLine(index int) (retVal string, retErr error) {
+func (b *Buffer) GetLine(index int) (string, error) {
+	var retVal string
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -508,7 +522,9 @@ func (b *Buffer) GetLine(index int) (retVal string, retErr error) {
 }
 
 // SetLine waiting for documentation from Neovim
-func (b *Buffer) SetLine(index int, line string) (retErr error) {
+func (b *Buffer) SetLine(index int, line string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(3)
 		if _err != nil {
@@ -557,7 +573,9 @@ func (b *Buffer) SetLine(index int, line string) (retErr error) {
 }
 
 // DelLine waiting for documentation from Neovim
-func (b *Buffer) DelLine(index int) (retErr error) {
+func (b *Buffer) DelLine(index int) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -600,7 +618,9 @@ func (b *Buffer) DelLine(index int) (retErr error) {
 }
 
 // GetSlice waiting for documentation from Neovim
-func (b *Buffer) GetSlice(start int, end int, includeStart bool, includeEnd bool) (retVal []string, retErr error) {
+func (b *Buffer) GetSlice(start int, end int, includeStart bool, includeEnd bool) ([]string, error) {
+	var retVal []string
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(5)
 		if _err != nil {
@@ -662,7 +682,9 @@ func (b *Buffer) GetSlice(start int, end int, includeStart bool, includeEnd bool
 }
 
 // SetSlice waiting for documentation from Neovim
-func (b *Buffer) SetSlice(start int, end int, includeStart bool, includeEnd bool, replacement []string) (retErr error) {
+func (b *Buffer) SetSlice(start int, end int, includeStart bool, includeEnd bool, replacement []string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(6)
 		if _err != nil {
@@ -729,7 +751,9 @@ func (b *Buffer) SetSlice(start int, end int, includeStart bool, includeEnd bool
 }
 
 // GetVar waiting for documentation from Neovim
-func (b *Buffer) GetVar(name string) (retVal interface{}, retErr error) {
+func (b *Buffer) GetVar(name string) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -773,7 +797,9 @@ func (b *Buffer) GetVar(name string) (retVal interface{}, retErr error) {
 }
 
 // SetVar waiting for documentation from Neovim
-func (b *Buffer) SetVar(name string, value interface{}) (retVal interface{}, retErr error) {
+func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(3)
 		if _err != nil {
@@ -823,7 +849,9 @@ func (b *Buffer) SetVar(name string, value interface{}) (retVal interface{}, ret
 }
 
 // GetOption waiting for documentation from Neovim
-func (b *Buffer) GetOption(name string) (retVal interface{}, retErr error) {
+func (b *Buffer) GetOption(name string) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -867,7 +895,9 @@ func (b *Buffer) GetOption(name string) (retVal interface{}, retErr error) {
 }
 
 // SetOption waiting for documentation from Neovim
-func (b *Buffer) SetOption(name string, value interface{}) (retErr error) {
+func (b *Buffer) SetOption(name string, value interface{}) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(3)
 		if _err != nil {
@@ -916,7 +946,9 @@ func (b *Buffer) SetOption(name string, value interface{}) (retErr error) {
 }
 
 // GetNumber waiting for documentation from Neovim
-func (b *Buffer) GetNumber() (retVal int, retErr error) {
+func (b *Buffer) GetNumber() (int, error) {
+	var retVal int
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -954,7 +986,9 @@ func (b *Buffer) GetNumber() (retVal int, retErr error) {
 }
 
 // GetName waiting for documentation from Neovim
-func (b *Buffer) GetName() (retVal string, retErr error) {
+func (b *Buffer) GetName() (string, error) {
+	var retVal string
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -992,7 +1026,9 @@ func (b *Buffer) GetName() (retVal string, retErr error) {
 }
 
 // SetName waiting for documentation from Neovim
-func (b *Buffer) SetName(name string) (retErr error) {
+func (b *Buffer) SetName(name string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -1035,7 +1071,9 @@ func (b *Buffer) SetName(name string) (retErr error) {
 }
 
 // IsValid waiting for documentation from Neovim
-func (b *Buffer) IsValid() (retVal bool, retErr error) {
+func (b *Buffer) IsValid() (bool, error) {
+	var retVal bool
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1073,7 +1111,9 @@ func (b *Buffer) IsValid() (retVal bool, retErr error) {
 }
 
 // Insert waiting for documentation from Neovim
-func (b *Buffer) Insert(lnum int, lines []string) (retErr error) {
+func (b *Buffer) Insert(lnum int, lines []string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(3)
 		if _err != nil {
@@ -1122,7 +1162,9 @@ func (b *Buffer) Insert(lnum int, lines []string) (retErr error) {
 }
 
 // GetMark waiting for documentation from Neovim
-func (b *Buffer) GetMark(name string) (retVal uint32, retErr error) {
+func (b *Buffer) GetMark(name string) (uint32, error) {
+	var retVal uint32
+	var retErr error
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -1166,7 +1208,9 @@ func (b *Buffer) GetMark(name string) (retVal uint32, retErr error) {
 }
 
 // PushKeys waiting for documentation from Neovim
-func (c *Client) PushKeys(str string) (retErr error) {
+func (c *Client) PushKeys(str string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1204,7 +1248,9 @@ func (c *Client) PushKeys(str string) (retErr error) {
 }
 
 // Command waiting for documentation from Neovim
-func (c *Client) Command(str string) (retErr error) {
+func (c *Client) Command(str string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1242,7 +1288,9 @@ func (c *Client) Command(str string) (retErr error) {
 }
 
 // Feedkeys waiting for documentation from Neovim
-func (c *Client) Feedkeys(keys string, mode string) (retErr error) {
+func (c *Client) Feedkeys(keys string, mode string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -1286,7 +1334,9 @@ func (c *Client) Feedkeys(keys string, mode string) (retErr error) {
 }
 
 // ReplaceTermcodes waiting for documentation from Neovim
-func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special bool) (retVal string, retErr error) {
+func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special bool) (string, error) {
+	var retVal string
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(4)
 		if _err != nil {
@@ -1343,7 +1393,9 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 }
 
 // Eval waiting for documentation from Neovim
-func (c *Client) Eval(str string) (retVal interface{}, retErr error) {
+func (c *Client) Eval(str string) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1382,7 +1434,9 @@ func (c *Client) Eval(str string) (retVal interface{}, retErr error) {
 }
 
 // Strwidth waiting for documentation from Neovim
-func (c *Client) Strwidth(str string) (retVal int, retErr error) {
+func (c *Client) Strwidth(str string) (int, error) {
+	var retVal int
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1421,7 +1475,9 @@ func (c *Client) Strwidth(str string) (retVal int, retErr error) {
 }
 
 // ListRuntimePaths waiting for documentation from Neovim
-func (c *Client) ListRuntimePaths() (retVal []string, retErr error) {
+func (c *Client) ListRuntimePaths() ([]string, error) {
+	var retVal []string
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -1454,7 +1510,9 @@ func (c *Client) ListRuntimePaths() (retVal []string, retErr error) {
 }
 
 // ChangeDirectory waiting for documentation from Neovim
-func (c *Client) ChangeDirectory(dir string) (retErr error) {
+func (c *Client) ChangeDirectory(dir string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1492,7 +1550,9 @@ func (c *Client) ChangeDirectory(dir string) (retErr error) {
 }
 
 // GetCurrentLine waiting for documentation from Neovim
-func (c *Client) GetCurrentLine() (retVal string, retErr error) {
+func (c *Client) GetCurrentLine() (string, error) {
+	var retVal string
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -1525,7 +1585,9 @@ func (c *Client) GetCurrentLine() (retVal string, retErr error) {
 }
 
 // SetCurrentLine waiting for documentation from Neovim
-func (c *Client) SetCurrentLine(line string) (retErr error) {
+func (c *Client) SetCurrentLine(line string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1563,7 +1625,9 @@ func (c *Client) SetCurrentLine(line string) (retErr error) {
 }
 
 // DelCurrentLine waiting for documentation from Neovim
-func (c *Client) DelCurrentLine() (retErr error) {
+func (c *Client) DelCurrentLine() error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -1595,7 +1659,9 @@ func (c *Client) DelCurrentLine() (retErr error) {
 }
 
 // GetVar waiting for documentation from Neovim
-func (c *Client) GetVar(name string) (retVal interface{}, retErr error) {
+func (c *Client) GetVar(name string) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1634,7 +1700,9 @@ func (c *Client) GetVar(name string) (retVal interface{}, retErr error) {
 }
 
 // SetVar waiting for documentation from Neovim
-func (c *Client) SetVar(name string, value interface{}) (retVal interface{}, retErr error) {
+func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -1679,7 +1747,9 @@ func (c *Client) SetVar(name string, value interface{}) (retVal interface{}, ret
 }
 
 // GetVvar waiting for documentation from Neovim
-func (c *Client) GetVvar(name string) (retVal interface{}, retErr error) {
+func (c *Client) GetVvar(name string) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1718,7 +1788,9 @@ func (c *Client) GetVvar(name string) (retVal interface{}, retErr error) {
 }
 
 // GetOption waiting for documentation from Neovim
-func (c *Client) GetOption(name string) (retVal interface{}, retErr error) {
+func (c *Client) GetOption(name string) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1757,7 +1829,9 @@ func (c *Client) GetOption(name string) (retVal interface{}, retErr error) {
 }
 
 // SetOption waiting for documentation from Neovim
-func (c *Client) SetOption(name string, value interface{}) (retErr error) {
+func (c *Client) SetOption(name string, value interface{}) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -1801,7 +1875,9 @@ func (c *Client) SetOption(name string, value interface{}) (retErr error) {
 }
 
 // OutWrite waiting for documentation from Neovim
-func (c *Client) OutWrite(str string) (retErr error) {
+func (c *Client) OutWrite(str string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1839,7 +1915,9 @@ func (c *Client) OutWrite(str string) (retErr error) {
 }
 
 // ErrWrite waiting for documentation from Neovim
-func (c *Client) ErrWrite(str string) (retErr error) {
+func (c *Client) ErrWrite(str string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1877,7 +1955,9 @@ func (c *Client) ErrWrite(str string) (retErr error) {
 }
 
 // GetBuffers waiting for documentation from Neovim
-func (c *Client) GetBuffers() (retVal []Buffer, retErr error) {
+func (c *Client) GetBuffers() ([]Buffer, error) {
+	var retVal []Buffer
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -1910,7 +1990,9 @@ func (c *Client) GetBuffers() (retVal []Buffer, retErr error) {
 }
 
 // GetCurrentBuffer waiting for documentation from Neovim
-func (c *Client) GetCurrentBuffer() (retVal Buffer, retErr error) {
+func (c *Client) GetCurrentBuffer() (Buffer, error) {
+	var retVal Buffer
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -1943,7 +2025,9 @@ func (c *Client) GetCurrentBuffer() (retVal Buffer, retErr error) {
 }
 
 // SetCurrentBuffer waiting for documentation from Neovim
-func (c *Client) SetCurrentBuffer(buffer Buffer) (retErr error) {
+func (c *Client) SetCurrentBuffer(buffer Buffer) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -1981,7 +2065,9 @@ func (c *Client) SetCurrentBuffer(buffer Buffer) (retErr error) {
 }
 
 // GetWindows waiting for documentation from Neovim
-func (c *Client) GetWindows() (retVal []Window, retErr error) {
+func (c *Client) GetWindows() ([]Window, error) {
+	var retVal []Window
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -2014,7 +2100,9 @@ func (c *Client) GetWindows() (retVal []Window, retErr error) {
 }
 
 // GetCurrentWindow waiting for documentation from Neovim
-func (c *Client) GetCurrentWindow() (retVal Window, retErr error) {
+func (c *Client) GetCurrentWindow() (Window, error) {
+	var retVal Window
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -2047,7 +2135,9 @@ func (c *Client) GetCurrentWindow() (retVal Window, retErr error) {
 }
 
 // SetCurrentWindow waiting for documentation from Neovim
-func (c *Client) SetCurrentWindow(window Window) (retErr error) {
+func (c *Client) SetCurrentWindow(window Window) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2085,7 +2175,9 @@ func (c *Client) SetCurrentWindow(window Window) (retErr error) {
 }
 
 // GetTabpages waiting for documentation from Neovim
-func (c *Client) GetTabpages() (retVal []Tabpage, retErr error) {
+func (c *Client) GetTabpages() ([]Tabpage, error) {
+	var retVal []Tabpage
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -2118,7 +2210,9 @@ func (c *Client) GetTabpages() (retVal []Tabpage, retErr error) {
 }
 
 // GetCurrentTabpage waiting for documentation from Neovim
-func (c *Client) GetCurrentTabpage() (retVal Tabpage, retErr error) {
+func (c *Client) GetCurrentTabpage() (Tabpage, error) {
+	var retVal Tabpage
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -2151,7 +2245,9 @@ func (c *Client) GetCurrentTabpage() (retVal Tabpage, retErr error) {
 }
 
 // SetCurrentTabpage waiting for documentation from Neovim
-func (c *Client) SetCurrentTabpage(tabpage Tabpage) (retErr error) {
+func (c *Client) SetCurrentTabpage(tabpage Tabpage) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2189,7 +2285,9 @@ func (c *Client) SetCurrentTabpage(tabpage Tabpage) (retErr error) {
 }
 
 // Subscribe waiting for documentation from Neovim
-func (c *Client) Subscribe(event string) (retErr error) {
+func (c *Client) Subscribe(event string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2227,7 +2325,9 @@ func (c *Client) Subscribe(event string) (retErr error) {
 }
 
 // Unsubscribe waiting for documentation from Neovim
-func (c *Client) Unsubscribe(event string) (retErr error) {
+func (c *Client) Unsubscribe(event string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2265,7 +2365,9 @@ func (c *Client) Unsubscribe(event string) (retErr error) {
 }
 
 // RegisterProvider waiting for documentation from Neovim
-func (c *Client) RegisterProvider(method string) (retErr error) {
+func (c *Client) RegisterProvider(method string) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2303,7 +2405,9 @@ func (c *Client) RegisterProvider(method string) (retErr error) {
 }
 
 // GetBuffer waiting for documentation from Neovim
-func (w *Window) GetBuffer() (retVal Buffer, retErr error) {
+func (w *Window) GetBuffer() (Buffer, error) {
+	var retVal Buffer
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2341,7 +2445,9 @@ func (w *Window) GetBuffer() (retVal Buffer, retErr error) {
 }
 
 // GetCursor waiting for documentation from Neovim
-func (w *Window) GetCursor() (retVal uint32, retErr error) {
+func (w *Window) GetCursor() (uint32, error) {
+	var retVal uint32
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2379,7 +2485,9 @@ func (w *Window) GetCursor() (retVal uint32, retErr error) {
 }
 
 // SetCursor waiting for documentation from Neovim
-func (w *Window) SetCursor(pos uint32) (retErr error) {
+func (w *Window) SetCursor(pos uint32) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -2422,7 +2530,9 @@ func (w *Window) SetCursor(pos uint32) (retErr error) {
 }
 
 // GetHeight waiting for documentation from Neovim
-func (w *Window) GetHeight() (retVal int, retErr error) {
+func (w *Window) GetHeight() (int, error) {
+	var retVal int
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2460,7 +2570,9 @@ func (w *Window) GetHeight() (retVal int, retErr error) {
 }
 
 // SetHeight waiting for documentation from Neovim
-func (w *Window) SetHeight(height int) (retErr error) {
+func (w *Window) SetHeight(height int) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -2503,7 +2615,9 @@ func (w *Window) SetHeight(height int) (retErr error) {
 }
 
 // GetWidth waiting for documentation from Neovim
-func (w *Window) GetWidth() (retVal int, retErr error) {
+func (w *Window) GetWidth() (int, error) {
+	var retVal int
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2541,7 +2655,9 @@ func (w *Window) GetWidth() (retVal int, retErr error) {
 }
 
 // SetWidth waiting for documentation from Neovim
-func (w *Window) SetWidth(width int) (retErr error) {
+func (w *Window) SetWidth(width int) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -2584,7 +2700,9 @@ func (w *Window) SetWidth(width int) (retErr error) {
 }
 
 // GetVar waiting for documentation from Neovim
-func (w *Window) GetVar(name string) (retVal interface{}, retErr error) {
+func (w *Window) GetVar(name string) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -2628,7 +2746,9 @@ func (w *Window) GetVar(name string) (retVal interface{}, retErr error) {
 }
 
 // SetVar waiting for documentation from Neovim
-func (w *Window) SetVar(name string, value interface{}) (retVal interface{}, retErr error) {
+func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(3)
 		if _err != nil {
@@ -2678,7 +2798,9 @@ func (w *Window) SetVar(name string, value interface{}) (retVal interface{}, ret
 }
 
 // GetOption waiting for documentation from Neovim
-func (w *Window) GetOption(name string) (retVal interface{}, retErr error) {
+func (w *Window) GetOption(name string) (interface{}, error) {
+	var retVal interface{}
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -2722,7 +2844,9 @@ func (w *Window) GetOption(name string) (retVal interface{}, retErr error) {
 }
 
 // SetOption waiting for documentation from Neovim
-func (w *Window) SetOption(name string, value interface{}) (retErr error) {
+func (w *Window) SetOption(name string, value interface{}) error {
+
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(3)
 		if _err != nil {
@@ -2771,7 +2895,9 @@ func (w *Window) SetOption(name string, value interface{}) (retErr error) {
 }
 
 // GetPosition waiting for documentation from Neovim
-func (w *Window) GetPosition() (retVal uint32, retErr error) {
+func (w *Window) GetPosition() (uint32, error) {
+	var retVal uint32
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2809,7 +2935,9 @@ func (w *Window) GetPosition() (retVal uint32, retErr error) {
 }
 
 // GetTabpage waiting for documentation from Neovim
-func (w *Window) GetTabpage() (retVal Tabpage, retErr error) {
+func (w *Window) GetTabpage() (Tabpage, error) {
+	var retVal Tabpage
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(1)
 		if _err != nil {
@@ -2847,7 +2975,9 @@ func (w *Window) GetTabpage() (retVal Tabpage, retErr error) {
 }
 
 // IsValid waiting for documentation from Neovim
-func (w *Window) IsValid() (retVal bool, retErr error) {
+func (w *Window) IsValid() (bool, error) {
+	var retVal bool
+	var retErr error
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(1)
 		if _err != nil {
