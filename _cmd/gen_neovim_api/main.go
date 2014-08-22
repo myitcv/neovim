@@ -629,6 +629,8 @@ func (c *Client) decode{{.Name | camelize }}Slice() ([]{{.Name}}, error) {
 {{define "meth"}}
 // {{ .Name }} waiting for documentation from Neovim
 func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {{template "meth_ret" .Ret}} {
+	{{if .Ret}}var {{.Ret.Name}} {{.Ret.Type.Name}}{{end}}
+	var retErr error
 	enc := func() (_err error) {
 		_err = {{.Rec.Client}}.enc.EncodeSliceLen({{.NumParams}})
 		if _err != nil {
@@ -691,7 +693,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 
 {{define "meth_params"}}{{range $index, $element := .}}{{if gt $index 0}}, {{end}}{{ .Name }} {{.Type.Name}}{{end}}{{end}}
 
-{{define "meth_ret"}}({{if .}}{{.Name}} {{.Type.Name}}, {{end}}retErr error){{end}}
+{{define "meth_ret"}}({{if .}}{{.Type.Name}}, {{end}} error){{end}}
 `
 
 var typeMap = map[string]_type{
