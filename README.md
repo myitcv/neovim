@@ -6,6 +6,9 @@ Go package for writing [Neovim](http://neovim.org/) plugins
 go get github.com/myitcv/neovim
 ```
 
+This package is very much in alpha as [the Neovim API itsef](https://github.com/neovim/neovim/issues/973)
+is still in flux. Therefore, expect changes to this API.
+
 ## Writing plugins
 
 A very rudimentary example can be found [here](https://github.com/myitcv/neovim_example)
