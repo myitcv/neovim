@@ -61,6 +61,7 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
+* Add support for functions that `CanFail`
 * Add build to Travis (including re-gen against latest Neovim build)
 * Get full test coverage; can we auto-generate certain basic tests?
 * Cleanly handle Neovim instances quitting
