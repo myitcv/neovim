@@ -22,17 +22,17 @@ import (
 	// "github.com/vmihailenco/msgpack"
 )
 
-type mp_response struct {
-	t      int
-	msg_id uint32
-	err    interface{}
+type mpResponse struct {
+	t     int
+	msgID uint32
+	err   interface{}
 }
 
 type NeovimTest struct {
-	client       *neovim.Client
-	nvim         *exec.Cmd
-	watcher      *fsnotify.Watcher
-	start_listen chan chan struct{}
+	client      *neovim.Client
+	nvim        *exec.Cmd
+	watcher     *fsnotify.Watcher
+	startListen chan chan struct{}
 }
 
 func Test(t *testing.T) { TestingT(t) }
@@ -46,22 +46,22 @@ var _ = Suite(&NeovimTest{})
 // 	}
 // 	t.watcher = watcher
 
-// 	t.start_listen = make(chan chan struct{})
+// 	t.startListen = make(chan chan struct{})
 
 // 	go func() {
-// 		var resp_chan chan struct{}
+// 		var respChan chan struct{}
 // 		for {
 // 			select {
-// 			case resp_chan = <-t.start_listen:
-// 				resp_chan <- struct{}{}
+// 			case respChan = <-t.startListen:
+// 				respChan <- struct{}{}
 // 			case event := <-t.watcher.Events:
 // 				fmt.Println("Got an event")
-// 				if resp_chan == nil {
+// 				if respChan == nil {
 // 					log.Fatalf("Got unexpected event; not listening but got %v\n", event)
 // 				}
 // 				if event.Op&fsnotify.Create == fsnotify.Create {
-// 					resp_chan <- struct{}{}
-// 					resp_chan = nil
+// 					respChan <- struct{}{}
+// 					respChan = nil
 // 				}
 // 			case err := <-t.watcher.Errors:
 // 				log.Fatalf("Got an error in the watcher: %v\n", err)
@@ -101,7 +101,7 @@ func (t *NeovimTest) SetUpTest(c *C) {
 	// t.nvim.Env = new_env
 
 	// done_chan := make(chan struct{})
-	// t.start_listen <- done_chan
+	// t.startListen <- done_chan
 	// <-done_chan
 	// t.watcher.Add(la)
 	// err := t.nvim.Start()
@@ -178,29 +178,29 @@ func (t *NeovimTest) TestBufferSetGetLine(c *C) {
 }
 
 func (t *NeovimTest) TestClientSubscribe(c *C) {
-	resp_chan := make(chan neovim.SubscriptionEvent)
-	err_chan := make(chan error)
+	respChan := make(chan neovim.SubscriptionEvent)
+	errChan := make(chan error)
 	topic := "event1"
 	val := []interface{}{1, 2, 3}
 
 	vals := make([]string, len(val))
-	for i, _ := range val {
+	for i := range val {
 		vals[i] = fmt.Sprintf("%v", val[i])
 	}
 
 	t.client.SubChan <- neovim.Subscription{
 		Topic:  topic,
-		Events: resp_chan,
-		Error:  err_chan,
+		Events: respChan,
+		Error:  errChan,
 	}
-	err := <-err_chan
+	err := <-errChan
 	c.Assert(err, IsNil)
 	err = t.client.Subscribe(topic)
 	c.Assert(err, IsNil)
 	command := fmt.Sprintf(`call send_event(0, "%v", [%v])`, topic, strings.Join(vals, ","))
 	err = t.client.Command(command)
 	c.Assert(err, IsNil)
-	resp := <-resp_chan
+	resp := <-respChan
 	c.Assert(resp, NotNil)
 }
 

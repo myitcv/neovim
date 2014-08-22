@@ -28,15 +28,15 @@ func ExampleSubscription() {
 	}
 
 	topic := "topic1" // corresponds to the topic used in Neovim's send_event()
-	resp_chan := make(chan neovim.SubscriptionEvent)
-	err_chan := make(chan error)
+	respChan := make(chan neovim.SubscriptionEvent)
+	errChan := make(chan error)
 
 	client.SubChan <- neovim.Subscription{
 		Topic:  topic,
-		Events: resp_chan,
-		Error:  err_chan,
+		Events: respChan,
+		Error:  errChan,
 	}
-	err = <-err_chan
+	err = <-errChan
 	if err != nil {
 		log.Fatalf("Could not register subscription handler: %v", errgo.Details(err))
 	}
@@ -46,8 +46,8 @@ func ExampleSubscription() {
 		log.Fatalf("Could not subscribe to topic %v: %v", topic, errgo.Details(err))
 	}
 
-	// Now wait to receive a notification on resp_chan
-	// resp := <-resp_chan
+	// Now wait to receive a notification on respChan
+	// resp := <-respChan
 	// Output:
 }
 
@@ -64,7 +64,7 @@ func ExampleClient_GetCurrentBuffer() {
 	if err != nil {
 		log.Fatalf("Could not get name for buffer %v: %v", b, errgo.Details(err))
 	}
-	fmt.Printf("Current buffer is: %v %v\n", b.Id, n)
+	fmt.Printf("Current buffer is: %v %v\n", b.ID, n)
 	// Output:
 	// Current buffer is: 2
 }

@@ -10,15 +10,15 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-type neovimMethodId uint32
+type neovimMethodID uint32
 
 // A Client represents a connection to a single Neovim instance
 type Client struct {
 	conn      net.Conn
 	dec       *msgpack.Decoder
 	enc       *msgpack.Encoder
-	next_req  uint32
-	resp_map  *sync_map
+	nextReq   uint32
+	respMap   *syncMap
 	SubChan   chan Subscription
 	UnsubChan chan Subscription
 }
@@ -42,31 +42,31 @@ type SubscriptionEvent struct {
 	Value interface{}
 }
 
-// Represents a Neovim Buffer
+// Buffer represents a Neovim Buffer
 //
 // Multiple goroutines may invoke methods on a Buffer simultaneously
 type Buffer struct {
-	Id     uint32
+	ID     uint32
 	client *Client
 }
 
-// Represents a Neovim Window
+// Window represents a Neovim Window
 //
 // Multiple goroutines may invoke methods on a Window simultaneously
 type Window struct {
-	Id     uint32
+	ID     uint32
 	client *Client
 }
 
-// Represents a Neovim Tabpage
+// Tabpage represents a Neovim Tabpage
 //
 // Multiple goroutines may invoke methods on a Tabpage simultaneously
 type Tabpage struct {
-	Id     uint32
+	ID     uint32
 	client *Client
 }
 
-type response_holder struct {
+type responseHolder struct {
 	dec decoder
 	ch  chan *response
 }
