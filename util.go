@@ -1,5 +1,5 @@
 // Copyright 2014 Paul Jolly <paul@myitcv.org.uk>. All rights reserved.
-// Use of this source code is governed by a BSD-style
+// Use of s source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 package neovim
@@ -10,38 +10,40 @@ import (
 	"github.com/juju/errgo"
 )
 
-type sync_map struct {
-	lock    *sync.Mutex
-	the_map map[uint32]*response_holder
+type syncMap struct {
+	lock   *sync.Mutex
+	theMap map[uint32]*responseHolder
 }
 
-func newSyncMap() *sync_map {
-	return &sync_map{
-		lock:    new(sync.Mutex),
-		the_map: make(map[uint32]*response_holder),
+func newSyncMap() *syncMap {
+	return &syncMap{
+		lock:   new(sync.Mutex),
+		theMap: make(map[uint32]*responseHolder),
 	}
 }
 
-func (this *sync_map) Put(k uint32, v *response_holder) error {
-	this.lock.Lock()
-	defer this.lock.Unlock()
+func (s *syncMap) Put(k uint32, v *responseHolder) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
-	if _, present := this.the_map[k]; present {
+	if _, present := s.theMap[k]; present {
 		return errgo.Newf("Key already exists for key %v", k)
 	}
 
-	this.the_map[k] = v
+	s.theMap[k] = v
 	return nil
 }
 
-func (this *sync_map) Get(k uint32) (*response_holder, error) {
-	this.lock.Lock()
-	defer this.lock.Unlock()
+func (s *syncMap) Get(k uint32) (res *responseHolder, retErr error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
-	if res, present := this.the_map[k]; !present {
-		return nil, errgo.Newf("Key does not exist for %v", k)
+	res, present := s.theMap[k]
+	if !present {
+		retErr = errgo.Newf("Key does not exist for %v", k)
 	} else {
-		delete(this.the_map, k)
-		return res, nil
+		delete(s.theMap, k)
 	}
+
+	return
 }

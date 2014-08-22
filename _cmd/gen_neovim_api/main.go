@@ -22,39 +22,42 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-// A representation of the API advertised by Neovim
+// An API represents the API as advertised by Neovim
 type API struct {
 	Classes   []APIClass
 	Functions []APIFunction
 }
 
+// An APIClass represents a class as defined as part of the API
 type APIClass struct {
 	Name string
 }
 
+// An APIFunction represents a class as defined as part of the API
 type APIFunction struct {
 	Name              string
 	ReturnType        string
-	Id                uint32
+	ID                uint32
 	CanFail           bool
-	ReceivesChannelId bool
+	ReceivesChannelID bool
 	Parameters        []APIFunctionParameter
 }
 
+// An APIFunctionParameter represents a function parameters as defined by an APIFunction
 type APIFunctionParameter struct {
 	Type, Name string
 }
 
-var generated_functions map[string]bool
+var generatedFunctions map[string]bool
 
 var log = _log.New(os.Stdout, "", _log.Lshortfile)
 
-var known_classes = []string{"Buffer", "Window", "Tabpage"}
+var knowClasses = []string{"Buffer", "Window", "Tabpage"}
 
-var f_cprint = flag.Bool("c", false, "custom print")
-var f_print = flag.Bool("p", false, "print the API")
-var f_gen = flag.Bool("g", false, "generate code from the API")
-var f_fgen = flag.String("f", "", "file containing the list of API functions to generate")
+var fCustomPrint = flag.Bool("c", false, "custom print")
+var fPrintAPI = flag.Bool("p", false, "print the API")
+var fGenAPI = flag.Bool("g", false, "generate code from the API")
+var fGenList = flag.String("f", "", "file containing the list of API functions to generate")
 
 func showUsage() {
 	fmt.Fprintf(os.Stderr, "Usage: %v [-p] [-g] [-f filename]\n\n", os.Args[0])
@@ -68,7 +71,7 @@ func main() {
 	flag.Usage = showUsage
 	flag.Parse()
 
-	if !*f_print && !*f_gen && !*f_cprint {
+	if !*fPrintAPI && !*fGenAPI && !*fCustomPrint {
 		showUsage()
 	}
 
@@ -78,7 +81,7 @@ func main() {
 	}
 
 	switch {
-	case *f_print:
+	case *fPrintAPI:
 		j, err := json.MarshalIndent(api, "", "  ")
 		if err != nil {
 			log.Fatalf("Could not marshall JSON: %v\n", err)
@@ -86,10 +89,10 @@ func main() {
 
 		os.Stdout.Write(j)
 		os.Stdout.WriteString("\n")
-	case *f_gen:
+	case *fGenAPI:
 		loadGeneratedFunctions()
 		genAPI(api)
-	case *f_cprint:
+	case *fCustomPrint:
 		for _, v := range api.Functions {
 			splits := strings.SplitN(v.Name, "_", 2)
 			fmt.Printf("%v: ", splits[0])
@@ -199,7 +202,7 @@ func decodeAPIFunction(d *msgpack.Decoder) (APIFunction, error) {
 			if err != nil {
 				return resp, errgo.NoteMask(err, "Could not decode function receives_channel_id")
 			}
-			resp.ReceivesChannelId = b
+			resp.ReceivesChannelID = b
 		case "can_fail":
 			b, err := d.DecodeBool()
 			if err != nil {
@@ -217,7 +220,7 @@ func decodeAPIFunction(d *msgpack.Decoder) (APIFunction, error) {
 			if err != nil {
 				return resp, errgo.NoteMask(err, "Could not decode function id")
 			}
-			resp.Id = i
+			resp.ID = i
 		case "parameters":
 			ps, err := decodeAPIFunctionParameterSlice(d)
 			if err != nil {
@@ -295,16 +298,16 @@ func decodeAPIFunctionParameterSlice(d *msgpack.Decoder) ([]APIFunctionParameter
 }
 
 func loadGeneratedFunctions() {
-	if *f_fgen != "" {
-		generated_functions = make(map[string]bool)
-		f, err := os.Open(*f_fgen)
+	if *fGenList != "" {
+		generatedFunctions = make(map[string]bool)
+		f, err := os.Open(*fGenList)
 		if err != nil {
 			log.Fatalf("Could not open -f supplied file to read list of API functions: %v\n", err)
 		}
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			fn := strings.TrimSpace(scanner.Text())
-			generated_functions[fn] = true
+			generatedFunctions[fn] = true
 		}
 		if err := scanner.Err(); err != nil {
 			log.Fatalf("Error reading from the -f supplied file: %v\n", err)
@@ -317,7 +320,7 @@ type typeTemplate struct {
 }
 
 type methodTemplate struct {
-	Id     uint32
+	ID     uint32
 	Name   string
 	Rec    variable
 	Ret    *variable
@@ -333,11 +336,11 @@ func (m *methodTemplate) NumParams() (res int) {
 }
 
 type _type struct {
-	name       string
-	enc        string
-	dec        string
-	primitive  bool
-	gen_helper bool
+	name      string
+	enc       string
+	dec       string
+	primitive bool
+	genHelper bool
 }
 
 func (t *_type) Name() string {
@@ -397,7 +400,7 @@ type api struct {
 }
 
 func getType(s string) _type {
-	res, ok := type_map[s]
+	res, ok := typeMap[s]
 	if !ok {
 		log.Fatalf("Could not find type for %v", s)
 	}
@@ -417,49 +420,50 @@ func genMethodTemplates(fs []APIFunction) []methodTemplate {
 
 		// name
 		m.Name = sstrings.Camelize(splits[1])
-		m.Id = f.Id
+		m.ID = f.ID
 
 		// receiver
-		rec_id := splits[0]
-		var rec_type _type
-		switch rec_id {
+		recID := splits[0]
+		var recType _type
+		switch recID {
 		case "vim":
-			rec_type = getType("Client")
+			recType = getType("Client")
 		case "buffer", "window", "tabpage":
-			rec_type = getType(sstrings.Camelize(rec_id))
+			recType = getType(sstrings.Camelize(recID))
 		default:
-			log.Fatalf("Do not know how to deal with receiver type %v\n", rec_id)
+			log.Fatalf("Do not know how to deal with receiver type %v\n", recID)
 		}
 		m.Rec = variable{
-			Type: rec_type,
-			name: "recv",
+			Type: recType,
+			name: strings.ToLower(string(recType.Name()[0])),
 		}
 
 		// return
 		if f.ReturnType != "void" {
-			ret_type := getType(f.ReturnType)
+			retType := getType(f.ReturnType)
 			m.Ret = &variable{
-				Type: ret_type,
-				name: "ret_val",
+				Type: retType,
+				name: "retVal",
 			}
 		}
 
 		// params
 		// TODO this could be improved
-		var of_interest []APIFunctionParameter
+		var ofInterest []APIFunctionParameter
 		switch m.Rec.Type.Name() {
 		case "Client":
-			of_interest = f.Parameters
+			ofInterest = f.Parameters
 		case "Buffer", "Window", "Tabpage":
-			of_interest = f.Parameters[1:]
+			ofInterest = f.Parameters[1:]
 		default:
 			log.Fatalf("Don't know how to handle receiver of type %v\n", m.Rec.Type.Name())
 		}
 
-		m.Params = make([]variable, len(of_interest))
-		for i, v := range of_interest {
+		m.Params = make([]variable, len(ofInterest))
+		for i, v := range ofInterest {
 			p := getType(v.Type)
-			m.Params[i].name = "i_" + v.Name
+			m.Params[i].name = sstrings.Camelize(v.Name)
+			m.Params[i].name = strings.ToLower(string(m.Params[i].name[0])) + m.Params[i].name[1:]
 			m.Params[i].Type = p
 		}
 
@@ -476,9 +480,9 @@ func (a byType) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byType) Less(i, j int) bool { return a[i].name < a[j].name }
 
 func genTypeTemplates(ts []APIClass) []_type {
-	res := make([]_type, 0)
-	for _, v := range type_map {
-		if v.gen_helper {
+	var res []_type
+	for _, v := range typeMap {
+		if v.genHelper {
 			res = append(res, v)
 		}
 	}
@@ -488,9 +492,9 @@ func genTypeTemplates(ts []APIClass) []_type {
 
 func genAPI(a *API) {
 	// ensure we only have classes we know about
-	comp := make(map[string]int, len(known_classes))
-	for _, k := range known_classes {
-		comp[k] += 1
+	comp := make(map[string]int, len(knowClasses))
+	for _, k := range knowClasses {
+		comp[k]++
 	}
 	for _, k := range a.Classes {
 		if comp[k.Name] != 1 {
@@ -498,19 +502,19 @@ func genAPI(a *API) {
 		}
 	}
 
-	var funcs_of_interest []APIFunction
-	if generated_functions != nil {
-		funcs_of_interest = make([]APIFunction, 0)
-		for i, _ := range a.Functions {
-			if _, ok := generated_functions[a.Functions[i].Name]; ok {
-				funcs_of_interest = append(funcs_of_interest, a.Functions[i])
+	var funcsOfInterest []APIFunction
+	if generatedFunctions != nil {
+		funcsOfInterest = make([]APIFunction, 0)
+		for i := range a.Functions {
+			if _, ok := generatedFunctions[a.Functions[i].Name]; ok {
+				funcsOfInterest = append(funcsOfInterest, a.Functions[i])
 			}
 		}
 	} else {
-		funcs_of_interest = a.Functions
+		funcsOfInterest = a.Functions
 	}
 
-	if funcs_of_interest == nil {
+	if funcsOfInterest == nil {
 		log.Fatalln("Could not find functions of interest")
 	}
 
@@ -526,7 +530,7 @@ func genAPI(a *API) {
 	}
 
 	api := api{}
-	api.Methods = genMethodTemplates(funcs_of_interest)
+	api.Methods = genMethodTemplates(funcsOfInterest)
 	api.Types = genTypeTemplates(a.Classes)
 
 	err = t.Execute(os.Stdout, api)
@@ -548,17 +552,17 @@ import "github.com/juju/errgo"
 // constants representing method ids
 
 const (
-	neovim_API neovimMethodId  = 0
-	{{range .Methods }}{{.Rec.Type.Name | to_lower}}_{{.Name}} = {{.Id}}
+	neovimAPI neovimMethodID  = 0
+	{{range .Methods }}{{.Rec.Type.Name | to_lower}}{{.Name}} = {{.ID}}
 	{{end}}
 )
 
-func (n neovimMethodId) String() string {
+func (n neovimMethodID) String() string {
 	switch n {
-	case neovim_API:
+	case neovimAPI:
 		return "API"
-	{{range .Methods }}case {{.Rec.Type.Name | to_lower}}_{{.Name}}:
-		return "{{.Rec.Type.Name}}_{{.Name}}"
+	{{range .Methods }}case {{.Rec.Type.Name | to_lower}}{{.Name}}:
+		return "{{.Rec.Type.Name}}{{.Name}}"
 	{{end}}
 	default:
 		return ""
@@ -623,6 +627,7 @@ func (c *Client) decode{{.Name | camelize }}Slice() ([]{{.Name}}, error) {
 {{end}}
 
 {{define "meth"}}
+// {{ .Name }} waiting for documentation from Neovim
 func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {{template "meth_ret" .Ret}} {
 	enc := func() (_err error) {
 		_err = {{.Rec.Client}}.enc.EncodeSliceLen({{.NumParams}})
@@ -661,22 +666,22 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 		{{end}}
 		return
 	}
-	resp_chan, err := {{.Rec.Client}}.makeCall({{.Rec.Type.Name | to_lower}}_{{.Name}}, enc, dec)
+	respChan, err := {{.Rec.Client}}.makeCall({{.Rec.Type.Name | to_lower}}{{.Name}}, enc, dec)
 	if err != nil {
 		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
 	}
-	resp := <-resp_chan
+	resp := <-respChan
 	if resp == nil {
-		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.New("We got a nil response on resp_chan")
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.New("We got a nil response on respChan")
 	}
 	if resp.err != nil {
 		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.NoteMask(err, "We got a non-nil error in our response")
 	}
 	{{if .Ret}}
 	{{.Ret.Name}} = resp.obj.({{.Ret.Type.Name}})
-	return {{.Ret.Name}}, ret_err
+	return {{.Ret.Name}}, retErr
 	{{else}}
-	return ret_err
+	return retErr
 	{{end}}
 
 }
@@ -686,16 +691,16 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 
 {{define "meth_params"}}{{range $index, $element := .}}{{if gt $index 0}}, {{end}}{{ .Name }} {{.Type.Name}}{{end}}{{end}}
 
-{{define "meth_ret"}}({{if .}}{{.Name}} {{.Type.Name}}, {{end}}ret_err error){{end}}
+{{define "meth_ret"}}({{if .}}{{.Name}} {{.Type.Name}}, {{end}}retErr error){{end}}
 `
 
-var type_map = map[string]_type{
+var typeMap = map[string]_type{
 	"String": {
-		name:       "string",
-		enc:        "EncodeString",
-		dec:        "DecodeString",
-		primitive:  true,
-		gen_helper: true,
+		name:      "string",
+		enc:       "EncodeString",
+		dec:       "DecodeString",
+		primitive: true,
+		genHelper: true,
 	},
 	"StringArray": {
 		name: "[]string",
@@ -727,10 +732,10 @@ var type_map = map[string]_type{
 		primitive: true,
 	},
 	"Buffer": {
-		name:       "Buffer",
-		enc:        "encodeBuffer",
-		dec:        "decodeBuffer",
-		gen_helper: true,
+		name:      "Buffer",
+		enc:       "encodeBuffer",
+		dec:       "decodeBuffer",
+		genHelper: true,
 	},
 	"BufferArray": {
 		name: "[]Buffer",
@@ -738,10 +743,10 @@ var type_map = map[string]_type{
 		dec:  "decodeBufferSlice",
 	},
 	"Window": {
-		name:       "Window",
-		enc:        "encodeWindow",
-		dec:        "decodeWindow",
-		gen_helper: true,
+		name:      "Window",
+		enc:       "encodeWindow",
+		dec:       "decodeWindow",
+		genHelper: true,
 	},
 	"WindowArray": {
 		name: "[]Window",
@@ -749,10 +754,10 @@ var type_map = map[string]_type{
 		dec:  "decodeWindowSlice",
 	},
 	"Tabpage": {
-		name:       "Tabpage",
-		enc:        "encodeTabpage",
-		dec:        "decodeTabpage",
-		gen_helper: true,
+		name:      "Tabpage",
+		enc:       "encodeTabpage",
+		dec:       "decodeTabpage",
+		genHelper: true,
 	},
 	"TabpageArray": {
 		name: "[]Tabpage",

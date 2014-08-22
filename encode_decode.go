@@ -6,48 +6,48 @@ package neovim
 
 import "github.com/juju/errgo"
 
-func (c *Client) decodeBuffer() (ret_b Buffer, ret_err error) {
+func (c *Client) decodeBuffer() (retVal Buffer, retErr error) {
 	b, err := c.dec.DecodeUint32()
 	if err != nil {
-		return ret_b, errgo.Notef(err, "Could not decode Buffer")
+		return retVal, errgo.Notef(err, "Could not decode Buffer")
 	}
-	return Buffer{Id: b, client: c}, ret_err
+	return Buffer{ID: b, client: c}, retErr
 }
 
 func (c *Client) encodeBuffer(b Buffer) error {
-	err := c.enc.EncodeUint32(b.Id)
+	err := c.enc.EncodeUint32(b.ID)
 	if err != nil {
 		return errgo.Notef(err, "Could not encode Buffer")
 	}
 	return nil
 }
 
-func (c *Client) decodeWindow() (ret_b Window, ret_err error) {
+func (c *Client) decodeWindow() (retVal Window, retErr error) {
 	b, err := c.dec.DecodeUint32()
 	if err != nil {
-		return ret_b, errgo.Notef(err, "Could not decode Window")
+		return retVal, errgo.Notef(err, "Could not decode Window")
 	}
-	return Window{Id: b, client: c}, ret_err
+	return Window{ID: b, client: c}, retErr
 }
 
 func (c *Client) encodeWindow(b Window) error {
-	err := c.enc.EncodeUint32(b.Id)
+	err := c.enc.EncodeUint32(b.ID)
 	if err != nil {
 		return errgo.Notef(err, "Could not encode Window")
 	}
 	return nil
 }
 
-func (c *Client) decodeTabpage() (ret_b Tabpage, ret_err error) {
+func (c *Client) decodeTabpage() (retVal Tabpage, retErr error) {
 	b, err := c.dec.DecodeUint32()
 	if err != nil {
-		return ret_b, errgo.Notef(err, "Could not decode Tabpage")
+		return retVal, errgo.Notef(err, "Could not decode Tabpage")
 	}
-	return Tabpage{Id: b, client: c}, ret_err
+	return Tabpage{ID: b, client: c}, retErr
 }
 
 func (c *Client) encodeTabpage(b Tabpage) error {
-	err := c.enc.EncodeUint32(b.Id)
+	err := c.enc.EncodeUint32(b.ID)
 	if err != nil {
 		return errgo.Notef(err, "Could not encode Tabpage")
 	}

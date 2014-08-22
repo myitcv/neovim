@@ -3,48 +3,47 @@
 // license that can be found in the LICENSE file.
 
 /*
-	Package neovim implements support for writing Neovim plugins in Go. It also
-	implements a tool for generating the MSGPACK-based API against a Neovim instance.
+Package neovim implements support for writing Neovim plugins in Go. It also
+implements a tool for generating the MSGPACK-based API against a Neovim instance.
 
-	All API methods are supported, as are notifications. See Subscription for an example
-	of how to register a subscription on a given topic.
+All API methods are supported, as are notifications. See Subscription for an example
+of how to register a subscription on a given topic.
 
-	Client
+Client
 
-	Everything starts from Client:
+Everything starts from Client:
 
-		_, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: "/tmp/neovim"})
-		if err != nil {
-			log.Fatalf("Could not create new Unix client: %v", errgo.Details(err))
-		}
+	_, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: "/tmp/neovim"})
+	if err != nil {
+		log.Fatalf("Could not create new Unix client: %v", errgo.Details(err))
+	}
 
-	See the examples for further usage patterns.
+See the examples for further usage patterns.
 
-	Concurrency
+Concurrency
 
-	A single Client may safely be used by multiple goroutines. Calls to API methods are blocking
-	by design.
+A single Client may safely be used by multiple goroutines. Calls to API methods are blocking
+by design.
 
-	Generating the API
+Generating the API
 
-	See the github repo for details on re-generating the API.
+See the github repo for details on re-generating the API.
 
-	Compatibility
+Compatibility
 
-	There are currently no checks to verify a connected Neovim instance exposes the same API
-	against which the neovim package was generated. This is future work (and probably needs
-	some work on the Neovim side).
+There are currently no checks to verify a connected Neovim instance exposes the same API
+against which the neovim package was generated. This is future work (and probably needs
+some work on the Neovim side).
 
-	Errors
+Errors
 
-	Errors returned by this package are created using errgo at http://godoc.org/github.com/juju/errgo.
-	Hence errors may be inspected using functions like errgo.Details for example:
+Errors returned by this package are created using errgo at http://godoc.org/github.com/juju/errgo.
+Hence errors may be inspected using functions like errgo.Details for example:
 
-		_, err := client.GetCurrentBuffer()
-		if err != nil {
-			log.Fatalf("Could not get current buffer: %v", errgo.Details(err))
-		}
-
+	_, err := client.GetCurrentBuffer()
+	if err != nil {
+		log.Fatalf("Could not get current buffer: %v", errgo.Details(err))
+	}
 */
 package neovim
 
@@ -58,7 +57,7 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-// Convenience method for creating a new *Client. Method signature matches
+// NewUnixClient is a convenience method for creating a new *Client. Method signature matches
 // that of net.DialUnix
 func NewUnixClient(_net string, laddr, raddr *net.UnixAddr) (*Client, error) {
 	c, err := net.DialUnix(_net, laddr, raddr)
@@ -68,10 +67,10 @@ func NewUnixClient(_net string, laddr, raddr *net.UnixAddr) (*Client, error) {
 	return NewClient(c)
 }
 
-// Create a new Client
+// NewClient creates a new Client
 func NewClient(c net.Conn) (*Client, error) {
 	res := &Client{conn: c}
-	res.resp_map = newSyncMap()
+	res.respMap = newSyncMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
 	res.SubChan = make(chan Subscription)
@@ -84,8 +83,8 @@ func (c *Client) doListen() {
 	// TODO need kill channel
 
 	// TODO look at the semantics of making this buffered...
-	sub_events := make(chan SubscriptionEvent, 10)
-	go c.doSubscriptionManager(sub_events)
+	subEvents := make(chan SubscriptionEvent, 10)
+	go c.doSubscriptionManager(subEvents)
 
 	dec := c.dec
 	for {
@@ -102,7 +101,7 @@ func (c *Client) doListen() {
 		switch t {
 		case 1:
 			// handle response
-			req_id, err := dec.DecodeUint32()
+			reqID, err := dec.DecodeUint32()
 			if err != nil {
 				log.Fatalf("Could not decode request id: %v", err)
 			}
@@ -117,9 +116,9 @@ func (c *Client) doListen() {
 			}
 
 			// no, carry on
-			rh, err := c.resp_map.Get(req_id)
+			rh, err := c.respMap.Get(reqID)
 			if err != nil {
-				log.Fatalf("Could not get response holder for %v: %v", req_id, err)
+				log.Fatalf("Could not get response holder for %v: %v", reqID, err)
 			}
 
 			// we have a valid response, dispatch to our decoder for the response
@@ -148,7 +147,7 @@ func (c *Client) doListen() {
 				Value: obj,
 			}
 
-			sub_events <- ev
+			subEvents <- ev
 		default:
 			log.Fatalf("Unexpected type of message: %v\n", t)
 		}
@@ -158,7 +157,7 @@ func (c *Client) doListen() {
 func (c *Client) doSubscriptionManager(se chan SubscriptionEvent) {
 	subs := make(map[string]map[chan SubscriptionEvent]struct{})
 
-	send_or_close := func(c chan error, e error) {
+	sendOrClose := func(c chan error, e error) {
 		if c != nil {
 			if e != nil {
 				c <- e
@@ -173,7 +172,7 @@ func (c *Client) doSubscriptionManager(se chan SubscriptionEvent) {
 		case event := <-se:
 			// TODO should we really swallow events on topics for which we have no subs?
 			if chans, ok := subs[event.Topic]; ok {
-				for k, _ := range chans {
+				for k := range chans {
 					k <- event
 				}
 			} else {
@@ -186,32 +185,32 @@ func (c *Client) doSubscriptionManager(se chan SubscriptionEvent) {
 				subs[sub.Topic] = m
 			}
 			if _, ok := m[sub.Events]; ok {
-				send_or_close(sub.Error, errors.Errorf("Already have subscription for topic %v on this channel", sub.Topic))
+				sendOrClose(sub.Error, errors.Errorf("Already have subscription for topic %v on this channel", sub.Topic))
 			}
 			m[sub.Events] = struct{}{}
-			send_or_close(sub.Error, nil)
+			sendOrClose(sub.Error, nil)
 		case unsub := <-c.UnsubChan:
 			m, ok := subs[unsub.Topic]
 			if !ok {
-				send_or_close(unsub.Error, errors.Errorf("We don't have any subscriptions for topic %v", unsub.Topic))
+				sendOrClose(unsub.Error, errors.Errorf("We don't have any subscriptions for topic %v", unsub.Topic))
 			}
 			if _, ok := m[unsub.Events]; !ok {
-				send_or_close(unsub.Error, errors.Errorf("We don't have a subscription on topic %v on this channel", unsub.Topic))
+				sendOrClose(unsub.Error, errors.Errorf("We don't have a subscription on topic %v on this channel", unsub.Topic))
 			}
 			delete(m, unsub.Events)
-			send_or_close(unsub.Error, nil)
+			sendOrClose(unsub.Error, nil)
 		}
 	}
 }
 
-func (c *Client) makeCall(req_meth_id neovimMethodId, e encoder, d decoder) (chan *response, error) {
-	req_type := 0
-	req_id := c.nextReqId()
+func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan *response, error) {
+	reqType := 0
+	reqID := c.nextReqID()
 	enc := c.enc
 
 	res := make(chan *response)
-	rh := &response_holder{dec: d, ch: res}
-	err := c.resp_map.Put(req_id, rh)
+	rh := &responseHolder{dec: d, ch: res}
+	err := c.respMap.Put(reqID, rh)
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not store response holder")
 	}
@@ -221,17 +220,17 @@ func (c *Client) makeCall(req_meth_id neovimMethodId, e encoder, d decoder) (cha
 		return nil, errgo.NoteMask(err, "Could not encode request length")
 	}
 
-	err = enc.EncodeInt(req_type)
+	err = enc.EncodeInt(reqType)
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not encode request type")
 	}
 
-	err = enc.EncodeUint32(req_id)
+	err = enc.EncodeUint32(reqID)
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not encode request ID")
 	}
 
-	err = enc.EncodeUint32(uint32(req_meth_id))
+	err = enc.EncodeUint32(uint32(reqMethID))
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not encode request method ID")
 	}
@@ -246,6 +245,6 @@ func (c *Client) makeCall(req_meth_id neovimMethodId, e encoder, d decoder) (cha
 	return res, nil
 }
 
-func (c *Client) nextReqId() uint32 {
-	return atomic.AddUint32(&c.next_req, 1)
+func (c *Client) nextReqID() uint32 {
+	return atomic.AddUint32(&c.nextReq, 1)
 }
