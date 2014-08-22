@@ -62,9 +62,9 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 * Get full test coverage; can we auto-generate certain basic tests?
 * Cleanly handle Neovim instances quitting
 * Test on more platforms
-* Tidy up the API generator - it's very messy
+* Tidy up the API generator - it's very messy. Very messy
 * Make the API generator optionally write the generated file into the appropriate place in `$GOPATH`
-* Improve example to make it more idiomatic
+* Improve example to make it more idiomatic; syntax highlighter perhaps?
 * Check our use of types; e.g. what does `Integer` in the API really map to? `uint64`?
 * More tests around concurrent use of a `Client`
 * Look into semantics of current decision to make `sub_events` a buffered channel
@@ -75,5 +75,5 @@ with which we (a calling client) was compiled. This handshake will probably need
 side (versioning of the API perhaps?)
 * Benchmark tests for performance
 * Look into whether notification decoding can be made more efficient (current uses `DecodeInterface`)
-* Make API generator more robust
+* Fix function and variable names (there are a few anomalies like `Client.GetVvar`)
 
