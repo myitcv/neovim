@@ -248,3 +248,10 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 func (c *Client) nextReqID() uint32 {
 	return atomic.AddUint32(&c.nextReq, 1)
 }
+
+func (c *Client) panicOrReturn(e error) error {
+	if e != nil && c.PanicOnError {
+		panic(e)
+	}
+	return e
+}

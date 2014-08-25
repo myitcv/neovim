@@ -630,7 +630,6 @@ func (c *Client) decode{{.Name | camelize }}Slice() ([]{{.Name}}, error) {
 // {{ .Name }} waiting for documentation from Neovim
 func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {{template "meth_ret" .Ret}} {
 	{{if .Ret}}var {{.Ret.Name}} {{.Ret.Type.Name}}{{end}}
-	var retErr error
 	enc := func() (_err error) {
 		_err = {{.Rec.Client}}.enc.EncodeSliceLen({{.NumParams}})
 		if _err != nil {
@@ -670,20 +669,20 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 	}
 	respChan, err := {{.Rec.Client}}.makeCall({{.Rec.Type.Name | to_lower}}{{.Name}}, enc, dec)
 	if err != nil {
-		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}")
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}{{.Rec.Client}}.panicOrReturn(errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.New("We got a nil response on respChan")
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}{{.Rec.Client}}.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return {{if .Ret}}{{.Ret.Name}}, {{end}}errgo.NoteMask(err, "We got a non-nil error in our response")
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}{{.Rec.Client}}.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 	{{if .Ret}}
 	{{.Ret.Name}} = resp.obj.({{.Ret.Type.Name}})
-	return {{.Ret.Name}}, retErr
+	return {{.Ret.Name}}, nil
 	{{else}}
-	return retErr
+	return nil
 	{{end}}
 
 }

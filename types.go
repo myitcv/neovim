@@ -14,13 +14,22 @@ type neovimMethodID uint32
 
 // A Client represents a connection to a single Neovim instance
 type Client struct {
-	conn      net.Conn
-	dec       *msgpack.Decoder
-	enc       *msgpack.Encoder
-	nextReq   uint32
-	respMap   *syncMap
-	SubChan   chan Subscription
+	conn    net.Conn
+	dec     *msgpack.Decoder
+	enc     *msgpack.Encoder
+	nextReq uint32
+	respMap *syncMap
+
+	// SubChan is the channel on which subscription requests are registered
+	SubChan chan Subscription
+
+	// UnsubChan is the channel on which subscription requests are unregistered
 	UnsubChan chan Subscription
+
+	// PanicOnError can be set to have the Client panic when an error would
+	// otherwise have been returned via an API method. Note: any attempt to
+	// change this option during concurrent use of the Client will be racey
+	PanicOnError bool
 }
 
 // A Subscription is used to register/unregister interest in a topic

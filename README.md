@@ -11,7 +11,8 @@ is still in flux. Therefore, expect changes to this API.
 
 ## Writing plugins
 
-A very rudimentary example can be found [here](https://github.com/myitcv/neovim_example)
+A current, idiomatic example of a plugin written against `neovim` is [`neovim-go`](https://github.com/myitcv/neovim-go),
+a plugin that is designed to help support the editing of Go files.
 
 ## Supported platforms
 
@@ -61,6 +62,7 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
+* Tidy up use of `PanicOnError` and ensure all errors that would otherwise have been return use `panic` if this is set
 * Add support for functions that `CanFail`
 * Add build to Travis (including re-gen against latest Neovim build)
 * Get full test coverage; can we auto-generate certain basic tests?
