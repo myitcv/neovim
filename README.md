@@ -14,6 +14,9 @@ is still in flux. Therefore, expect changes to this API.
 A current, idiomatic example of a plugin written against `neovim` is [`neovim-go`](https://github.com/myitcv/neovim-go),
 a plugin that is designed to help support the editing of Go files.
 
+A further example can be found [here](https://github.com/myitcv/neovim_example); this example demonstrates on-the-fly
+compiling of a Go file.
+
 ## Supported platforms
 
 At the time of writing this package has only been written for/tested against Linux.
