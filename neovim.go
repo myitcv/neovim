@@ -124,7 +124,7 @@ func (c *Client) doListen() {
 			// we have a valid response, dispatch to our decoder for the response
 			res, err := rh.dec()
 			if err != nil {
-				log.Fatalf("Could not decode response: %v", err)
+				log.Fatalf("Could not decode response: %v\n", err)
 			}
 
 			resp := &response{obj: res, err: nil}
