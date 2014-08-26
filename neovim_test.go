@@ -118,6 +118,7 @@ func (t *NeovimTest) SetUpTest(c *C) {
 	if err != nil {
 		log.Fatalf("Could not setup client: %v", errgo.Details(err))
 	}
+	client.PanicOnError = true
 	t.client = client
 }
 
@@ -175,6 +176,13 @@ func (t *NeovimTest) TestBufferSetGetLine(c *C) {
 	length, err := b.GetLength()
 	c.Assert(err, IsNil)
 	c.Assert(length, Equals, 1)
+}
+
+func (t *NeovimTest) TestEval(c *C) {
+	res, err := t.client.Eval(`matchadd("Keyword", '\%1l\%1c.\{4\}')`)
+	c.Assert(err, IsNil)
+	res_i := res.(int64)
+	c.Assert(res_i > 0, Equals, true)
 }
 
 func (t *NeovimTest) TestClientSubscribe(c *C) {
