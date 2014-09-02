@@ -13,4 +13,6 @@ git rebase origin/master
 make
 popd
 
+go get -d -v ./... && go build -v ./...
+
 NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim go test
