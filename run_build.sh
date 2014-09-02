@@ -2,7 +2,7 @@
 
 set -e
 
-curl -fsSL https://raw.githubusercontent.com/neovim/neovim/master/.ci/common.sh | source /dev/stdin
+source <(curl -fsSL https://raw.githubusercontent.com/neovim/neovim/master/.ci/common.sh)
 
 set_environment /opt/neovim-deps
 
