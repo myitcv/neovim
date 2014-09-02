@@ -1,7 +1,5 @@
 #!/bin/bash
 
-## NEEDS HEADLESS MODE FOR NEOVIM BEFORE THIS CAN BE COMPLETED
-
 set -e
 
 if [ ! -d $TRAVIS_BUILD_DIR/_neovim ]
@@ -15,3 +13,4 @@ git rebase origin/master
 make
 popd
 
+NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim go test

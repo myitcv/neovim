@@ -7,6 +7,7 @@ package neovim_test
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -18,7 +19,6 @@ import (
 	"github.com/myitcv/neovim"
 
 	. "gopkg.in/check.v1"
-	// "github.com/vmihailenco/msgpack"
 )
 
 type mpResponse struct {
@@ -40,7 +40,7 @@ var _ = Suite(&NeovimTest{})
 
 func (t *NeovimTest) SetUpTest(c *C) {
 	// now start the process and wait for the socket file to be created
-	t.nvim = exec.Command("nvim", "-u", "/dev/null")
+	t.nvim = exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
 	t.nvim.Dir = "/tmp"
 
 	// now we can create a new client
