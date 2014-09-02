@@ -7,6 +7,7 @@ package neovim_test
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 
 	"github.com/juju/errgo"
@@ -14,7 +15,7 @@ import (
 )
 
 func ExampleSubscription() {
-	cmd := exec.Command("nvim", "-u", "/dev/null")
+	cmd := exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
 	cmd.Dir = "/tmp"
 
 	client, err := neovim.NewCmdClient(cmd)
@@ -53,7 +54,7 @@ func ExampleSubscription() {
 }
 
 func ExampleClient_GetCurrentBuffer() {
-	cmd := exec.Command("nvim", "-u", "/dev/null")
+	cmd := exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
 	cmd.Dir = "/tmp"
 
 	client, err := neovim.NewCmdClient(cmd)
