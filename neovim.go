@@ -48,9 +48,11 @@ Hence errors may be inspected using functions like errgo.Details for example:
 package neovim
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net"
+	"os"
 	"os/exec"
 	"sync/atomic"
 
@@ -164,7 +166,7 @@ func (c *Client) doListen() {
 				log.Fatalf("Could not decode response error: %v", err)
 			}
 			if re != nil {
-				log.Fatalf("Got a response error: %v", re)
+				log.Fatalf("Got a response error for request %v: %v", reqID, re)
 			}
 
 			// no, carry on
@@ -259,6 +261,8 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 	reqType := 0
 	reqID := c.nextReqID()
 	enc := c.enc
+
+	fmt.Fprintf(os.Stderr, "Call id %v: %v\n", reqID, reqMethID)
 
 	res := make(chan *response)
 	rh := &responseHolder{dec: d, ch: res}
