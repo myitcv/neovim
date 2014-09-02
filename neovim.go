@@ -48,8 +48,10 @@ Hence errors may be inspected using functions like errgo.Details for example:
 package neovim
 
 import (
+	"io"
 	"log"
 	"net"
+	"os/exec"
 	"sync/atomic"
 
 	"github.com/juju/errgo"
@@ -67,9 +69,28 @@ func NewUnixClient(_net string, laddr, raddr *net.UnixAddr) (*Client, error) {
 	return NewClient(c)
 }
 
+func NewStdClient(c *exec.Cmd) (*Client, error) {
+	stdin, err := c.StdinPipe()
+	if err != nil {
+		log.Fatalf("Could not get a stdin pipe to embedded nvim: %v\n", err)
+	}
+	stdout, err := c.StdoutPipe()
+	if err != nil {
+		log.Fatalf("Could not get a stdout pipe to embedded nvim: %v\n", err)
+	}
+	wrap := &stdWrapper{stdin: stdin, stdout: stdout}
+
+	err = c.Start()
+	if err != nil {
+		log.Fatalf("Could not start the cmd: %v\n", err)
+	}
+
+	return NewClient(wrap)
+}
+
 // NewClient creates a new Client
-func NewClient(c net.Conn) (*Client, error) {
-	res := &Client{conn: c}
+func NewClient(c io.ReadWriteCloser) (*Client, error) {
+	res := &Client{rw: c}
 	res.respMap = newSyncMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
@@ -77,6 +98,16 @@ func NewClient(c net.Conn) (*Client, error) {
 	res.UnsubChan = make(chan Subscription)
 	go res.doListen()
 	return res, nil
+}
+
+// Close cleanly kills the client connection to Neovim
+func (c *Client) Close() error {
+	err := c.rw.Close()
+	if err != nil {
+		log.Fatalf("Could not cleanly close client: %v\n", err)
+	}
+	// TODO improve this
+	return nil
 }
 
 func (c *Client) doListen() {
@@ -88,8 +119,12 @@ func (c *Client) doListen() {
 
 	dec := c.dec
 	for {
+		// TODO need better handling of EOF, i.e. client dies
 		_, err := dec.DecodeSliceLen()
 		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
 			log.Fatalf("Could not decode message slice length: %v", err)
 		}
 
