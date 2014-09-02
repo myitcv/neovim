@@ -40,11 +40,11 @@ var _ = Suite(&NeovimTest{})
 
 func (t *NeovimTest) SetUpTest(c *C) {
 	// now start the process and wait for the socket file to be created
-	t.nvim = exec.Command("nvim", "--embedded-mode", "-u", "/dev/null")
+	t.nvim = exec.Command("nvim", "-u", "/dev/null")
 	t.nvim.Dir = "/tmp"
 
 	// now we can create a new client
-	client, err := neovim.NewStdClient(t.nvim)
+	client, err := neovim.NewCmdClient(t.nvim)
 	if err != nil {
 		log.Fatalf("Could not setup client: %v", errgo.Details(err))
 	}
@@ -121,8 +121,8 @@ func (t *NeovimTest) TestBufferSetGetLine(c *C) {
 func (t *NeovimTest) TestEval(c *C) {
 	res, err := t.client.Eval(`4`)
 	c.Assert(err, IsNil)
-	res_i := res.(int64)
-	c.Assert(res_i > 0, Equals, true)
+	resInt64 := res.(int64)
+	c.Assert(resInt64 > 0, Equals, true)
 }
 
 func (t *NeovimTest) TestClientSubscribe(c *C) {

@@ -14,10 +14,10 @@ import (
 )
 
 func ExampleSubscription() {
-	cmd := exec.Command("nvim", "--embedded-mode", "-u", "/dev/null")
+	cmd := exec.Command("nvim", "-u", "/dev/null")
 	cmd.Dir = "/tmp"
-	// TODO need to start the client
-	client, err := neovim.NewStdClient(cmd)
+
+	client, err := neovim.NewCmdClient(cmd)
 	if err != nil {
 		log.Fatalf("Could not create new client: %v", errgo.Details(err))
 	}
@@ -48,13 +48,15 @@ func ExampleSubscription() {
 	if err != nil {
 		log.Fatalf("Could not close client: %v\n", err)
 	}
+
 	// Output:
 }
 
 func ExampleClient_GetCurrentBuffer() {
-	cmd := exec.Command("nvim", "--embedded-mode", "-n", "-u", "/dev/null")
+	cmd := exec.Command("nvim", "-u", "/dev/null")
 	cmd.Dir = "/tmp"
-	client, err := neovim.NewStdClient(cmd)
+
+	client, err := neovim.NewCmdClient(cmd)
 	if err != nil {
 		log.Fatalf("Could not create new client: %v", errgo.Details(err))
 	}
@@ -72,6 +74,7 @@ func ExampleClient_GetCurrentBuffer() {
 	if err != nil {
 		log.Fatalf("Could not close client: %v\n", err)
 	}
+
 	// Output:
 	// Current buffer is: 2
 }
