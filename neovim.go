@@ -69,7 +69,12 @@ func NewUnixClient(_net string, laddr, raddr *net.UnixAddr) (*Client, error) {
 	return NewClient(c)
 }
 
-func NewStdClient(c *exec.Cmd) (*Client, error) {
+// NewCmdClient creates a new Client that is linked via stdin/stdout to the
+// supplied exec.Cmd, which is assumed to launch Neovim. The Neovim flag
+// --embedded-mode is added if it is missing, and the exec.Cmd is started
+// as part of creating the client. Calling Close() will close stdin on the
+// embedded Neovim instance, thereby ending the process
+func NewCmdClient(c *exec.Cmd) (*Client, error) {
 	stdin, err := c.StdinPipe()
 	if err != nil {
 		log.Fatalf("Could not get a stdin pipe to embedded nvim: %v\n", err)
@@ -79,6 +84,18 @@ func NewStdClient(c *exec.Cmd) (*Client, error) {
 		log.Fatalf("Could not get a stdout pipe to embedded nvim: %v\n", err)
 	}
 	wrap := &stdWrapper{stdin: stdin, stdout: stdout}
+
+	// ensure that we have --embedded-mode
+	found := false
+	for i := range c.Args {
+		if c.Args[i] == "--embedded-mode" {
+			found = true
+		}
+	}
+
+	if !found {
+		c.Args = append(c.Args, "--embedded-mode")
+	}
 
 	err = c.Start()
 	if err != nil {
