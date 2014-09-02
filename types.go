@@ -11,7 +11,7 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-type neovimMethodID uint32
+type neovimMethodID string
 
 // A Client represents a connection to a single Neovim instance
 type Client struct {
