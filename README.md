@@ -1,5 +1,7 @@
 ## neovim
 
+[![Build Status](https://travis-ci.org/myitcv/neovim.svg?branch=master)](https://travis-ci.org/myitcv/neovim)
+
 Go package for writing [Neovim](http://neovim.org/) plugins
 
 ```bash
