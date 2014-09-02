@@ -7,213 +7,72 @@ import "github.com/juju/errgo"
 // constants representing method ids
 
 const (
-	neovimAPI               neovimMethodID = 0
-	tabpageGetWindows                      = 1
-	tabpageGetVar                          = 2
-	tabpageSetVar                          = 3
-	tabpageGetWindow                       = 4
-	tabpageIsValid                         = 5
-	bufferGetLength                        = 6
-	bufferGetLine                          = 7
-	bufferSetLine                          = 8
-	bufferDelLine                          = 9
-	bufferGetSlice                         = 10
-	bufferSetSlice                         = 11
-	bufferGetVar                           = 12
-	bufferSetVar                           = 13
-	bufferGetOption                        = 14
-	bufferSetOption                        = 15
-	bufferGetNumber                        = 16
-	bufferGetName                          = 17
-	bufferSetName                          = 18
-	bufferIsValid                          = 19
-	bufferInsert                           = 20
-	bufferGetMark                          = 21
-	clientPushKeys                         = 22
-	clientCommand                          = 23
-	clientFeedkeys                         = 24
-	clientReplaceTermcodes                 = 25
-	clientEval                             = 26
-	clientStrwidth                         = 27
-	clientListRuntimePaths                 = 28
-	clientChangeDirectory                  = 29
-	clientGetCurrentLine                   = 30
-	clientSetCurrentLine                   = 31
-	clientDelCurrentLine                   = 32
-	clientGetVar                           = 33
-	clientSetVar                           = 34
-	clientGetVvar                          = 35
-	clientGetOption                        = 36
-	clientSetOption                        = 37
-	clientOutWrite                         = 38
-	clientErrWrite                         = 39
-	clientGetBuffers                       = 40
-	clientGetCurrentBuffer                 = 41
-	clientSetCurrentBuffer                 = 42
-	clientGetWindows                       = 43
-	clientGetCurrentWindow                 = 44
-	clientSetCurrentWindow                 = 45
-	clientGetTabpages                      = 46
-	clientGetCurrentTabpage                = 47
-	clientSetCurrentTabpage                = 48
-	clientSubscribe                        = 49
-	clientUnsubscribe                      = 50
-	clientRegisterProvider                 = 51
-	windowGetBuffer                        = 52
-	windowGetCursor                        = 53
-	windowSetCursor                        = 54
-	windowGetHeight                        = 55
-	windowSetHeight                        = 56
-	windowGetWidth                         = 57
-	windowSetWidth                         = 58
-	windowGetVar                           = 59
-	windowSetVar                           = 60
-	windowGetOption                        = 61
-	windowSetOption                        = 62
-	windowGetPosition                      = 63
-	windowGetTabpage                       = 64
-	windowIsValid                          = 65
+	tabpageGetWindows       = "tabpage_get_windows"
+	tabpageGetVar           = "tabpage_get_var"
+	tabpageSetVar           = "tabpage_set_var"
+	tabpageGetWindow        = "tabpage_get_window"
+	tabpageIsValid          = "tabpage_is_valid"
+	bufferGetLength         = "buffer_get_length"
+	bufferGetLine           = "buffer_get_line"
+	bufferSetLine           = "buffer_set_line"
+	bufferDelLine           = "buffer_del_line"
+	bufferGetSlice          = "buffer_get_slice"
+	bufferSetSlice          = "buffer_set_slice"
+	bufferGetVar            = "buffer_get_var"
+	bufferSetVar            = "buffer_set_var"
+	bufferGetOption         = "buffer_get_option"
+	bufferSetOption         = "buffer_set_option"
+	bufferGetNumber         = "buffer_get_number"
+	bufferGetName           = "buffer_get_name"
+	bufferSetName           = "buffer_set_name"
+	bufferIsValid           = "buffer_is_valid"
+	bufferInsert            = "buffer_insert"
+	bufferGetMark           = "buffer_get_mark"
+	clientPushKeys          = "vim_push_keys"
+	clientCommand           = "vim_command"
+	clientFeedkeys          = "vim_feedkeys"
+	clientReplaceTermcodes  = "vim_replace_termcodes"
+	clientEval              = "vim_eval"
+	clientStrwidth          = "vim_strwidth"
+	clientListRuntimePaths  = "vim_list_runtime_paths"
+	clientChangeDirectory   = "vim_change_directory"
+	clientGetCurrentLine    = "vim_get_current_line"
+	clientSetCurrentLine    = "vim_set_current_line"
+	clientDelCurrentLine    = "vim_del_current_line"
+	clientGetVar            = "vim_get_var"
+	clientSetVar            = "vim_set_var"
+	clientGetVvar           = "vim_get_vvar"
+	clientGetOption         = "vim_get_option"
+	clientSetOption         = "vim_set_option"
+	clientOutWrite          = "vim_out_write"
+	clientErrWrite          = "vim_err_write"
+	clientGetBuffers        = "vim_get_buffers"
+	clientGetCurrentBuffer  = "vim_get_current_buffer"
+	clientSetCurrentBuffer  = "vim_set_current_buffer"
+	clientGetWindows        = "vim_get_windows"
+	clientGetCurrentWindow  = "vim_get_current_window"
+	clientSetCurrentWindow  = "vim_set_current_window"
+	clientGetTabpages       = "vim_get_tabpages"
+	clientGetCurrentTabpage = "vim_get_current_tabpage"
+	clientSetCurrentTabpage = "vim_set_current_tabpage"
+	clientSubscribe         = "vim_subscribe"
+	clientUnsubscribe       = "vim_unsubscribe"
+	clientRegisterProvider  = "vim_register_provider"
+	windowGetBuffer         = "window_get_buffer"
+	windowGetCursor         = "window_get_cursor"
+	windowSetCursor         = "window_set_cursor"
+	windowGetHeight         = "window_get_height"
+	windowSetHeight         = "window_set_height"
+	windowGetWidth          = "window_get_width"
+	windowSetWidth          = "window_set_width"
+	windowGetVar            = "window_get_var"
+	windowSetVar            = "window_set_var"
+	windowGetOption         = "window_get_option"
+	windowSetOption         = "window_set_option"
+	windowGetPosition       = "window_get_position"
+	windowGetTabpage        = "window_get_tabpage"
+	windowIsValid           = "window_is_valid"
 )
-
-func (n neovimMethodID) String() string {
-	switch n {
-	case neovimAPI:
-		return "API"
-	case tabpageGetWindows:
-		return "TabpageGetWindows"
-	case tabpageGetVar:
-		return "TabpageGetVar"
-	case tabpageSetVar:
-		return "TabpageSetVar"
-	case tabpageGetWindow:
-		return "TabpageGetWindow"
-	case tabpageIsValid:
-		return "TabpageIsValid"
-	case bufferGetLength:
-		return "BufferGetLength"
-	case bufferGetLine:
-		return "BufferGetLine"
-	case bufferSetLine:
-		return "BufferSetLine"
-	case bufferDelLine:
-		return "BufferDelLine"
-	case bufferGetSlice:
-		return "BufferGetSlice"
-	case bufferSetSlice:
-		return "BufferSetSlice"
-	case bufferGetVar:
-		return "BufferGetVar"
-	case bufferSetVar:
-		return "BufferSetVar"
-	case bufferGetOption:
-		return "BufferGetOption"
-	case bufferSetOption:
-		return "BufferSetOption"
-	case bufferGetNumber:
-		return "BufferGetNumber"
-	case bufferGetName:
-		return "BufferGetName"
-	case bufferSetName:
-		return "BufferSetName"
-	case bufferIsValid:
-		return "BufferIsValid"
-	case bufferInsert:
-		return "BufferInsert"
-	case bufferGetMark:
-		return "BufferGetMark"
-	case clientPushKeys:
-		return "ClientPushKeys"
-	case clientCommand:
-		return "ClientCommand"
-	case clientFeedkeys:
-		return "ClientFeedkeys"
-	case clientReplaceTermcodes:
-		return "ClientReplaceTermcodes"
-	case clientEval:
-		return "ClientEval"
-	case clientStrwidth:
-		return "ClientStrwidth"
-	case clientListRuntimePaths:
-		return "ClientListRuntimePaths"
-	case clientChangeDirectory:
-		return "ClientChangeDirectory"
-	case clientGetCurrentLine:
-		return "ClientGetCurrentLine"
-	case clientSetCurrentLine:
-		return "ClientSetCurrentLine"
-	case clientDelCurrentLine:
-		return "ClientDelCurrentLine"
-	case clientGetVar:
-		return "ClientGetVar"
-	case clientSetVar:
-		return "ClientSetVar"
-	case clientGetVvar:
-		return "ClientGetVvar"
-	case clientGetOption:
-		return "ClientGetOption"
-	case clientSetOption:
-		return "ClientSetOption"
-	case clientOutWrite:
-		return "ClientOutWrite"
-	case clientErrWrite:
-		return "ClientErrWrite"
-	case clientGetBuffers:
-		return "ClientGetBuffers"
-	case clientGetCurrentBuffer:
-		return "ClientGetCurrentBuffer"
-	case clientSetCurrentBuffer:
-		return "ClientSetCurrentBuffer"
-	case clientGetWindows:
-		return "ClientGetWindows"
-	case clientGetCurrentWindow:
-		return "ClientGetCurrentWindow"
-	case clientSetCurrentWindow:
-		return "ClientSetCurrentWindow"
-	case clientGetTabpages:
-		return "ClientGetTabpages"
-	case clientGetCurrentTabpage:
-		return "ClientGetCurrentTabpage"
-	case clientSetCurrentTabpage:
-		return "ClientSetCurrentTabpage"
-	case clientSubscribe:
-		return "ClientSubscribe"
-	case clientUnsubscribe:
-		return "ClientUnsubscribe"
-	case clientRegisterProvider:
-		return "ClientRegisterProvider"
-	case windowGetBuffer:
-		return "WindowGetBuffer"
-	case windowGetCursor:
-		return "WindowGetCursor"
-	case windowSetCursor:
-		return "WindowSetCursor"
-	case windowGetHeight:
-		return "WindowGetHeight"
-	case windowSetHeight:
-		return "WindowSetHeight"
-	case windowGetWidth:
-		return "WindowGetWidth"
-	case windowSetWidth:
-		return "WindowSetWidth"
-	case windowGetVar:
-		return "WindowGetVar"
-	case windowSetVar:
-		return "WindowSetVar"
-	case windowGetOption:
-		return "WindowGetOption"
-	case windowSetOption:
-		return "WindowSetOption"
-	case windowGetPosition:
-		return "WindowGetPosition"
-	case windowGetTabpage:
-		return "WindowGetTabpage"
-	case windowIsValid:
-		return "WindowIsValid"
-
-	default:
-		return ""
-	}
-}
 
 // methods on the API
 

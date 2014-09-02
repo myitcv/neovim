@@ -320,11 +320,12 @@ type typeTemplate struct {
 }
 
 type methodTemplate struct {
-	ID     uint32
-	Name   string
-	Rec    variable
-	Ret    *variable
-	Params []variable
+	ID      uint32
+	Name    string
+	RawName string
+	Rec     variable
+	Ret     *variable
+	Params  []variable
 }
 
 func (m *methodTemplate) NumParams() (res int) {
@@ -419,6 +420,7 @@ func genMethodTemplates(fs []APIFunction) []methodTemplate {
 		}
 
 		// name
+		m.RawName = f.Name
 		m.Name = sstrings.Camelize(splits[1])
 		m.ID = f.ID
 
@@ -552,22 +554,9 @@ import "github.com/juju/errgo"
 // constants representing method ids
 
 const (
-	neovimAPI neovimMethodID  = 0
-	{{range .Methods }}{{.Rec.Type.Name | to_lower}}{{.Name}} = {{.ID}}
+	{{range .Methods }}{{.Rec.Type.Name | to_lower}}{{.Name}} = "{{.RawName}}"
 	{{end}}
 )
-
-func (n neovimMethodID) String() string {
-	switch n {
-	case neovimAPI:
-		return "API"
-	{{range .Methods }}case {{.Rec.Type.Name | to_lower}}{{.Name}}:
-		return "{{.Rec.Type.Name}}{{.Name}}"
-	{{end}}
-	default:
-		return ""
-	}
-}
 
 // methods on the API
 

@@ -282,7 +282,7 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 		return nil, errgo.NoteMask(err, "Could not encode request ID")
 	}
 
-	err = enc.EncodeUint32(uint32(reqMethID))
+	err = enc.EncodeString(string(reqMethID))
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not encode request method ID")
 	}
