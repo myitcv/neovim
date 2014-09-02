@@ -107,7 +107,7 @@ func main() {
 }
 
 func getAPI() (*API, error) {
-	output, err := exec.Command("nvim", "--api-msgpack-metadata").CombinedOutput()
+	output, err := exec.Command(os.Getenv("NEOVIM_BIN"), "--api-msgpack-metadata").CombinedOutput()
 	if err != nil {
 		log.Fatalf("Could not get current API dump: %v", errgo.Details(err))
 	}
