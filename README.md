@@ -65,6 +65,7 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
+* Remove unncessary `sync.Mutex` on `stdWrapper.Write`
 * Tidy up use of `PanicOnError` and ensure all errors that would otherwise have been return use `panic` if this is set
 * Add support for functions that `CanFail`
 * Ensure Travis build tests whether generated API matches the rebuilt Neovim instance
