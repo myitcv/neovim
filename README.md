@@ -67,6 +67,7 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
+* Fix race condition on stdin of embedded client
 * Remove unncessary `sync.Mutex` on `stdWrapper.Write`
 * Tidy up use of `PanicOnError` and ensure all errors that would otherwise have been return use `panic` if this is set
 * Add support for functions that `CanFail`
