@@ -14,7 +14,6 @@ import (
 
 	"testing"
 
-	"github.com/go-fsnotify/fsnotify"
 	"github.com/juju/errgo"
 	"github.com/myitcv/neovim"
 
@@ -30,7 +29,6 @@ type mpResponse struct {
 type NeovimTest struct {
 	client      *neovim.Client
 	nvim        *exec.Cmd
-	watcher     *fsnotify.Watcher
 	startListen chan chan struct{}
 }
 
