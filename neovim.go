@@ -48,11 +48,9 @@ Hence errors may be inspected using functions like errgo.Details for example:
 package neovim
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net"
-	"os"
 	"os/exec"
 	"sync/atomic"
 
@@ -261,8 +259,6 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 	reqType := 0
 	reqID := c.nextReqID()
 	enc := c.enc
-
-	fmt.Fprintf(os.Stderr, "Call id %v: %v\n", reqID, reqMethID)
 
 	res := make(chan *response)
 	rh := &responseHolder{dec: d, ch: res}
