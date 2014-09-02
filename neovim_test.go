@@ -7,11 +7,10 @@ package neovim_test
 import (
 	"fmt"
 	"log"
-	"net"
-	"os"
 	"os/exec"
 	"strings"
 	"sync"
+
 	"testing"
 
 	"github.com/go-fsnotify/fsnotify"
@@ -39,99 +38,42 @@ func Test(t *testing.T) { TestingT(t) }
 
 var _ = Suite(&NeovimTest{})
 
-// func (t *NeovimTest) SetUpSuite(c *C) {
-// 	watcher, err := fsnotify.NewWatcher()
-// 	if err != nil {
-// 		log.Fatalf("Could not create a new watcher: %v", err)
-// 	}
-// 	t.watcher = watcher
-
-// 	t.startListen = make(chan chan struct{})
-
-// 	go func() {
-// 		var respChan chan struct{}
-// 		for {
-// 			select {
-// 			case respChan = <-t.startListen:
-// 				respChan <- struct{}{}
-// 			case event := <-t.watcher.Events:
-// 				fmt.Println("Got an event")
-// 				if respChan == nil {
-// 					log.Fatalf("Got unexpected event; not listening but got %v\n", event)
-// 				}
-// 				if event.Op&fsnotify.Create == fsnotify.Create {
-// 					respChan <- struct{}{}
-// 					respChan = nil
-// 				}
-// 			case err := <-t.watcher.Errors:
-// 				log.Fatalf("Got an error in the watcher: %v\n", err)
-// 			}
-// 		}
-// 	}()
-// }
-
-// func (t *NeovimTest) TearDownSuite(c *C) {
-// 	err := t.watcher.Close()
-// 	if err != nil {
-// 		log.Fatalf("Could not cleanly shut down watcher: %v\n", err)
-// 	}
-// }
-
 func (t *NeovimTest) SetUpTest(c *C) {
-	la := os.Getenv("NEOVIM_LISTEN_ADDRESS")
-
-	// cur_t := time.Now()
-	// la := fmt.Sprintf("/tmp/neovim.%v%v", cur_t.Unix(), cur_t.Nanosecond())
-	// e_la := "NEOVIM_LISTEN_ADDRESS=" + la
-
 	// now start the process and wait for the socket file to be created
-	// t.nvim = exec.Command("nvim", "-u /dev/null")
-	// new_env := os.Environ()
-
-	// found := false
-	// for i, _ := range new_env {
-	// 	if strings.HasPrefix(new_env[i], "NEOVIM_LISTEN_ADDRESS=") {
-	// 		found = true
-	// 		new_env[i] = e_la
-	// 	}
-	// }
-	// if !found {
-	// 	new_env = append(new_env, e_la)
-	// }
-	// t.nvim.Env = new_env
-
-	// done_chan := make(chan struct{})
-	// t.startListen <- done_chan
-	// <-done_chan
-	// t.watcher.Add(la)
-	// err := t.nvim.Start()
-	// if err != nil {
-	// 	log.Fatalf("Could not start nvim instance: %v\n", err)
-	// }
-	// <-done_chan
-	// t.watcher.Remove(la)
-
-	// fmt.Println("Starting test")
+	t.nvim = exec.Command("nvim", "--embedded-mode", "-u", "/dev/null")
+	t.nvim.Dir = "/tmp"
 
 	// now we can create a new client
-	client, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: la})
+	client, err := neovim.NewStdClient(t.nvim)
 	if err != nil {
 		log.Fatalf("Could not setup client: %v", errgo.Details(err))
 	}
+
+	// TODO need to handle nvim subprocess bombing out...
+
+	// this is important; all tests below ignore errors...
 	client.PanicOnError = true
 	t.client = client
 }
 
-// func (t *NeovimTest) TearDownTest(c *C) {
-// 	err := t.nvim.Process.Kill()
-// 	if err != nil {
-// 		log.Fatalf("Could not kill nvim instance: %v\n", err)
-// 	}
-// }
+func (t *NeovimTest) TearDownTest(c *C) {
+	done := make(chan struct{})
+	go func() {
+		err := t.nvim.Wait()
+		if err != nil {
+			log.Fatalf("Process did not exit cleanly: %v\n", err)
+		}
+		done <- struct{}{}
+	}()
+	err := t.client.Close()
+	if err != nil {
+		log.Fatalf("Could not close client: %v\n", err)
+	}
+	<-done
+}
 
 func (t *NeovimTest) TestClientGetBuffers(c *C) {
-	ba, err := t.client.GetBuffers()
-	c.Assert(err, IsNil)
+	ba, _ := t.client.GetBuffers()
 	c.Assert(ba, NotNil)
 }
 
@@ -141,8 +83,7 @@ func (t *NeovimTest) TestConcurrentClientGetBuffers(c *C) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ba, err := t.client.GetBuffers()
-			c.Assert(err, IsNil)
+			ba, _ := t.client.GetBuffers()
 			c.Assert(ba, NotNil)
 		}()
 	}
@@ -150,15 +91,14 @@ func (t *NeovimTest) TestConcurrentClientGetBuffers(c *C) {
 }
 
 func (t *NeovimTest) TestClientGetCurrentBuffer(c *C) {
-	_, err := t.client.GetCurrentBuffer()
-	c.Assert(err, IsNil)
+	cb, _ := t.client.GetCurrentBuffer()
+	c.Assert(c, NotNil)
+	c.Assert(cb.ID > 0, Equals, true)
 }
 
 func (t *NeovimTest) TestBufferGetLength(c *C) {
-	b, err := t.client.GetCurrentBuffer()
-	c.Assert(err, IsNil)
-	l, err := b.GetLength()
-	c.Assert(err, IsNil)
+	b, _ := t.client.GetCurrentBuffer()
+	l, _ := b.GetLength()
 	c.Assert(l, Equals, 1)
 }
 

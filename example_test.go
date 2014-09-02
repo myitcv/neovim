@@ -7,24 +7,19 @@ package neovim_test
 import (
 	"fmt"
 	"log"
-	"net"
+	"os/exec"
 
 	"github.com/juju/errgo"
 	"github.com/myitcv/neovim"
 )
 
-func ExampleNewUnixClient() {
-	_, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: "/tmp/neovim"})
-	if err != nil {
-		log.Fatalf("Could not create new Unix client: %v", errgo.Details(err))
-	}
-	// Output:
-}
-
 func ExampleSubscription() {
-	client, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: "/tmp/neovim"})
+	cmd := exec.Command("nvim", "--embedded-mode", "-u", "/dev/null")
+	cmd.Dir = "/tmp"
+	// TODO need to start the client
+	client, err := neovim.NewStdClient(cmd)
 	if err != nil {
-		log.Fatalf("Could not create new Unix client: %v", errgo.Details(err))
+		log.Fatalf("Could not create new client: %v", errgo.Details(err))
 	}
 
 	topic := "topic1" // corresponds to the topic used in Neovim's send_event()
@@ -48,13 +43,20 @@ func ExampleSubscription() {
 
 	// Now wait to receive a notification on respChan
 	// resp := <-respChan
+
+	err = client.Close()
+	if err != nil {
+		log.Fatalf("Could not close client: %v\n", err)
+	}
 	// Output:
 }
 
 func ExampleClient_GetCurrentBuffer() {
-	client, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: "/tmp/neovim"})
+	cmd := exec.Command("nvim", "--embedded-mode", "-n", "-u", "/dev/null")
+	cmd.Dir = "/tmp"
+	client, err := neovim.NewStdClient(cmd)
 	if err != nil {
-		log.Fatalf("Could not create new Unix client: %v", errgo.Details(err))
+		log.Fatalf("Could not create new client: %v", errgo.Details(err))
 	}
 	b, err := client.GetCurrentBuffer()
 	if err != nil {
@@ -65,6 +67,11 @@ func ExampleClient_GetCurrentBuffer() {
 		log.Fatalf("Could not get name for buffer %v: %v", b, errgo.Details(err))
 	}
 	fmt.Printf("Current buffer is: %v %v\n", b.ID, n)
+
+	err = client.Close()
+	if err != nil {
+		log.Fatalf("Could not close client: %v\n", err)
+	}
 	// Output:
 	// Current buffer is: 2
 }

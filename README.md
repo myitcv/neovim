@@ -65,6 +65,7 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
+* Make sure tests wait for embedded process to end cleanly; catch errors (e.g. with bad options `'-u /dev/null'`)
 * Tidy up use of `PanicOnError` and ensure all errors that would otherwise have been return use `panic` if this is set
 * Add support for functions that `CanFail`
 * Add build to Travis (including re-gen against latest Neovim build)

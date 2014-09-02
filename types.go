@@ -5,7 +5,7 @@
 package neovim
 
 import (
-	"net"
+	"io"
 
 	"github.com/vmihailenco/msgpack"
 )
@@ -14,7 +14,7 @@ type neovimMethodID uint32
 
 // A Client represents a connection to a single Neovim instance
 type Client struct {
-	conn    net.Conn
+	rw      io.ReadWriteCloser
 	dec     *msgpack.Decoder
 	enc     *msgpack.Encoder
 	nextReq uint32
@@ -83,6 +83,23 @@ type responseHolder struct {
 type response struct {
 	obj interface{}
 	err error
+}
+
+type stdWrapper struct {
+	stdin  io.WriteCloser
+	stdout io.ReadCloser
+}
+
+func (s *stdWrapper) Read(p []byte) (n int, err error) {
+	return s.stdout.Read(p)
+}
+
+func (s *stdWrapper) Write(p []byte) (n int, err error) {
+	return s.stdin.Write(p)
+}
+
+func (s *stdWrapper) Close() error {
+	return s.stdin.Close()
 }
 
 type encoder func() error
