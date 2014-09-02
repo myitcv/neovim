@@ -2,6 +2,10 @@
 
 set -e
 
+curl -fsSL https://raw.githubusercontent.com/neovim/neovim/master/.ci/common.sh | source /dev/stdin
+
+set_environment /opt/neovim-deps
+
 if [ ! -d $TRAVIS_BUILD_DIR/_neovim ]
 then
   git clone https://github.com/neovim/neovim.git $TRAVIS_BUILD_DIR/_neovim
