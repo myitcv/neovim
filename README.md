@@ -67,6 +67,7 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
+* Create test case where event received on subscription is not consumed... but unsubscribe is called
 * Improve the example on sub/unsub
 * Support Go package acting as a server, i.e. receiving requests from Neovim
 * Tidy up subscription handling code
