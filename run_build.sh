@@ -17,4 +17,17 @@ git rebase origin/master
 make
 popd
 
+pushd $TRAVIS_BUILD_DIR/_cmd/gen_neovim_api/
+go get -d -t -v ./... && go build -v ./...
+x=`mktemp`
+./gen_neovim_api -g | gofmt > $x
+diff $x ../../gen_client_api.go
+if [ $? -ne 0 ]
+then
+  echo "Neovim exposed API differs from committed generated API"
+  exit 1
+fi
+rm $x
+popd
+
 NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim go test
