@@ -57,9 +57,9 @@ func (t *NeovimTest) SetUpTest(c *C) {
 func (t *NeovimTest) TearDownTest(c *C) {
 	done := make(chan struct{})
 	go func() {
-		err := t.nvim.Wait()
+		state, err := t.nvim.Process.Wait()
 		if err != nil {
-			log.Fatalf("Process did not exit cleanly: %v\n", err)
+			log.Fatalf("Process did not exit cleanly: %v, %v\n", err, state)
 		}
 		done <- struct{}{}
 	}()
