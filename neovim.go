@@ -55,7 +55,6 @@ import (
 	"sync/atomic"
 
 	"github.com/juju/errgo"
-	"github.com/juju/errors"
 	"github.com/vmihailenco/msgpack"
 )
 
@@ -143,7 +142,7 @@ func (c *Client) Subscribe(topic string) (*Subscription, error) {
 	return res, nil
 }
 
-// Unsubscribe unsubscribes from a topic of events from Neovim
+// Unsubscribe unsubscribes from a topic of events from Neovim.
 // This needs to be called on a different goroutine to that which
 // is handling the SubscriptionEvent's
 func (c *Client) Unsubscribe(sub *Subscription) error {
@@ -192,6 +191,9 @@ func (c *Client) doListen() {
 		}
 
 		switch t {
+		// TODO implement support for handling requests in a Go client, i.e.
+		// Neovim making a request to the Go client, and the Go client sending
+		// a response
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
@@ -260,21 +262,15 @@ func (c *Client) doListen() {
 }
 
 func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
+	// this map keeps track of subscriptions
+	// subs["topic"] == nil indicates no subscriptions on a topic
+	// subs["topic"] otherwise contains a map, where the keys are the
+	// Events channels that have subscribed
 	subs := make(map[string]map[chan *SubscriptionEvent]struct{})
-
-	sendOrClose := func(c chan error, e error) {
-		if c != nil {
-			if e != nil {
-				c <- e
-			} else {
-				close(c)
-			}
-		}
-	}
 
 	// a goroutine that is responsible for handling subscribe/unsubscribe calls
 	// on a separate goroutine because the calls to sub/unsub are blocking
-	// TODO look at semantics of making this buffered
+	// TODO kill on close
 	subTasks := make(chan subWrapper, 10)
 	go func() {
 		for {
@@ -297,52 +293,56 @@ func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
 		}
 	}()
 
-	// TODO tidy up send or close mess
-	// TODO tidy up this mess
+	// TODO kill on close
 	for {
 		select {
 		case event := <-se:
+			// receive from the main doListen goroutine
 			if chans, ok := subs[event.Topic]; ok {
 				for k := range chans {
 					k <- event
 				}
 			} else {
-				// we got an event when nothing was subscribed to
-				// the topic
 				log.Fatalf("Got an event for which we have no subs on topic %v\n", event.Topic)
 			}
-		case subW := <-c.subChan:
-			if subW.task == _Sub {
-				sub := subW.sub
+		case w := <-c.subChan:
+			if w.task == _Sub {
+				sub := w.sub
 				m, ok := subs[sub.Topic]
 				if !ok {
-					// we move from 0 subs to one: subscribe
-					subTasks <- subW
+					// we have no subscriptions on this topic
+					// the handling of the sub task will close
+					// the error channel
+					subTasks <- w
 					m = make(map[chan *SubscriptionEvent]struct{})
 					subs[sub.Topic] = m
 				} else if _, ok := m[sub.Events]; ok {
-					sendOrClose(subW.errChan, errors.Errorf("Already have subscription for topic %v on this channel", sub.Topic))
+					// fatal error if we already have subscribed
+					// using this channel
+					w.errChan <- errgo.Newf("Already have subscription for topic %v with this channel: %v", sub.Topic, sub.Events)
 				} else {
-					close(subW.errChan)
+					// we are simply going to add to an existing
+					// subscription. Close the error channel
+					close(w.errChan)
 				}
 				m[sub.Events] = struct{}{}
-			} else if subW.task == _Unsub {
-				unsub := subW.sub
+			} else if w.task == _Unsub {
+				unsub := w.sub
 				close(unsub.Events)
 				m, ok := subs[unsub.Topic]
 				if !ok {
-					sendOrClose(subW.errChan, errors.Errorf("We don't have any subscriptions for topic %v", unsub.Topic))
+					w.errChan <- errgo.Newf("We don't have any subscriptions for topic %v", unsub.Topic)
 				}
 				if _, ok := m[unsub.Events]; !ok {
-					sendOrClose(subW.errChan, errors.Errorf("We don't have a subscription on topic %v on this channel", unsub.Topic))
+					w.errChan <- errgo.Newf("We don't have a subscription on topic %v for this channel %v", unsub.Topic, unsub.Events)
 				}
 				delete(m, unsub.Events)
 				if len(m) == 0 {
 					// we are back down to 0 again; unsubscribe
-					subTasks <- subW
+					subTasks <- w
 					delete(subs, unsub.Topic)
 				} else {
-					close(subW.errChan)
+					close(w.errChan)
 				}
 			}
 		}
@@ -350,9 +350,9 @@ func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
 }
 
 func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan *response, error) {
-	// TODO tidy this up; @tarruda has given more details
-	// on the server implementation here:
-	// https://github.com/neovim/neovim/issues/1133#issuecomment-54246060
+	// TODO implement support for handling requests in a Go client, i.e.
+	// Neovim making a request to the Go client, and the Go client sending
+	// a response
 	c.lock.Lock()
 	defer c.lock.Unlock()
 

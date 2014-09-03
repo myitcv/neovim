@@ -22,8 +22,6 @@ func ExampleSubscription() {
 	if err != nil {
 		log.Fatalf("Could not create new client: %v", errgo.Details(err))
 	}
-
-	// useful for debugging
 	client.PanicOnError = true
 
 	topic := "topic1"
@@ -36,15 +34,11 @@ func ExampleSubscription() {
 	received := make(chan struct{})
 
 	go func() {
-		// listen for events on that topic channel
-		// finish when we get the first (and only) one
-
 	ForLoop:
 		for {
 			select {
 			case e := <-sub.Events:
 				if e == nil {
-					// the Events channel gets closed when the Unsubscribe happens
 					break ForLoop
 				}
 				fmt.Printf("We got %v\n", e.Value)
