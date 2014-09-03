@@ -25,7 +25,8 @@ type Client struct {
 
 	// PanicOnError can be set to have the Client panic when an error would
 	// otherwise have been returned via an API method. Note: any attempt to
-	// change this option during concurrent use of the Client will be racey
+	// change this option during concurrent use of the Client will be racey.
+	// This is useful for debugging.
 	PanicOnError bool
 }
 
@@ -42,12 +43,8 @@ type subWrapper struct {
 	task    subTask
 }
 
-// A Subscription is used to register/unregister interest in a topic
-// in the form of a SubscriptionEvent channel (can be viewed as the
-// handler)
-//
-// This needs to be used in conjunction with Client.Subscribe and
-// Client.Unsubscribe
+// A Subscription represents a subscription to a Neovim event on a particular
+// topic.
 type Subscription struct {
 	Topic  string
 	Events chan *SubscriptionEvent
