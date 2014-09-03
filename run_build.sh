@@ -20,7 +20,7 @@ popd
 pushd $TRAVIS_BUILD_DIR/_cmd/gen_neovim_api/
 go get -d -t -v ./... && go build -v ./...
 x=`mktemp`
-./gen_neovim_api -g | gofmt > $x
+NEOVIM_BIN=NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim ./gen_neovim_api -g | gofmt > $x
 diff $x ../../gen_client_api.go
 if [ $? -ne 0 ]
 then
