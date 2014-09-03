@@ -128,25 +128,22 @@ func (c *Client) Close() error {
 }
 
 func (c *Client) doListen() {
-	// TODO need kill channel
-
-	// TODO look at the semantics of making this buffered...
 	subEvents := make(chan SubscriptionEvent, 10)
 	go c.doSubscriptionManager(subEvents)
 
 	dec := c.dec
 	for {
-		// TODO need better handling of EOF, i.e. client dies
 		_, err := dec.DecodeSliceLen()
-		if err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
+		if err == io.EOF {
+			break
+		} else if err != nil {
 			log.Fatalf("Could not decode message slice length: %v", err)
 		}
 
 		t, err := dec.DecodeInt()
-		if err != nil {
+		if err == io.EOF {
+			break
+		} else if err != nil {
 			log.Fatalf("Could not decode message type: %v", err)
 		}
 
@@ -154,13 +151,17 @@ func (c *Client) doListen() {
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode request id: %v", err)
 			}
 
 			// do we have an error?
 			re, err := dec.DecodeInterface()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode response error: %v", err)
 			}
 			if re != nil {
@@ -169,13 +170,16 @@ func (c *Client) doListen() {
 
 			// no, carry on
 			rh, err := c.respMap.Get(reqID)
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not get response holder for %v: %v", reqID, err)
 			}
 
-			// we have a valid response, dispatch to our decoder for the response
 			res, err := rh.dec()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode response: %v\n", err)
 			}
 
@@ -184,13 +188,18 @@ func (c *Client) doListen() {
 		case 2:
 			// handle notification
 			topic, err := dec.DecodeString()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode topic: %v", err)
 			}
 
-			// TODO this could be more efficient?
+			// TODO we could make a decode part of the subscription
+			// interface to avoid this reflection based decoding
 			obj, err := dec.DecodeInterface()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode obj payload: %v", err)
 			}
 
