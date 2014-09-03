@@ -256,6 +256,12 @@ func (c *Client) doSubscriptionManager(se chan SubscriptionEvent) {
 }
 
 func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan *response, error) {
+	// TODO tidy this up; @tarruda has given more details
+	// on the server implementation here:
+	// https://github.com/neovim/neovim/issues/1133#issuecomment-54246060
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
 	reqType := 0
 	reqID := c.nextReqID()
 	enc := c.enc

@@ -20,6 +20,7 @@ type Client struct {
 	enc     *msgpack.Encoder
 	nextReq uint32
 	respMap *syncMap
+	lock    sync.Mutex
 
 	// SubChan is the channel on which subscription requests are registered
 	SubChan chan Subscription
@@ -87,7 +88,6 @@ type response struct {
 }
 
 type stdWrapper struct {
-	lock   sync.Mutex
 	stdin  io.WriteCloser
 	stdout io.ReadCloser
 }
@@ -97,10 +97,6 @@ func (s *stdWrapper) Read(p []byte) (n int, err error) {
 }
 
 func (s *stdWrapper) Write(p []byte) (n int, err error) {
-	// TODO this should be unncessary, but leave in for now
-	// while Neovim concurrent test fails
-	s.lock.Lock()
-	defer s.lock.Unlock()
 	return s.stdin.Write(p)
 }
 
