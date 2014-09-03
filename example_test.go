@@ -33,6 +33,7 @@ func ExampleSubscription() {
 	}
 
 	done := make(chan struct{})
+	received := make(chan struct{})
 
 	go func() {
 		// listen for events on that topic channel
@@ -47,12 +48,7 @@ func ExampleSubscription() {
 					break ForLoop
 				}
 				fmt.Printf("We got %v\n", e.Value)
-
-				// it is important this unsubscribe happens on another
-				// goroutine
-				go func() {
-					_ = client.Unsubscribe(sub)
-				}()
+				received <- struct{}{}
 			}
 		}
 		done <- struct{}{}
@@ -60,6 +56,10 @@ func ExampleSubscription() {
 
 	command := fmt.Sprintf(`call send_event(0, "%v", 1)`, topic)
 	_ = client.Command(command)
+
+	<-received
+
+	_ = client.Unsubscribe(sub)
 
 	<-done
 
