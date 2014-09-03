@@ -56,8 +56,8 @@ const (
 	clientSetOption         = "vim_set_option"
 	clientSetVar            = "vim_set_var"
 	clientStrwidth          = "vim_strwidth"
-	clientSubscribe         = "vim_subscribe"
-	clientUnsubscribe       = "vim_unsubscribe"
+	clientsubscribe         = "vim_subscribe"
+	clientunsubscribe       = "vim_unsubscribe"
 	windowGetBuffer         = "window_get_buffer"
 	windowGetCursor         = "window_get_cursor"
 	windowGetHeight         = "window_get_height"
@@ -2134,8 +2134,8 @@ func (c *Client) Strwidth(str string) (int, error) {
 
 }
 
-// Subscribe waiting for documentation from Neovim
-func (c *Client) Subscribe(event string) error {
+// subscribe waiting for documentation from Neovim
+func (c *Client) subscribe(event string) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -2157,9 +2157,9 @@ func (c *Client) Subscribe(event string) error {
 
 		return
 	}
-	respChan, err := c.makeCall(clientSubscribe, enc, dec)
+	respChan, err := c.makeCall(clientsubscribe, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Subscribe"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.subscribe"))
 	}
 	resp := <-respChan
 	if resp == nil {
@@ -2173,8 +2173,8 @@ func (c *Client) Subscribe(event string) error {
 
 }
 
-// Unsubscribe waiting for documentation from Neovim
-func (c *Client) Unsubscribe(event string) error {
+// unsubscribe waiting for documentation from Neovim
+func (c *Client) unsubscribe(event string) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -2196,9 +2196,9 @@ func (c *Client) Unsubscribe(event string) error {
 
 		return
 	}
-	respChan, err := c.makeCall(clientUnsubscribe, enc, dec)
+	respChan, err := c.makeCall(clientunsubscribe, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Unsubscribe"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.unsubscribe"))
 	}
 	resp := <-respChan
 	if resp == nil {

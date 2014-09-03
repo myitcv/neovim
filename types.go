@@ -21,17 +21,25 @@ type Client struct {
 	nextReq uint32
 	respMap *syncMap
 	lock    sync.Mutex
-
-	// SubChan is the channel on which subscription requests are registered
-	SubChan chan Subscription
-
-	// UnsubChan is the channel on which subscription requests are unregistered
-	UnsubChan chan Subscription
+	subChan chan subWrapper
 
 	// PanicOnError can be set to have the Client panic when an error would
 	// otherwise have been returned via an API method. Note: any attempt to
 	// change this option during concurrent use of the Client will be racey
 	PanicOnError bool
+}
+
+type subTask int
+
+const (
+	_Sub subTask = iota
+	_Unsub
+)
+
+type subWrapper struct {
+	sub     *Subscription
+	errChan chan error
+	task    subTask
 }
 
 // A Subscription is used to register/unregister interest in a topic
@@ -42,15 +50,14 @@ type Client struct {
 // Client.Unsubscribe
 type Subscription struct {
 	Topic  string
-	Error  chan error
-	Events chan SubscriptionEvent
+	Events chan *SubscriptionEvent
 }
 
 // A SubscriptionEvent contains the value Value announced via a notification
 // on topic Topic
 type SubscriptionEvent struct {
 	Topic string
-	Value interface{}
+	Value []interface{}
 }
 
 // Buffer represents a Neovim Buffer
