@@ -2134,8 +2134,8 @@ func (c *Client) Strwidth(str string) (int, error) {
 
 }
 
-// Subscribe waiting for documentation from Neovim
-func (c *Client) Subscribe(event string) error {
+// subscribe waiting for documentation from Neovim
+func (c *Client) subscribe(event string) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -2159,7 +2159,7 @@ func (c *Client) Subscribe(event string) error {
 	}
 	respChan, err := c.makeCall(clientSubscribe, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Subscribe"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.subscribe"))
 	}
 	resp := <-respChan
 	if resp == nil {
@@ -2173,8 +2173,8 @@ func (c *Client) Subscribe(event string) error {
 
 }
 
-// Unsubscribe waiting for documentation from Neovim
-func (c *Client) Unsubscribe(event string) error {
+// unsubscribe waiting for documentation from Neovim
+func (c *Client) unsubscribe(event string) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -2198,7 +2198,7 @@ func (c *Client) Unsubscribe(event string) error {
 	}
 	respChan, err := c.makeCall(clientUnsubscribe, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Unsubscribe"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.unsubscribe"))
 	}
 	resp := <-respChan
 	if resp == nil {
