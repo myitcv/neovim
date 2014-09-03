@@ -67,32 +67,24 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
-* Create test case where event received on subscription is not consumed... but unsubscribe is called
-* Improve the example on sub/unsub
 * Support Go package acting as a server, i.e. receiving requests from Neovim
-* Tidy up subscription handling code
-* Unsubscribe needs to close the `Events` channel
-* Give example on how to avoid deadlock when calling `Unsubscribe`
 * Move from `log.Fatal` to something better....
 * Tidy up use of `PanicOnError` and ensure all errors that would otherwise have been return use `panic` if this is set
 * Ensure tests panic if there is an error so we can see the stack
 * Add support for functions that `CanFail`
-* Ensure Travis build tests whether generated API matches the rebuilt Neovim instance
 * Get full test coverage; can we auto-generate certain basic tests?
-* Cleanly handle Neovim instances quitting
+* Cleanly handle Neovim instances quitting - need to kill goroutines for reading, subscription manager etc
+* Ability to cleanly terminate a client; along with associated tests
 * Test on more platforms
 * Tidy up the API generator - it's very messy. Very messy
 * Make the API generator optionally write the generated file into the appropriate place in `$GOPATH`
-* Improve example to make it more idiomatic; syntax highlighter perhaps?
 * Check our use of types; e.g. what does `Integer` in the API really map to? `uint64`?
-* More tests around concurrent use of a `Client`
-* Look into semantics of current decision to make `sub_events` a buffered channel
-* Ability to cleanly terminate a client; along with associated tests
-* Use Neovim's headless mode for testing (when that becomes available)
+* Look into semantics of current decision to make certain channels buffered
 * Look at how we verify at runtime whether the Neovim instance to which we have connected exposes an API
 with which we (a calling client) was compiled. This handshake will probably need some work on the Neovim
-side (versioning of the API perhaps?)
-* Benchmark tests for performance
-* Look into whether notification decoding can be made more efficient (current uses `DecodeInterface`)
+side (versioning of the API perhaps?). See comments in [this
+thread](https://github.com/neovim/neovim/pull/1121#issuecomment-53873091)
+* More benchmark tests for performance
+* Make notification decoding can be made more efficient (currently uses generic `DecodeSlice`)
 * Fix function and variable names (there are a few anomalies like `Client.GetVvar`)
 
