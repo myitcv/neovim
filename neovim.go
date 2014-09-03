@@ -298,12 +298,11 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 		return nil, errgo.NoteMask(err, "Could not encode method args ")
 	}
 
-	// TODO need a flush here?
-
 	return res, nil
 }
 
 func (c *Client) nextReqID() uint32 {
+	// TODO this is no longer necessary... see makeCall
 	return atomic.AddUint32(&c.nextReq, 1)
 }
 
