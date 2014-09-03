@@ -56,8 +56,8 @@ const (
 	clientSetOption         = "vim_set_option"
 	clientSetVar            = "vim_set_var"
 	clientStrwidth          = "vim_strwidth"
-	clientSubscribe         = "vim_subscribe"
-	clientUnsubscribe       = "vim_unsubscribe"
+	clientsubscribe         = "vim_subscribe"
+	clientunsubscribe       = "vim_unsubscribe"
 	windowGetBuffer         = "window_get_buffer"
 	windowGetCursor         = "window_get_cursor"
 	windowGetHeight         = "window_get_height"
@@ -2157,7 +2157,7 @@ func (c *Client) subscribe(event string) error {
 
 		return
 	}
-	respChan, err := c.makeCall(clientSubscribe, enc, dec)
+	respChan, err := c.makeCall(clientsubscribe, enc, dec)
 	if err != nil {
 		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.subscribe"))
 	}
@@ -2196,7 +2196,7 @@ func (c *Client) unsubscribe(event string) error {
 
 		return
 	}
-	respChan, err := c.makeCall(clientUnsubscribe, enc, dec)
+	respChan, err := c.makeCall(clientunsubscribe, enc, dec)
 	if err != nil {
 		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.unsubscribe"))
 	}
