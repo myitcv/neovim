@@ -135,7 +135,12 @@ func (t *NeovimTest) TestClientSubscribe(c *C) {
 	for i := range resp.Value {
 		c.Assert(resp.Value[i], Equals, val[i])
 	}
-	c.Assert(resp, NotNil)
+	_ = t.client.Unsubscribe(sub)
+	_ = t.client.Command(command)
+
+	// try and resubsubscribe; if there is an unhandled notification this will block
+	// forever and fail the tests
+	sub, _ = t.client.Subscribe(topic)
 }
 
 func (t *NeovimTest) TestGetSlice(c *C) {
