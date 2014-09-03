@@ -23,34 +23,50 @@ func ExampleSubscription() {
 		log.Fatalf("Could not create new client: %v", errgo.Details(err))
 	}
 
-	topic := "topic1" // corresponds to the topic used in Neovim's send_event()
-	respChan := make(chan neovim.SubscriptionEvent)
-	errChan := make(chan error)
+	// useful for debugging
+	client.PanicOnError = true
 
-	client.SubChan <- neovim.Subscription{
-		Topic:  topic,
-		Events: respChan,
-		Error:  errChan,
-	}
-	err = <-errChan
+	topic := "topic1"
+	sub, err := client.Subscribe(topic)
 	if err != nil {
-		log.Fatalf("Could not register subscription handler: %v", errgo.Details(err))
+		log.Fatalf("Could not subscribe to topic %v, with respChan %v and errChan %v: %v", sub.Topic, sub, errgo.Details(err))
 	}
 
-	err = client.Subscribe(topic)
-	if err != nil {
-		log.Fatalf("Could not subscribe to topic %v: %v", topic, errgo.Details(err))
-	}
+	done := make(chan struct{})
+	received := make(chan struct{})
 
-	// Now wait to receive a notification on respChan
-	// resp := <-respChan
+	go func() {
+		// listen for events on that topic channel
+		// finish when we get the first (and only) one
 
-	err = client.Close()
-	if err != nil {
-		log.Fatalf("Could not close client: %v\n", err)
-	}
+	ForLoop:
+		for {
+			select {
+			case e := <-sub.Events:
+				if e == nil {
+					// the Events channel gets closed when the Unsubscribe happens
+					break ForLoop
+				}
+				fmt.Printf("We got %v\n", e.Value)
+				received <- struct{}{}
+			}
+		}
+		done <- struct{}{}
+	}()
+
+	command := fmt.Sprintf(`call send_event(0, "%v", 1)`, topic)
+	_ = client.Command(command)
+
+	<-received
+
+	_ = client.Unsubscribe(sub)
+
+	<-done
+
+	_ = client.Close()
 
 	// Output:
+	// We got [1]
 }
 
 func ExampleClient_GetCurrentBuffer() {

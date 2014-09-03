@@ -67,6 +67,12 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
+* Improve the example on sub/unsub
+* Support Go package acting as a server, i.e. receiving requests from Neovim
+* Tidy up subscription handling code
+* Unsubscribe needs to close the `Events` channel
+* Give example on how to avoid deadlock when calling `Unsubscribe`
+* Move from `log.Fatal` to something better....
 * Tidy up use of `PanicOnError` and ensure all errors that would otherwise have been return use `panic` if this is set
 * Ensure tests panic if there is an error so we can see the stack
 * Add support for functions that `CanFail`

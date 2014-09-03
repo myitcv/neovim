@@ -111,42 +111,83 @@ func NewClient(c io.ReadWriteCloser) (*Client, error) {
 	res.respMap = newSyncMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
-	res.SubChan = make(chan Subscription)
-	res.UnsubChan = make(chan Subscription)
+	res.subChan = make(chan subWrapper)
 	go res.doListen()
 	return res, nil
+}
+
+// Subscribe subscribes to a topic of events from Neovim. The
+// *Subscription.Events channel will receive SubscriptionEvent's
+// Unsubscribe needs to be called on a different goroutine to
+// the goroutine that handles these SubscriptionEvent's
+func (c *Client) Subscribe(topic string) (*Subscription, error) {
+	respChan := make(chan *SubscriptionEvent)
+	errChan := make(chan error)
+
+	res := &Subscription{
+		Topic:  topic,
+		Events: respChan,
+	}
+
+	c.subChan <- subWrapper{
+		sub:     res,
+		errChan: errChan,
+		task:    _Sub,
+	}
+
+	err := <-errChan
+	if err != nil {
+		return nil, c.panicOrReturn(errgo.NoteMask(err, "Could not register subscription"))
+	}
+
+	return res, nil
+}
+
+// Unsubscribe unsubscribes from a topic of events from Neovim
+// This needs to be called on a different goroutine to that which
+// is handling the SubscriptionEvent's
+func (c *Client) Unsubscribe(sub *Subscription) error {
+	errChan := make(chan error)
+	c.subChan <- subWrapper{
+		sub:     sub,
+		errChan: errChan,
+		task:    _Unsub,
+	}
+
+	err := <-errChan
+	if err != nil {
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not register unsubscribe"))
+	}
+
+	return nil
 }
 
 // Close cleanly kills the client connection to Neovim
 func (c *Client) Close() error {
 	err := c.rw.Close()
 	if err != nil {
-		log.Fatalf("Could not cleanly close client: %v\n", err)
+		return c.panicOrReturn(errgo.Notef(err, "Could not cleanly close client"))
 	}
-	// TODO improve this
 	return nil
 }
 
 func (c *Client) doListen() {
-	// TODO need kill channel
-
-	// TODO look at the semantics of making this buffered...
-	subEvents := make(chan SubscriptionEvent, 10)
+	subEvents := make(chan *SubscriptionEvent, 10)
 	go c.doSubscriptionManager(subEvents)
 
 	dec := c.dec
 	for {
-		// TODO need better handling of EOF, i.e. client dies
 		_, err := dec.DecodeSliceLen()
-		if err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
+		if err == io.EOF {
+			break
+		} else if err != nil {
 			log.Fatalf("Could not decode message slice length: %v", err)
 		}
 
 		t, err := dec.DecodeInt()
-		if err != nil {
+		if err == io.EOF {
+			break
+		} else if err != nil {
 			log.Fatalf("Could not decode message type: %v", err)
 		}
 
@@ -154,13 +195,17 @@ func (c *Client) doListen() {
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode request id: %v", err)
 			}
 
 			// do we have an error?
 			re, err := dec.DecodeInterface()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode response error: %v", err)
 			}
 			if re != nil {
@@ -169,13 +214,16 @@ func (c *Client) doListen() {
 
 			// no, carry on
 			rh, err := c.respMap.Get(reqID)
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not get response holder for %v: %v", reqID, err)
 			}
 
-			// we have a valid response, dispatch to our decoder for the response
 			res, err := rh.dec()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode response: %v\n", err)
 			}
 
@@ -184,17 +232,22 @@ func (c *Client) doListen() {
 		case 2:
 			// handle notification
 			topic, err := dec.DecodeString()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode topic: %v", err)
 			}
 
-			// TODO this could be more efficient?
-			obj, err := dec.DecodeInterface()
-			if err != nil {
+			// TODO we could make a decode part of the subscription
+			// interface to avoid this reflection based decoding
+			obj, err := dec.DecodeSlice()
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				log.Fatalf("Could not decode obj payload: %v", err)
 			}
 
-			ev := SubscriptionEvent{
+			ev := &SubscriptionEvent{
 				Topic: topic,
 				Value: obj,
 			}
@@ -206,8 +259,8 @@ func (c *Client) doListen() {
 	}
 }
 
-func (c *Client) doSubscriptionManager(se chan SubscriptionEvent) {
-	subs := make(map[string]map[chan SubscriptionEvent]struct{})
+func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
+	subs := make(map[string]map[chan *SubscriptionEvent]struct{})
 
 	sendOrClose := func(c chan error, e error) {
 		if c != nil {
@@ -219,38 +272,79 @@ func (c *Client) doSubscriptionManager(se chan SubscriptionEvent) {
 		}
 	}
 
+	// a goroutine that is responsible for handling subscribe/unsubscribe calls
+	// on a separate goroutine because the calls to sub/unsub are blocking
+	// TODO look at semantics of making this buffered
+	subTasks := make(chan subWrapper, 10)
+	go func() {
+		for {
+			t := <-subTasks
+			if t.task == _Sub {
+				err := c.subscribe(t.sub.Topic)
+				if err != nil {
+					t.errChan <- errgo.NoteMask(err, "Could not subscribe")
+				} else {
+					close(t.errChan)
+				}
+			} else if t.task == _Unsub {
+				err := c.unsubscribe(t.sub.Topic)
+				if err != nil {
+					t.errChan <- errgo.NoteMask(err, "Could not unsubscribe")
+				} else {
+					close(t.errChan)
+				}
+			}
+		}
+	}()
+
+	// TODO tidy up send or close mess
+	// TODO tidy up this mess
 	for {
 		select {
 		case event := <-se:
-			// TODO should we really swallow events on topics for which we have no subs?
 			if chans, ok := subs[event.Topic]; ok {
 				for k := range chans {
 					k <- event
 				}
 			} else {
-				log.Printf("Got an event for which we have no subs on topic %v\n", event.Topic)
+				// we got an event when nothing was subscribed to
+				// the topic
+				log.Fatalf("Got an event for which we have no subs on topic %v\n", event.Topic)
 			}
-		case sub := <-c.SubChan:
-			m, ok := subs[sub.Topic]
-			if !ok {
-				m = make(map[chan SubscriptionEvent]struct{})
-				subs[sub.Topic] = m
+		case subW := <-c.subChan:
+			if subW.task == _Sub {
+				sub := subW.sub
+				m, ok := subs[sub.Topic]
+				if !ok {
+					// we move from 0 subs to one: subscribe
+					subTasks <- subW
+					m = make(map[chan *SubscriptionEvent]struct{})
+					subs[sub.Topic] = m
+				} else if _, ok := m[sub.Events]; ok {
+					sendOrClose(subW.errChan, errors.Errorf("Already have subscription for topic %v on this channel", sub.Topic))
+				} else {
+					close(subW.errChan)
+				}
+				m[sub.Events] = struct{}{}
+			} else if subW.task == _Unsub {
+				unsub := subW.sub
+				close(unsub.Events)
+				m, ok := subs[unsub.Topic]
+				if !ok {
+					sendOrClose(subW.errChan, errors.Errorf("We don't have any subscriptions for topic %v", unsub.Topic))
+				}
+				if _, ok := m[unsub.Events]; !ok {
+					sendOrClose(subW.errChan, errors.Errorf("We don't have a subscription on topic %v on this channel", unsub.Topic))
+				}
+				delete(m, unsub.Events)
+				if len(m) == 0 {
+					// we are back down to 0 again; unsubscribe
+					subTasks <- subW
+					delete(subs, unsub.Topic)
+				} else {
+					close(subW.errChan)
+				}
 			}
-			if _, ok := m[sub.Events]; ok {
-				sendOrClose(sub.Error, errors.Errorf("Already have subscription for topic %v on this channel", sub.Topic))
-			}
-			m[sub.Events] = struct{}{}
-			sendOrClose(sub.Error, nil)
-		case unsub := <-c.UnsubChan:
-			m, ok := subs[unsub.Topic]
-			if !ok {
-				sendOrClose(unsub.Error, errors.Errorf("We don't have any subscriptions for topic %v", unsub.Topic))
-			}
-			if _, ok := m[unsub.Events]; !ok {
-				sendOrClose(unsub.Error, errors.Errorf("We don't have a subscription on topic %v on this channel", unsub.Topic))
-			}
-			delete(m, unsub.Events)
-			sendOrClose(unsub.Error, nil)
 		}
 	}
 }

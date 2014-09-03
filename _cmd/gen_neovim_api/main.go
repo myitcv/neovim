@@ -422,6 +422,13 @@ func genMethodTemplates(fs []APIFunction) []methodTemplate {
 		// name
 		m.RawName = f.Name
 		m.Name = sstrings.Camelize(splits[1])
+
+		// TODO this is gross
+		switch m.RawName {
+		case "vim_subscribe", "vim_unsubscribe":
+			m.Name = strings.ToLower(m.Name[0:1]) + m.Name[1:]
+		}
+
 		m.ID = f.ID
 
 		// receiver
