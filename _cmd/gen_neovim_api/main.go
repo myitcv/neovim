@@ -472,6 +472,8 @@ func genMethodTemplates(fs []APIFunction) []methodTemplate {
 		res[i] = m
 	}
 
+	sort.Sort(byMethod(res))
+
 	return res
 }
 
@@ -480,6 +482,12 @@ type byType []_type
 func (a byType) Len() int           { return len(a) }
 func (a byType) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byType) Less(i, j int) bool { return a[i].name < a[j].name }
+
+type byMethod []methodTemplate
+
+func (a byMethod) Len() int           { return len(a) }
+func (a byMethod) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byMethod) Less(i, j int) bool { return a[i].RawName < a[j].RawName }
 
 func genTypeTemplates(ts []APIClass) []_type {
 	var res []_type

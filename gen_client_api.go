@@ -7,129 +7,90 @@ import "github.com/juju/errgo"
 // constants representing method ids
 
 const (
-	tabpageGetWindows       = "tabpage_get_windows"
-	tabpageGetVar           = "tabpage_get_var"
-	tabpageSetVar           = "tabpage_set_var"
-	tabpageGetWindow        = "tabpage_get_window"
-	tabpageIsValid          = "tabpage_is_valid"
+	bufferDelLine           = "buffer_del_line"
 	bufferGetLength         = "buffer_get_length"
 	bufferGetLine           = "buffer_get_line"
-	bufferSetLine           = "buffer_set_line"
-	bufferDelLine           = "buffer_del_line"
-	bufferGetSlice          = "buffer_get_slice"
-	bufferSetSlice          = "buffer_set_slice"
-	bufferGetVar            = "buffer_get_var"
-	bufferSetVar            = "buffer_set_var"
-	bufferGetOption         = "buffer_get_option"
-	bufferSetOption         = "buffer_set_option"
-	bufferGetNumber         = "buffer_get_number"
-	bufferGetName           = "buffer_get_name"
-	bufferSetName           = "buffer_set_name"
-	bufferIsValid           = "buffer_is_valid"
-	bufferInsert            = "buffer_insert"
 	bufferGetMark           = "buffer_get_mark"
-	clientPushKeys          = "vim_push_keys"
-	clientCommand           = "vim_command"
-	clientFeedkeys          = "vim_feedkeys"
-	clientReplaceTermcodes  = "vim_replace_termcodes"
-	clientEval              = "vim_eval"
-	clientStrwidth          = "vim_strwidth"
-	clientListRuntimePaths  = "vim_list_runtime_paths"
+	bufferGetName           = "buffer_get_name"
+	bufferGetNumber         = "buffer_get_number"
+	bufferGetOption         = "buffer_get_option"
+	bufferGetSlice          = "buffer_get_slice"
+	bufferGetVar            = "buffer_get_var"
+	bufferInsert            = "buffer_insert"
+	bufferIsValid           = "buffer_is_valid"
+	bufferSetLine           = "buffer_set_line"
+	bufferSetName           = "buffer_set_name"
+	bufferSetOption         = "buffer_set_option"
+	bufferSetSlice          = "buffer_set_slice"
+	bufferSetVar            = "buffer_set_var"
+	tabpageGetVar           = "tabpage_get_var"
+	tabpageGetWindow        = "tabpage_get_window"
+	tabpageGetWindows       = "tabpage_get_windows"
+	tabpageIsValid          = "tabpage_is_valid"
+	tabpageSetVar           = "tabpage_set_var"
 	clientChangeDirectory   = "vim_change_directory"
-	clientGetCurrentLine    = "vim_get_current_line"
-	clientSetCurrentLine    = "vim_set_current_line"
+	clientCommand           = "vim_command"
 	clientDelCurrentLine    = "vim_del_current_line"
-	clientGetVar            = "vim_get_var"
-	clientSetVar            = "vim_set_var"
-	clientGetVvar           = "vim_get_vvar"
-	clientGetOption         = "vim_get_option"
-	clientSetOption         = "vim_set_option"
-	clientOutWrite          = "vim_out_write"
 	clientErrWrite          = "vim_err_write"
+	clientEval              = "vim_eval"
+	clientFeedkeys          = "vim_feedkeys"
 	clientGetBuffers        = "vim_get_buffers"
 	clientGetCurrentBuffer  = "vim_get_current_buffer"
-	clientSetCurrentBuffer  = "vim_set_current_buffer"
-	clientGetWindows        = "vim_get_windows"
-	clientGetCurrentWindow  = "vim_get_current_window"
-	clientSetCurrentWindow  = "vim_set_current_window"
-	clientGetTabpages       = "vim_get_tabpages"
+	clientGetCurrentLine    = "vim_get_current_line"
 	clientGetCurrentTabpage = "vim_get_current_tabpage"
+	clientGetCurrentWindow  = "vim_get_current_window"
+	clientGetOption         = "vim_get_option"
+	clientGetTabpages       = "vim_get_tabpages"
+	clientGetVar            = "vim_get_var"
+	clientGetVvar           = "vim_get_vvar"
+	clientGetWindows        = "vim_get_windows"
+	clientListRuntimePaths  = "vim_list_runtime_paths"
+	clientOutWrite          = "vim_out_write"
+	clientPushKeys          = "vim_push_keys"
+	clientRegisterProvider  = "vim_register_provider"
+	clientReplaceTermcodes  = "vim_replace_termcodes"
+	clientSetCurrentBuffer  = "vim_set_current_buffer"
+	clientSetCurrentLine    = "vim_set_current_line"
 	clientSetCurrentTabpage = "vim_set_current_tabpage"
+	clientSetCurrentWindow  = "vim_set_current_window"
+	clientSetOption         = "vim_set_option"
+	clientSetVar            = "vim_set_var"
+	clientStrwidth          = "vim_strwidth"
 	clientSubscribe         = "vim_subscribe"
 	clientUnsubscribe       = "vim_unsubscribe"
-	clientRegisterProvider  = "vim_register_provider"
 	windowGetBuffer         = "window_get_buffer"
 	windowGetCursor         = "window_get_cursor"
-	windowSetCursor         = "window_set_cursor"
 	windowGetHeight         = "window_get_height"
-	windowSetHeight         = "window_set_height"
-	windowGetWidth          = "window_get_width"
-	windowSetWidth          = "window_set_width"
-	windowGetVar            = "window_get_var"
-	windowSetVar            = "window_set_var"
 	windowGetOption         = "window_get_option"
-	windowSetOption         = "window_set_option"
 	windowGetPosition       = "window_get_position"
 	windowGetTabpage        = "window_get_tabpage"
+	windowGetVar            = "window_get_var"
+	windowGetWidth          = "window_get_width"
 	windowIsValid           = "window_is_valid"
+	windowSetCursor         = "window_set_cursor"
+	windowSetHeight         = "window_set_height"
+	windowSetOption         = "window_set_option"
+	windowSetVar            = "window_set_var"
+	windowSetWidth          = "window_set_width"
 )
 
 // methods on the API
 
-// GetWindows waiting for documentation from Neovim
-func (t *Tabpage) GetWindows() ([]Window, error) {
-	var retVal []Window
+// DelLine waiting for documentation from Neovim
+func (b *Buffer) DelLine(index int) error {
+
 	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(1)
+		_err = b.client.enc.EncodeSliceLen(2)
 		if _err != nil {
 			return
 		}
 
-		_err = t.client.encodeTabpage(*t)
+		_err = b.client.encodeBuffer(*b)
 		if _err != nil {
 			return
 		}
 
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = t.client.decodeWindowSlice()
-
-		return
-	}
-	respChan, err := t.client.makeCall(tabpageGetWindows, enc, dec)
-	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.GetWindows"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.([]Window)
-	return retVal, nil
-
-}
-
-// GetVar waiting for documentation from Neovim
-func (t *Tabpage) GetVar(name string) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = t.client.encodeTabpage(*t)
-		if _err != nil {
-			return
-		}
-
-		_err = t.client.enc.EncodeString(name)
+		_err = b.client.enc.EncodeInt(index)
 
 		if _err != nil {
 			return
@@ -139,153 +100,23 @@ func (t *Tabpage) GetVar(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = t.client.dec.DecodeInterface()
+		_, _err = b.client.dec.DecodeBytes()
 
 		return
 	}
-	respChan, err := t.client.makeCall(tabpageGetVar, enc, dec)
+	respChan, err := b.client.makeCall(bufferDelLine, enc, dec)
 	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.GetVar"))
+		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.DelLine"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.(interface{})
-	return retVal, nil
-
-}
-
-// SetVar waiting for documentation from Neovim
-func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(3)
-		if _err != nil {
-			return
-		}
-
-		_err = t.client.encodeTabpage(*t)
-		if _err != nil {
-			return
-		}
-
-		_err = t.client.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		_err = t.client.enc.Encode(value)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = t.client.dec.DecodeInterface()
-
-		return
-	}
-	respChan, err := t.client.makeCall(tabpageSetVar, enc, dec)
-	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.SetVar"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(interface{})
-	return retVal, nil
-
-}
-
-// GetWindow waiting for documentation from Neovim
-func (t *Tabpage) GetWindow() (Window, error) {
-	var retVal Window
-	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = t.client.encodeTabpage(*t)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = t.client.decodeWindow()
-
-		return
-	}
-	respChan, err := t.client.makeCall(tabpageGetWindow, enc, dec)
-	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.GetWindow"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(Window)
-	return retVal, nil
-
-}
-
-// IsValid waiting for documentation from Neovim
-func (t *Tabpage) IsValid() (bool, error) {
-	var retVal bool
-	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = t.client.encodeTabpage(*t)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = t.client.dec.DecodeBool()
-
-		return
-	}
-	respChan, err := t.client.makeCall(tabpageIsValid, enc, dec)
-	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.IsValid"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(bool)
-	return retVal, nil
+	return nil
 
 }
 
@@ -373,59 +204,9 @@ func (b *Buffer) GetLine(index int) (string, error) {
 
 }
 
-// SetLine waiting for documentation from Neovim
-func (b *Buffer) SetLine(index int, line string) error {
-
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(3)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeInt(index)
-
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeString(line)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = b.client.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferSetLine, enc, dec)
-	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetLine"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// DelLine waiting for documentation from Neovim
-func (b *Buffer) DelLine(index int) error {
-
+// GetMark waiting for documentation from Neovim
+func (b *Buffer) GetMark(name string) (uint32, error) {
+	var retVal uint32
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -437,7 +218,7 @@ func (b *Buffer) DelLine(index int) error {
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(index)
+		_err = b.client.enc.EncodeString(name)
 
 		if _err != nil {
 			return
@@ -447,23 +228,147 @@ func (b *Buffer) DelLine(index int) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = b.client.dec.DecodeBytes()
+		_i, _err = b.client.dec.DecodeUint32()
 
 		return
 	}
-	respChan, err := b.client.makeCall(bufferDelLine, enc, dec)
+	respChan, err := b.client.makeCall(bufferGetMark, enc, dec)
 	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.DelLine"))
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetMark"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	return nil
+	retVal = resp.obj.(uint32)
+	return retVal, nil
+
+}
+
+// GetName waiting for documentation from Neovim
+func (b *Buffer) GetName() (string, error) {
+	var retVal string
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = b.client.dec.DecodeString()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferGetName, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetName"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(string)
+	return retVal, nil
+
+}
+
+// GetNumber waiting for documentation from Neovim
+func (b *Buffer) GetNumber() (int, error) {
+	var retVal int
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = b.client.dec.DecodeInt()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferGetNumber, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetNumber"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(int)
+	return retVal, nil
+
+}
+
+// GetOption waiting for documentation from Neovim
+func (b *Buffer) GetOption(name string) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = b.client.dec.DecodeInterface()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferGetOption, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetOption"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
 
 }
 
@@ -527,6 +432,284 @@ func (b *Buffer) GetSlice(start int, end int, includeStart bool, includeEnd bool
 
 	retVal = resp.obj.([]string)
 	return retVal, nil
+
+}
+
+// GetVar waiting for documentation from Neovim
+func (b *Buffer) GetVar(name string) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = b.client.dec.DecodeInterface()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferGetVar, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetVar"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
+
+}
+
+// Insert waiting for documentation from Neovim
+func (b *Buffer) Insert(lnum int, lines []string) error {
+
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(3)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeInt(lnum)
+
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeStringSlice(lines)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = b.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferInsert, enc, dec)
+	if err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.Insert"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// IsValid waiting for documentation from Neovim
+func (b *Buffer) IsValid() (bool, error) {
+	var retVal bool
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = b.client.dec.DecodeBool()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferIsValid, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.IsValid"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(bool)
+	return retVal, nil
+
+}
+
+// SetLine waiting for documentation from Neovim
+func (b *Buffer) SetLine(index int, line string) error {
+
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(3)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeInt(index)
+
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeString(line)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = b.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferSetLine, enc, dec)
+	if err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetLine"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// SetName waiting for documentation from Neovim
+func (b *Buffer) SetName(name string) error {
+
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = b.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferSetName, enc, dec)
+	if err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetName"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// SetOption waiting for documentation from Neovim
+func (b *Buffer) SetOption(name string, value interface{}) error {
+
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(3)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.Encode(value)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = b.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferSetOption, enc, dec)
+	if err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetOption"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
 
 }
 
@@ -598,51 +781,6 @@ func (b *Buffer) SetSlice(start int, end int, includeStart bool, includeEnd bool
 
 }
 
-// GetVar waiting for documentation from Neovim
-func (b *Buffer) GetVar(name string) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = b.client.dec.DecodeInterface()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferGetVar, enc, dec)
-	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetVar"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(interface{})
-	return retVal, nil
-
-}
-
 // SetVar waiting for documentation from Neovim
 func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 	var retVal interface{}
@@ -694,21 +832,21 @@ func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 
 }
 
-// GetOption waiting for documentation from Neovim
-func (b *Buffer) GetOption(name string) (interface{}, error) {
+// GetVar waiting for documentation from Neovim
+func (t *Tabpage) GetVar(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
+		_err = t.client.enc.EncodeSliceLen(2)
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.encodeBuffer(*b)
+		_err = t.client.encodeTabpage(*t)
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.enc.EncodeString(name)
+		_err = t.client.enc.EncodeString(name)
 
 		if _err != nil {
 			return
@@ -718,20 +856,20 @@ func (b *Buffer) GetOption(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeInterface()
+		_i, _err = t.client.dec.DecodeInterface()
 
 		return
 	}
-	respChan, err := b.client.makeCall(bufferGetOption, enc, dec)
+	respChan, err := t.client.makeCall(tabpageGetVar, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetOption"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.GetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -739,28 +877,16 @@ func (b *Buffer) GetOption(name string) (interface{}, error) {
 
 }
 
-// SetOption waiting for documentation from Neovim
-func (b *Buffer) SetOption(name string, value interface{}) error {
-
+// GetWindow waiting for documentation from Neovim
+func (t *Tabpage) GetWindow() (Window, error) {
+	var retVal Window
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(3)
+		_err = t.client.enc.EncodeSliceLen(1)
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.Encode(value)
-
+		_err = t.client.encodeTabpage(*t)
 		if _err != nil {
 			return
 		}
@@ -769,75 +895,37 @@ func (b *Buffer) SetOption(name string, value interface{}) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = b.client.dec.DecodeBytes()
+		_i, _err = t.client.decodeWindow()
 
 		return
 	}
-	respChan, err := b.client.makeCall(bufferSetOption, enc, dec)
+	respChan, err := t.client.makeCall(tabpageGetWindow, enc, dec)
 	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetOption"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.GetWindow"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	return nil
-
-}
-
-// GetNumber waiting for documentation from Neovim
-func (b *Buffer) GetNumber() (int, error) {
-	var retVal int
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = b.client.dec.DecodeInt()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferGetNumber, enc, dec)
-	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetNumber"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(int)
+	retVal = resp.obj.(Window)
 	return retVal, nil
 
 }
 
-// GetName waiting for documentation from Neovim
-func (b *Buffer) GetName() (string, error) {
-	var retVal string
+// GetWindows waiting for documentation from Neovim
+func (t *Tabpage) GetWindows() ([]Window, error) {
+	var retVal []Window
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
+		_err = t.client.enc.EncodeSliceLen(1)
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.encodeBuffer(*b)
+		_err = t.client.encodeTabpage(*t)
 		if _err != nil {
 			return
 		}
@@ -846,81 +934,37 @@ func (b *Buffer) GetName() (string, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeString()
+		_i, _err = t.client.decodeWindowSlice()
 
 		return
 	}
-	respChan, err := b.client.makeCall(bufferGetName, enc, dec)
+	respChan, err := t.client.makeCall(tabpageGetWindows, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetName"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.GetWindows"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.(string)
+	retVal = resp.obj.([]Window)
 	return retVal, nil
-
-}
-
-// SetName waiting for documentation from Neovim
-func (b *Buffer) SetName(name string) error {
-
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = b.client.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferSetName, enc, dec)
-	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetName"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
 
 }
 
 // IsValid waiting for documentation from Neovim
-func (b *Buffer) IsValid() (bool, error) {
+func (t *Tabpage) IsValid() (bool, error) {
 	var retVal bool
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
+		_err = t.client.enc.EncodeSliceLen(1)
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.encodeBuffer(*b)
+		_err = t.client.encodeTabpage(*t)
 		if _err != nil {
 			return
 		}
@@ -929,20 +973,20 @@ func (b *Buffer) IsValid() (bool, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeBool()
+		_i, _err = t.client.dec.DecodeBool()
 
 		return
 	}
-	respChan, err := b.client.makeCall(bufferIsValid, enc, dec)
+	respChan, err := t.client.makeCall(tabpageIsValid, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.IsValid"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.IsValid"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(bool)
@@ -950,27 +994,27 @@ func (b *Buffer) IsValid() (bool, error) {
 
 }
 
-// Insert waiting for documentation from Neovim
-func (b *Buffer) Insert(lnum int, lines []string) error {
-
+// SetVar waiting for documentation from Neovim
+func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
+	var retVal interface{}
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(3)
+		_err = t.client.enc.EncodeSliceLen(3)
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.encodeBuffer(*b)
+		_err = t.client.encodeTabpage(*t)
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(lnum)
+		_err = t.client.enc.EncodeString(name)
 
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.encodeStringSlice(lines)
+		_err = t.client.enc.Encode(value)
 
 		if _err != nil {
 			return
@@ -980,73 +1024,29 @@ func (b *Buffer) Insert(lnum int, lines []string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = b.client.dec.DecodeBytes()
+		_i, _err = t.client.dec.DecodeInterface()
 
 		return
 	}
-	respChan, err := b.client.makeCall(bufferInsert, enc, dec)
+	respChan, err := t.client.makeCall(tabpageSetVar, enc, dec)
 	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.Insert"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.SetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	return nil
-
-}
-
-// GetMark waiting for documentation from Neovim
-func (b *Buffer) GetMark(name string) (uint32, error) {
-	var retVal uint32
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = b.client.dec.DecodeUint32()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferGetMark, enc, dec)
-	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetMark"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(uint32)
+	retVal = resp.obj.(interface{})
 	return retVal, nil
 
 }
 
-// PushKeys waiting for documentation from Neovim
-func (c *Client) PushKeys(str string) error {
+// ChangeDirectory waiting for documentation from Neovim
+func (c *Client) ChangeDirectory(dir string) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -1054,7 +1054,7 @@ func (c *Client) PushKeys(str string) error {
 			return
 		}
 
-		_err = c.enc.EncodeString(str)
+		_err = c.enc.EncodeString(dir)
 
 		if _err != nil {
 			return
@@ -1068,9 +1068,9 @@ func (c *Client) PushKeys(str string) error {
 
 		return
 	}
-	respChan, err := c.makeCall(clientPushKeys, enc, dec)
+	respChan, err := c.makeCall(clientChangeDirectory, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.PushKeys"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ChangeDirectory"))
 	}
 	resp := <-respChan
 	if resp == nil {
@@ -1123,23 +1123,11 @@ func (c *Client) Command(str string) error {
 
 }
 
-// Feedkeys waiting for documentation from Neovim
-func (c *Client) Feedkeys(keys string, mode string) error {
+// DelCurrentLine waiting for documentation from Neovim
+func (c *Client) DelCurrentLine() error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(keys)
-
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(mode)
-
+		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
 			return
 		}
@@ -1152,9 +1140,9 @@ func (c *Client) Feedkeys(keys string, mode string) error {
 
 		return
 	}
-	respChan, err := c.makeCall(clientFeedkeys, enc, dec)
+	respChan, err := c.makeCall(clientDelCurrentLine, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Feedkeys"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.DelCurrentLine"))
 	}
 	resp := <-respChan
 	if resp == nil {
@@ -1168,11 +1156,11 @@ func (c *Client) Feedkeys(keys string, mode string) error {
 
 }
 
-// ReplaceTermcodes waiting for documentation from Neovim
-func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special bool) (string, error) {
-	var retVal string
+// ErrWrite waiting for documentation from Neovim
+func (c *Client) ErrWrite(str string) error {
+
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(4)
+		_err = c.enc.EncodeSliceLen(1)
 		if _err != nil {
 			return
 		}
@@ -1183,46 +1171,27 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 			return
 		}
 
-		_err = c.enc.EncodeBool(fromPart)
-
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeBool(doLt)
-
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeBool(special)
-
-		if _err != nil {
-			return
-		}
-
 		return
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeString()
+		_, _err = c.dec.DecodeBytes()
 
 		return
 	}
-	respChan, err := c.makeCall(clientReplaceTermcodes, enc, dec)
+	respChan, err := c.makeCall(clientErrWrite, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ReplaceTermcodes"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ErrWrite"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.(string)
-	return retVal, nil
+	return nil
 
 }
 
@@ -1266,393 +1235,8 @@ func (c *Client) Eval(str string) (interface{}, error) {
 
 }
 
-// Strwidth waiting for documentation from Neovim
-func (c *Client) Strwidth(str string) (int, error) {
-	var retVal int
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(str)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = c.dec.DecodeInt()
-
-		return
-	}
-	respChan, err := c.makeCall(clientStrwidth, enc, dec)
-	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Strwidth"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(int)
-	return retVal, nil
-
-}
-
-// ListRuntimePaths waiting for documentation from Neovim
-func (c *Client) ListRuntimePaths() ([]string, error) {
-	var retVal []string
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = c.decodeStringSlice()
-
-		return
-	}
-	respChan, err := c.makeCall(clientListRuntimePaths, enc, dec)
-	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ListRuntimePaths"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.([]string)
-	return retVal, nil
-
-}
-
-// ChangeDirectory waiting for documentation from Neovim
-func (c *Client) ChangeDirectory(dir string) error {
-
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(dir)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = c.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := c.makeCall(clientChangeDirectory, enc, dec)
-	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ChangeDirectory"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// GetCurrentLine waiting for documentation from Neovim
-func (c *Client) GetCurrentLine() (string, error) {
-	var retVal string
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = c.dec.DecodeString()
-
-		return
-	}
-	respChan, err := c.makeCall(clientGetCurrentLine, enc, dec)
-	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentLine"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(string)
-	return retVal, nil
-
-}
-
-// SetCurrentLine waiting for documentation from Neovim
-func (c *Client) SetCurrentLine(line string) error {
-
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(line)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = c.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := c.makeCall(clientSetCurrentLine, enc, dec)
-	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetCurrentLine"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// DelCurrentLine waiting for documentation from Neovim
-func (c *Client) DelCurrentLine() error {
-
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = c.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := c.makeCall(clientDelCurrentLine, enc, dec)
-	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.DelCurrentLine"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// GetVar waiting for documentation from Neovim
-func (c *Client) GetVar(name string) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = c.dec.DecodeInterface()
-
-		return
-	}
-	respChan, err := c.makeCall(clientGetVar, enc, dec)
-	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetVar"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(interface{})
-	return retVal, nil
-
-}
-
-// SetVar waiting for documentation from Neovim
-func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.Encode(value)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = c.dec.DecodeInterface()
-
-		return
-	}
-	respChan, err := c.makeCall(clientSetVar, enc, dec)
-	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetVar"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(interface{})
-	return retVal, nil
-
-}
-
-// GetVvar waiting for documentation from Neovim
-func (c *Client) GetVvar(name string) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = c.dec.DecodeInterface()
-
-		return
-	}
-	respChan, err := c.makeCall(clientGetVvar, enc, dec)
-	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetVvar"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(interface{})
-	return retVal, nil
-
-}
-
-// GetOption waiting for documentation from Neovim
-func (c *Client) GetOption(name string) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = c.dec.DecodeInterface()
-
-		return
-	}
-	respChan, err := c.makeCall(clientGetOption, enc, dec)
-	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetOption"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(interface{})
-	return retVal, nil
-
-}
-
-// SetOption waiting for documentation from Neovim
-func (c *Client) SetOption(name string, value interface{}) error {
+// Feedkeys waiting for documentation from Neovim
+func (c *Client) Feedkeys(keys string, mode string) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(2)
@@ -1660,52 +1244,13 @@ func (c *Client) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = c.enc.EncodeString(name)
+		_err = c.enc.EncodeString(keys)
 
 		if _err != nil {
 			return
 		}
 
-		_err = c.enc.Encode(value)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = c.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := c.makeCall(clientSetOption, enc, dec)
-	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetOption"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// OutWrite waiting for documentation from Neovim
-func (c *Client) OutWrite(str string) error {
-
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(str)
+		_err = c.enc.EncodeString(mode)
 
 		if _err != nil {
 			return
@@ -1719,48 +1264,9 @@ func (c *Client) OutWrite(str string) error {
 
 		return
 	}
-	respChan, err := c.makeCall(clientOutWrite, enc, dec)
+	respChan, err := c.makeCall(clientFeedkeys, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.OutWrite"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// ErrWrite waiting for documentation from Neovim
-func (c *Client) ErrWrite(str string) error {
-
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(str)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = c.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := c.makeCall(clientErrWrite, enc, dec)
-	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ErrWrite"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Feedkeys"))
 	}
 	resp := <-respChan
 	if resp == nil {
@@ -1842,6 +1348,505 @@ func (c *Client) GetCurrentBuffer() (Buffer, error) {
 
 }
 
+// GetCurrentLine waiting for documentation from Neovim
+func (c *Client) GetCurrentLine() (string, error) {
+	var retVal string
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.DecodeString()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetCurrentLine, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentLine"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(string)
+	return retVal, nil
+
+}
+
+// GetCurrentTabpage waiting for documentation from Neovim
+func (c *Client) GetCurrentTabpage() (Tabpage, error) {
+	var retVal Tabpage
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.decodeTabpage()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetCurrentTabpage, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentTabpage"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(Tabpage)
+	return retVal, nil
+
+}
+
+// GetCurrentWindow waiting for documentation from Neovim
+func (c *Client) GetCurrentWindow() (Window, error) {
+	var retVal Window
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.decodeWindow()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetCurrentWindow, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentWindow"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(Window)
+	return retVal, nil
+
+}
+
+// GetOption waiting for documentation from Neovim
+func (c *Client) GetOption(name string) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.DecodeInterface()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetOption, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetOption"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
+
+}
+
+// GetTabpages waiting for documentation from Neovim
+func (c *Client) GetTabpages() ([]Tabpage, error) {
+	var retVal []Tabpage
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.decodeTabpageSlice()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetTabpages, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetTabpages"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.([]Tabpage)
+	return retVal, nil
+
+}
+
+// GetVar waiting for documentation from Neovim
+func (c *Client) GetVar(name string) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.DecodeInterface()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetVar, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetVar"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
+
+}
+
+// GetVvar waiting for documentation from Neovim
+func (c *Client) GetVvar(name string) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.DecodeInterface()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetVvar, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetVvar"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
+
+}
+
+// GetWindows waiting for documentation from Neovim
+func (c *Client) GetWindows() ([]Window, error) {
+	var retVal []Window
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.decodeWindowSlice()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetWindows, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetWindows"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.([]Window)
+	return retVal, nil
+
+}
+
+// ListRuntimePaths waiting for documentation from Neovim
+func (c *Client) ListRuntimePaths() ([]string, error) {
+	var retVal []string
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.decodeStringSlice()
+
+		return
+	}
+	respChan, err := c.makeCall(clientListRuntimePaths, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ListRuntimePaths"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.([]string)
+	return retVal, nil
+
+}
+
+// OutWrite waiting for documentation from Neovim
+func (c *Client) OutWrite(str string) error {
+
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(str)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = c.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := c.makeCall(clientOutWrite, enc, dec)
+	if err != nil {
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.OutWrite"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// PushKeys waiting for documentation from Neovim
+func (c *Client) PushKeys(str string) error {
+
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(str)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = c.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := c.makeCall(clientPushKeys, enc, dec)
+	if err != nil {
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.PushKeys"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// RegisterProvider waiting for documentation from Neovim
+func (c *Client) RegisterProvider(method string) error {
+
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(method)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = c.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := c.makeCall(clientRegisterProvider, enc, dec)
+	if err != nil {
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.RegisterProvider"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// ReplaceTermcodes waiting for documentation from Neovim
+func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special bool) (string, error) {
+	var retVal string
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(4)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(str)
+
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeBool(fromPart)
+
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeBool(doLt)
+
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeBool(special)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.DecodeString()
+
+		return
+	}
+	respChan, err := c.makeCall(clientReplaceTermcodes, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ReplaceTermcodes"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(string)
+	return retVal, nil
+
+}
+
 // SetCurrentBuffer waiting for documentation from Neovim
 func (c *Client) SetCurrentBuffer(buffer Buffer) error {
 
@@ -1881,11 +1886,17 @@ func (c *Client) SetCurrentBuffer(buffer Buffer) error {
 
 }
 
-// GetWindows waiting for documentation from Neovim
-func (c *Client) GetWindows() ([]Window, error) {
-	var retVal []Window
+// SetCurrentLine waiting for documentation from Neovim
+func (c *Client) SetCurrentLine(line string) error {
+
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(line)
+
 		if _err != nil {
 			return
 		}
@@ -1894,32 +1905,37 @@ func (c *Client) GetWindows() ([]Window, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.decodeWindowSlice()
+		_, _err = c.dec.DecodeBytes()
 
 		return
 	}
-	respChan, err := c.makeCall(clientGetWindows, enc, dec)
+	respChan, err := c.makeCall(clientSetCurrentLine, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetWindows"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetCurrentLine"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.([]Window)
-	return retVal, nil
+	return nil
 
 }
 
-// GetCurrentWindow waiting for documentation from Neovim
-func (c *Client) GetCurrentWindow() (Window, error) {
-	var retVal Window
+// SetCurrentTabpage waiting for documentation from Neovim
+func (c *Client) SetCurrentTabpage(tabpage Tabpage) error {
+
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.encodeTabpage(tabpage)
+
 		if _err != nil {
 			return
 		}
@@ -1928,24 +1944,23 @@ func (c *Client) GetCurrentWindow() (Window, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.decodeWindow()
+		_, _err = c.dec.DecodeBytes()
 
 		return
 	}
-	respChan, err := c.makeCall(clientGetCurrentWindow, enc, dec)
+	respChan, err := c.makeCall(clientSetCurrentTabpage, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentWindow"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetCurrentTabpage"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.(Window)
-	return retVal, nil
+	return nil
 
 }
 
@@ -1988,84 +2003,22 @@ func (c *Client) SetCurrentWindow(window Window) error {
 
 }
 
-// GetTabpages waiting for documentation from Neovim
-func (c *Client) GetTabpages() ([]Tabpage, error) {
-	var retVal []Tabpage
+// SetOption waiting for documentation from Neovim
+func (c *Client) SetOption(name string, value interface{}) error {
+
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.EncodeSliceLen(2)
 		if _err != nil {
 			return
 		}
 
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
+		_err = c.enc.EncodeString(name)
 
-		_i, _err = c.decodeTabpageSlice()
-
-		return
-	}
-	respChan, err := c.makeCall(clientGetTabpages, enc, dec)
-	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetTabpages"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.([]Tabpage)
-	return retVal, nil
-
-}
-
-// GetCurrentTabpage waiting for documentation from Neovim
-func (c *Client) GetCurrentTabpage() (Tabpage, error) {
-	var retVal Tabpage
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
 			return
 		}
 
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = c.decodeTabpage()
-
-		return
-	}
-	respChan, err := c.makeCall(clientGetCurrentTabpage, enc, dec)
-	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentTabpage"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(Tabpage)
-	return retVal, nil
-
-}
-
-// SetCurrentTabpage waiting for documentation from Neovim
-func (c *Client) SetCurrentTabpage(tabpage Tabpage) error {
-
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.encodeTabpage(tabpage)
+		_err = c.enc.Encode(value)
 
 		if _err != nil {
 			return
@@ -2079,9 +2032,9 @@ func (c *Client) SetCurrentTabpage(tabpage Tabpage) error {
 
 		return
 	}
-	respChan, err := c.makeCall(clientSetCurrentTabpage, enc, dec)
+	respChan, err := c.makeCall(clientSetOption, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetCurrentTabpage"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetOption"))
 	}
 	resp := <-respChan
 	if resp == nil {
@@ -2092,6 +2045,92 @@ func (c *Client) SetCurrentTabpage(tabpage Tabpage) error {
 	}
 
 	return nil
+
+}
+
+// SetVar waiting for documentation from Neovim
+func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.Encode(value)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.DecodeInterface()
+
+		return
+	}
+	respChan, err := c.makeCall(clientSetVar, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetVar"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
+
+}
+
+// Strwidth waiting for documentation from Neovim
+func (c *Client) Strwidth(str string) (int, error) {
+	var retVal int
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.EncodeString(str)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.DecodeInt()
+
+		return
+	}
+	respChan, err := c.makeCall(clientStrwidth, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Strwidth"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(int)
+	return retVal, nil
 
 }
 
@@ -2160,45 +2199,6 @@ func (c *Client) Unsubscribe(event string) error {
 	respChan, err := c.makeCall(clientUnsubscribe, enc, dec)
 	if err != nil {
 		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Unsubscribe"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// RegisterProvider waiting for documentation from Neovim
-func (c *Client) RegisterProvider(method string) error {
-
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeString(method)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = c.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := c.makeCall(clientRegisterProvider, enc, dec)
-	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.RegisterProvider"))
 	}
 	resp := <-respChan
 	if resp == nil {
@@ -2290,50 +2290,6 @@ func (w *Window) GetCursor() (uint32, error) {
 
 }
 
-// SetCursor waiting for documentation from Neovim
-func (w *Window) SetCursor(pos uint32) error {
-
-	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.encodeWindow(*w)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.enc.EncodeUint32(pos)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = w.client.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := w.client.makeCall(windowSetCursor, enc, dec)
-	if err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetCursor"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
 // GetHeight waiting for documentation from Neovim
 func (w *Window) GetHeight() (int, error) {
 	var retVal int
@@ -2369,229 +2325,6 @@ func (w *Window) GetHeight() (int, error) {
 	}
 
 	retVal = resp.obj.(int)
-	return retVal, nil
-
-}
-
-// SetHeight waiting for documentation from Neovim
-func (w *Window) SetHeight(height int) error {
-
-	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.encodeWindow(*w)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.enc.EncodeInt(height)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = w.client.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := w.client.makeCall(windowSetHeight, enc, dec)
-	if err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetHeight"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// GetWidth waiting for documentation from Neovim
-func (w *Window) GetWidth() (int, error) {
-	var retVal int
-	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.encodeWindow(*w)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = w.client.dec.DecodeInt()
-
-		return
-	}
-	respChan, err := w.client.makeCall(windowGetWidth, enc, dec)
-	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetWidth"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(int)
-	return retVal, nil
-
-}
-
-// SetWidth waiting for documentation from Neovim
-func (w *Window) SetWidth(width int) error {
-
-	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.encodeWindow(*w)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.enc.EncodeInt(width)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = w.client.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := w.client.makeCall(windowSetWidth, enc, dec)
-	if err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetWidth"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// GetVar waiting for documentation from Neovim
-func (w *Window) GetVar(name string) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.encodeWindow(*w)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = w.client.dec.DecodeInterface()
-
-		return
-	}
-	respChan, err := w.client.makeCall(windowGetVar, enc, dec)
-	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetVar"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(interface{})
-	return retVal, nil
-
-}
-
-// SetVar waiting for documentation from Neovim
-func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(3)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.encodeWindow(*w)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.enc.Encode(value)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = w.client.dec.DecodeInterface()
-
-		return
-	}
-	respChan, err := w.client.makeCall(windowSetVar, enc, dec)
-	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetVar"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(interface{})
 	return retVal, nil
 
 }
@@ -2638,56 +2371,6 @@ func (w *Window) GetOption(name string) (interface{}, error) {
 
 	retVal = resp.obj.(interface{})
 	return retVal, nil
-
-}
-
-// SetOption waiting for documentation from Neovim
-func (w *Window) SetOption(name string, value interface{}) error {
-
-	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(3)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.encodeWindow(*w)
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.enc.EncodeString(name)
-
-		if _err != nil {
-			return
-		}
-
-		_err = w.client.enc.Encode(value)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = w.client.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := w.client.makeCall(windowSetOption, enc, dec)
-	if err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetOption"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
 
 }
 
@@ -2769,6 +2452,90 @@ func (w *Window) GetTabpage() (Tabpage, error) {
 
 }
 
+// GetVar waiting for documentation from Neovim
+func (w *Window) GetVar(name string) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = w.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.encodeWindow(*w)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = w.client.dec.DecodeInterface()
+
+		return
+	}
+	respChan, err := w.client.makeCall(windowGetVar, enc, dec)
+	if err != nil {
+		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetVar"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
+
+}
+
+// GetWidth waiting for documentation from Neovim
+func (w *Window) GetWidth() (int, error) {
+	var retVal int
+	enc := func() (_err error) {
+		_err = w.client.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.encodeWindow(*w)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = w.client.dec.DecodeInt()
+
+		return
+	}
+	respChan, err := w.client.makeCall(windowGetWidth, enc, dec)
+	if err != nil {
+		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetWidth"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(int)
+	return retVal, nil
+
+}
+
 // IsValid waiting for documentation from Neovim
 func (w *Window) IsValid() (bool, error) {
 	var retVal bool
@@ -2805,6 +2572,239 @@ func (w *Window) IsValid() (bool, error) {
 
 	retVal = resp.obj.(bool)
 	return retVal, nil
+
+}
+
+// SetCursor waiting for documentation from Neovim
+func (w *Window) SetCursor(pos uint32) error {
+
+	enc := func() (_err error) {
+		_err = w.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.encodeWindow(*w)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.enc.EncodeUint32(pos)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = w.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := w.client.makeCall(windowSetCursor, enc, dec)
+	if err != nil {
+		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetCursor"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// SetHeight waiting for documentation from Neovim
+func (w *Window) SetHeight(height int) error {
+
+	enc := func() (_err error) {
+		_err = w.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.encodeWindow(*w)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.enc.EncodeInt(height)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = w.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := w.client.makeCall(windowSetHeight, enc, dec)
+	if err != nil {
+		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetHeight"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// SetOption waiting for documentation from Neovim
+func (w *Window) SetOption(name string, value interface{}) error {
+
+	enc := func() (_err error) {
+		_err = w.client.enc.EncodeSliceLen(3)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.encodeWindow(*w)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.enc.Encode(value)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = w.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := w.client.makeCall(windowSetOption, enc, dec)
+	if err != nil {
+		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetOption"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// SetVar waiting for documentation from Neovim
+func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = w.client.enc.EncodeSliceLen(3)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.encodeWindow(*w)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.enc.EncodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.enc.Encode(value)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = w.client.dec.DecodeInterface()
+
+		return
+	}
+	respChan, err := w.client.makeCall(windowSetVar, enc, dec)
+	if err != nil {
+		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetVar"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
+
+}
+
+// SetWidth waiting for documentation from Neovim
+func (w *Window) SetWidth(width int) error {
+
+	enc := func() (_err error) {
+		_err = w.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.encodeWindow(*w)
+		if _err != nil {
+			return
+		}
+
+		_err = w.client.enc.EncodeInt(width)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = w.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := w.client.makeCall(windowSetWidth, enc, dec)
+	if err != nil {
+		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetWidth"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
 
 }
 
