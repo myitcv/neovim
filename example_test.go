@@ -30,6 +30,7 @@ func ExampleSubscription() {
 		log.Fatalf("Could not subscribe to topic %v, with respChan %v and errChan %v: %v", sub.Topic, sub, errgo.Details(err))
 	}
 
+	unsubbed := make(chan struct{})
 	done := make(chan struct{})
 	received := make(chan struct{})
 
@@ -56,9 +57,12 @@ func ExampleSubscription() {
 	go func() {
 
 		_ = client.Unsubscribe(sub)
+		unsubbed <- struct{}{}
 	}()
 
 	<-done
+
+	<-unsubbed
 
 	_ = client.Close()
 
