@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/vmihailenco/msgpack"
+	"gopkg.in/tomb.v2"
 )
 
 type neovimMethodID string
@@ -22,6 +23,7 @@ type Client struct {
 	respMap *syncMap
 	lock    sync.Mutex
 	subChan chan subWrapper
+	t       tomb.Tomb
 
 	// PanicOnError can be set to have the Client panic when an error would
 	// otherwise have been returned via an API method. Note: any attempt to
