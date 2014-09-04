@@ -67,11 +67,10 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
-* Cleanly handle Neovim instances quitting - need to kill goroutines for reading, subscription manager etc
-* Ability to cleanly terminate a client; along with associated tests and ensuring sub manager goroutines all get cleaned
-  up
 * Support Go package acting as a server, i.e. receiving requests from Neovim
-* Move from `log.Fatal` to something better....
+* Cleanly handle Neovim instances quitting - need to kill goroutines for reading, subscription manager etc
+* Need a test to confirm we have cleaned up all goroutines
+* Move from `log.Fatal` to something better....will work now that we have `tomb`
 * Tidy up use of `PanicOnError` and ensure all errors that would otherwise have been return use `panic` if this is set
 * Ensure tests panic if there is an error so we can see the stack
 * Add support for functions that `CanFail`
