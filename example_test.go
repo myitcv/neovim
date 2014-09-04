@@ -53,7 +53,10 @@ func ExampleSubscription() {
 
 	<-received
 
-	_ = client.Unsubscribe(sub)
+	go func() {
+
+		_ = client.Unsubscribe(sub)
+	}()
 
 	<-done
 

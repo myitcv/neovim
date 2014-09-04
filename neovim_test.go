@@ -165,6 +165,12 @@ func (t *NeovimTest) TestArrayEval(c *C) {
 	}
 }
 
+// Needs changes in Neovim to allow this
+// func (t *NeovimTest) TestRegisterProvider(c *C) {
+// 	_ = t.client.RegisterProvider("my_first_method")
+// 	_ = t.client.Command("call my_first_method()")
+// }
+
 func (t *NeovimTest) BenchmarkCommandAndEval(c *C) {
 	for i := 0; i < c.N; i++ {
 		_ = t.client.Command(fmt.Sprintf("let x=%v", i))
