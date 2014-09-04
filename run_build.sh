@@ -31,3 +31,4 @@ rm $x
 popd
 
 NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim go test
+NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim go test -race

@@ -163,6 +163,8 @@ func (c *Client) Unsubscribe(sub *Subscription) error {
 
 // Close cleanly kills the client connection to Neovim
 func (c *Client) Close() error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	err := c.rw.Close()
 	if err != nil {
 		return c.panicOrReturn(errgo.Notef(err, "Could not cleanly close client"))
