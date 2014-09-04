@@ -111,7 +111,12 @@ func NewClient(c io.ReadWriteCloser) (*Client, error) {
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
 	res.subChan = make(chan subWrapper)
+
+	// do not need to put this in the tomb because
+	// the closing of the the reader will handle the exit
+	// from this go routine
 	go res.doListen()
+
 	return res, nil
 }
 
@@ -169,12 +174,14 @@ func (c *Client) Close() error {
 	if err != nil {
 		return c.panicOrReturn(errgo.Notef(err, "Could not cleanly close client"))
 	}
+	c.t.Kill(nil)
+	c.t.Wait()
 	return nil
 }
 
-func (c *Client) doListen() {
+func (c *Client) doListen() error {
 	subEvents := make(chan *SubscriptionEvent, 10)
-	go c.doSubscriptionManager(subEvents)
+	c.doSubscriptionManager(subEvents)
 
 	dec := c.dec
 	for {
@@ -261,94 +268,112 @@ func (c *Client) doListen() {
 			log.Fatalf("Unexpected type of message: %v\n", t)
 		}
 	}
+
+	// TODO we could improve this, instead of log.Fatal above
+	// return the actual error
+	return nil
 }
 
 func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
-	// this map keeps track of subscriptions
-	// subs["topic"] == nil indicates no subscriptions on a topic
-	// subs["topic"] otherwise contains a map, where the keys are the
-	// Events channels that have subscribed
-	subs := make(map[string]map[chan *SubscriptionEvent]struct{})
+	c.t.Go(func() error {
+		// this map keeps track of subscriptions
+		// subs["topic"] == nil indicates no subscriptions on a topic
+		// subs["topic"] otherwise contains a map, where the keys are the
+		// Events channels that have subscribed
+		subs := make(map[string]map[chan *SubscriptionEvent]struct{})
 
-	// a goroutine that is responsible for handling subscribe/unsubscribe calls
-	// on a separate goroutine because the calls to sub/unsub are blocking
-	// TODO kill on close
-	subTasks := make(chan subWrapper, 10)
-	go func() {
+		// a goroutine that is responsible for handling subscribe/unsubscribe calls
+		// on a separate goroutine because the calls to sub/unsub are blocking
+		subTasks := make(chan subWrapper, 10)
+		c.t.Go(func() error {
+			for {
+				select {
+				case t := <-subTasks:
+					if t.task == _Sub {
+						err := c.subscribe(t.sub.Topic)
+						if err != nil {
+							t.errChan <- errgo.NoteMask(err, "Could not subscribe")
+						} else {
+							close(t.errChan)
+						}
+					} else if t.task == _Unsub {
+						err := c.unsubscribe(t.sub.Topic)
+						if err != nil {
+							t.errChan <- errgo.NoteMask(err, "Could not unsubscribe")
+						} else {
+							close(t.errChan)
+						}
+					}
+				case <-c.t.Dying():
+					return nil
+				}
+			}
+
+			// TODO we could improve this, instead of log.Fatal above
+			// return the actual error
+			return nil
+		})
+
 		for {
-			t := <-subTasks
-			if t.task == _Sub {
-				err := c.subscribe(t.sub.Topic)
-				if err != nil {
-					t.errChan <- errgo.NoteMask(err, "Could not subscribe")
+			select {
+			case <-c.t.Dying():
+				return nil
+			case event := <-se:
+				// receive from the main doListen goroutine
+				if chans, ok := subs[event.Topic]; ok {
+					for k := range chans {
+						k <- event
+					}
 				} else {
-					close(t.errChan)
+					log.Fatalf("Got an event for which we have no subs on topic %v\n", event.Topic)
 				}
-			} else if t.task == _Unsub {
-				err := c.unsubscribe(t.sub.Topic)
-				if err != nil {
-					t.errChan <- errgo.NoteMask(err, "Could not unsubscribe")
-				} else {
-					close(t.errChan)
+			case w := <-c.subChan:
+				if w.task == _Sub {
+					sub := w.sub
+					m, ok := subs[sub.Topic]
+					if !ok {
+						// we have no subscriptions on this topic
+						// the handling of the sub task will close
+						// the error channel
+						subTasks <- w
+						m = make(map[chan *SubscriptionEvent]struct{})
+						subs[sub.Topic] = m
+					} else if _, ok := m[sub.Events]; ok {
+						// fatal error if we already have subscribed
+						// using this channel
+						w.errChan <- errgo.Newf("Already have subscription for topic %v with this channel: %v", sub.Topic, sub.Events)
+					} else {
+						// we are simply going to add to an existing
+						// subscription. Close the error channel
+						close(w.errChan)
+					}
+					m[sub.Events] = struct{}{}
+				} else if w.task == _Unsub {
+					unsub := w.sub
+					close(unsub.Events)
+					m, ok := subs[unsub.Topic]
+					if !ok {
+						w.errChan <- errgo.Newf("We don't have any subscriptions for topic %v", unsub.Topic)
+					}
+					if _, ok := m[unsub.Events]; !ok {
+						w.errChan <- errgo.Newf("We don't have a subscription on topic %v for this channel %v", unsub.Topic, unsub.Events)
+					}
+					delete(m, unsub.Events)
+					if len(m) == 0 {
+						// we are back down to 0 again; unsubscribe
+						subTasks <- w
+						delete(subs, unsub.Topic)
+					} else {
+						close(w.errChan)
+					}
 				}
 			}
 		}
-	}()
 
-	// TODO kill on close
-	for {
-		select {
-		case event := <-se:
-			// receive from the main doListen goroutine
-			if chans, ok := subs[event.Topic]; ok {
-				for k := range chans {
-					k <- event
-				}
-			} else {
-				log.Fatalf("Got an event for which we have no subs on topic %v\n", event.Topic)
-			}
-		case w := <-c.subChan:
-			if w.task == _Sub {
-				sub := w.sub
-				m, ok := subs[sub.Topic]
-				if !ok {
-					// we have no subscriptions on this topic
-					// the handling of the sub task will close
-					// the error channel
-					subTasks <- w
-					m = make(map[chan *SubscriptionEvent]struct{})
-					subs[sub.Topic] = m
-				} else if _, ok := m[sub.Events]; ok {
-					// fatal error if we already have subscribed
-					// using this channel
-					w.errChan <- errgo.Newf("Already have subscription for topic %v with this channel: %v", sub.Topic, sub.Events)
-				} else {
-					// we are simply going to add to an existing
-					// subscription. Close the error channel
-					close(w.errChan)
-				}
-				m[sub.Events] = struct{}{}
-			} else if w.task == _Unsub {
-				unsub := w.sub
-				close(unsub.Events)
-				m, ok := subs[unsub.Topic]
-				if !ok {
-					w.errChan <- errgo.Newf("We don't have any subscriptions for topic %v", unsub.Topic)
-				}
-				if _, ok := m[unsub.Events]; !ok {
-					w.errChan <- errgo.Newf("We don't have a subscription on topic %v for this channel %v", unsub.Topic, unsub.Events)
-				}
-				delete(m, unsub.Events)
-				if len(m) == 0 {
-					// we are back down to 0 again; unsubscribe
-					subTasks <- w
-					delete(subs, unsub.Topic)
-				} else {
-					close(w.errChan)
-				}
-			}
-		}
-	}
+		// TODO we could improve this, instead of log.Fatal above
+		// return the actual error
+		return nil
+	})
 }
 
 func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan *response, error) {
