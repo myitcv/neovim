@@ -51,6 +51,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"os/exec"
 	"sync/atomic"
 
@@ -60,12 +61,12 @@ import (
 
 // NewUnixClient is a convenience method for creating a new *Client. Method signature matches
 // that of net.DialUnix
-func NewUnixClient(_net string, laddr, raddr *net.UnixAddr) (*Client, error) {
+func NewUnixClient(_net string, laddr, raddr *net.UnixAddr, l Logger) (*Client, error) {
 	c, err := net.DialUnix(_net, laddr, raddr)
 	if err != nil {
 		return nil, errgo.Notef(err, "Could not establish connection to Neovim, _net %v, laddr %v, %v", _net, laddr, raddr)
 	}
-	return NewClient(c)
+	return NewClient(c, l)
 }
 
 // NewCmdClient creates a new Client that is linked via stdin/stdout to the
@@ -73,7 +74,7 @@ func NewUnixClient(_net string, laddr, raddr *net.UnixAddr) (*Client, error) {
 // --embedded-mode is added if it is missing, and the exec.Cmd is started
 // as part of creating the client. Calling Close() will close stdin on the
 // embedded Neovim instance, thereby ending the process
-func NewCmdClient(c *exec.Cmd) (*Client, error) {
+func NewCmdClient(c *exec.Cmd, l Logger) (*Client, error) {
 	stdin, err := c.StdinPipe()
 	if err != nil {
 		log.Fatalf("Could not get a stdin pipe to embedded nvim: %v\n", err)
@@ -82,7 +83,7 @@ func NewCmdClient(c *exec.Cmd) (*Client, error) {
 	if err != nil {
 		log.Fatalf("Could not get a stdout pipe to embedded nvim: %v\n", err)
 	}
-	wrap := &stdWrapper{stdin: stdin, stdout: stdout}
+	wrap := &StdWrapper{Stdin: stdin, Stdout: stdout}
 
 	// ensure that we have --embedded-mode
 	found := false
@@ -101,16 +102,22 @@ func NewCmdClient(c *exec.Cmd) (*Client, error) {
 		log.Fatalf("Could not start the cmd: %v\n", err)
 	}
 
-	return NewClient(wrap)
+	return NewClient(wrap, l)
 }
 
 // NewClient creates a new Client
-func NewClient(c io.ReadWriteCloser) (*Client, error) {
+func NewClient(c io.ReadWriteCloser, l Logger) (*Client, error) {
 	res := &Client{rw: c}
 	res.respMap = newSyncMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
 	res.subChan = make(chan subWrapper)
+
+	if l != nil {
+		res.log = l
+	} else {
+		res.log = log.New(os.Stderr, "neovim ", log.Llongfile|log.Ldate|log.Ltime)
+	}
 
 	// do not need to put this in the tomb because
 	// the closing of the the reader will handle the exit
@@ -118,6 +125,10 @@ func NewClient(c io.ReadWriteCloser) (*Client, error) {
 	go res.doListen()
 
 	return res, nil
+}
+
+func (c *Client) RegisterProvider(m string, r RequestHandler) error {
+	return nil
 }
 
 // Subscribe subscribes to a topic of events from Neovim. The

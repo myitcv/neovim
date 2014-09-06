@@ -30,9 +30,18 @@ type Client struct {
 	// change this option during concurrent use of the Client will be racey.
 	// This is useful for debugging.
 	PanicOnError bool
+	KillChannel  chan struct{}
+	log          Logger
+}
+
+type Plugin interface {
+	Init(*Client, Logger) error
+	Shutdown() error
 }
 
 type subTask int
+
+type RequestHandler func([]interface{}) ([]interface{}, error)
 
 const (
 	_Sub subTask = iota
@@ -83,6 +92,23 @@ type Tabpage struct {
 	client *Client
 }
 
+type Logger interface {
+	Fatal(v ...interface{})
+	Fatalf(format string, v ...interface{})
+	Fatalln(v ...interface{})
+	Flags() int
+	Output(calldepth int, s string) error
+	Panic(v ...interface{})
+	Panicf(format string, v ...interface{})
+	Panicln(v ...interface{})
+	Prefix() string
+	Print(v ...interface{})
+	Printf(format string, v ...interface{})
+	Println(v ...interface{})
+	SetFlags(flag int)
+	SetPrefix(prefix string)
+}
+
 type responseHolder struct {
 	dec decoder
 	ch  chan *response
@@ -93,21 +119,21 @@ type response struct {
 	err error
 }
 
-type stdWrapper struct {
-	stdin  io.WriteCloser
-	stdout io.ReadCloser
+type StdWrapper struct {
+	Stdin  io.WriteCloser
+	Stdout io.ReadCloser
 }
 
-func (s *stdWrapper) Read(p []byte) (n int, err error) {
-	return s.stdout.Read(p)
+func (s *StdWrapper) Read(p []byte) (n int, err error) {
+	return s.Stdout.Read(p)
 }
 
-func (s *stdWrapper) Write(p []byte) (n int, err error) {
-	return s.stdin.Write(p)
+func (s *StdWrapper) Write(p []byte) (n int, err error) {
+	return s.Stdin.Write(p)
 }
 
-func (s *stdWrapper) Close() error {
-	return s.stdin.Close()
+func (s *StdWrapper) Close() error {
+	return s.Stdin.Close()
 }
 
 type encoder func() error

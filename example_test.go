@@ -18,7 +18,7 @@ func ExampleSubscription() {
 	cmd := exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
 	cmd.Dir = "/tmp"
 
-	client, err := neovim.NewCmdClient(cmd)
+	client, err := neovim.NewCmdClient(cmd, nil)
 	if err != nil {
 		log.Fatalf("Could not create new client: %v", errgo.Details(err))
 	}
