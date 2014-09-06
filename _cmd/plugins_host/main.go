@@ -4,8 +4,10 @@ import (
 	"fmt"
 	_log "log"
 	"os"
+	"os/signal"
 	"reflect"
 	"runtime"
+	"syscall"
 
 	"github.com/myitcv/neovim"
 	"github.com/myitcv/neovim/example"
@@ -98,6 +100,20 @@ func main() {
 	}
 	log := _log.New(logFile, "", _log.Llongfile|_log.Ldate|_log.Ltime)
 
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGQUIT)
+
+	go func() {
+		for {
+			select {
+			case <-sig:
+				buf := make([]byte, 1e6)
+				i := runtime.Stack(buf, true)
+				log.Printf("Got SIGQUIT, dumping stacks:\n%v", string(buf[0:i]))
+			}
+		}
+	}()
+
 	client, err := neovim.NewClient(transport, log)
 	if err != nil {
 		log.Fatalf("Could not connect to Neovim: %v\n", err)
@@ -123,11 +139,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not Init %v: %v\n", tp2, err)
 	}
-	log.Printf("Successfully call Init on %v\n", tp2)
+	log.Printf("Successfully called Init on %v\n", tp2)
 
-	buf := make([]byte, 1000000)
-	n := runtime.Stack(buf, true)
-	log.Println("We have the following stack:", string(buf[0:n]))
 	// list continues...
 	<-client.KillChannel
+	log.Printf("Got Kill Channel %v\n", tp2)
 }

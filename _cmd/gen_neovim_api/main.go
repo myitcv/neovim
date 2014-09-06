@@ -425,7 +425,7 @@ func genMethodTemplates(fs []APIFunction) []methodTemplate {
 
 		// TODO this is gross
 		switch m.RawName {
-		case "vim_subscribe", "vim_unsubscribe":
+		case "vim_subscribe", "vim_unsubscribe", "vim_register_provider":
 			m.Name = strings.ToLower(m.Name[0:1]) + m.Name[1:]
 		}
 

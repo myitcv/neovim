@@ -48,7 +48,6 @@ Hence errors may be inspected using functions like errgo.Details for example:
 package neovim
 
 import (
-	"fmt"
 	"io"
 	_log "log"
 	"net"
@@ -63,7 +62,6 @@ import (
 // NewUnixClient is a convenience method for creating a new *Client. Method signature matches
 // that of net.DialUnix
 func NewUnixClient(_net string, laddr, raddr *net.UnixAddr, l Logger) (*Client, error) {
-	_log.Fatal("Test")
 	c, err := net.DialUnix(_net, laddr, raddr)
 	if err != nil {
 		return nil, errgo.Notef(err, "Could not establish connection to Neovim, _net %v, laddr %v, %v", _net, laddr, raddr)
@@ -110,10 +108,12 @@ func NewCmdClient(c *exec.Cmd, log Logger) (*Client, error) {
 // NewClient creates a new Client
 func NewClient(c io.ReadWriteCloser, log Logger) (*Client, error) {
 	res := &Client{rw: c}
-	res.respMap = newSyncMap()
+	res.respMap = newSyncRespMap()
+	res.provMap = newSyncProviderMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
 	res.subChan = make(chan subWrapper)
+	res.KillChannel = make(chan struct{})
 
 	if log != nil {
 		res.log = log
@@ -130,6 +130,13 @@ func NewClient(c io.ReadWriteCloser, log Logger) (*Client, error) {
 }
 
 func (c *Client) RegisterProvider(m string, r RequestHandler) error {
+	if m == _MethodInit {
+		return errgo.Newf("Cannot register a provider with the protected method %v", _MethodInit)
+	}
+	err := c.provMap.Put(m, r)
+	if err != nil {
+		return errgo.Notef(err, "Could not store RequestHanlder in provider map:")
+	}
 	return nil
 }
 
@@ -198,7 +205,6 @@ func (c *Client) doListen() error {
 
 	dec := c.dec
 	for {
-		c.log.Println("Listening for request")
 		_, err := dec.DecodeSliceLen()
 		if err == io.EOF {
 			break
@@ -222,25 +228,50 @@ func (c *Client) doListen() error {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode request id: %v", err)
+				c.log.Fatalf("Could not decode request id: %v", err)
 			}
 
 			reqMeth, err := dec.DecodeString()
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode request method name: %v", err)
+				c.log.Fatalf("Could not decode request method name: %v", err)
+			}
+
+			var prov RequestHandler
+			if reqMeth == _MethodInit {
+				prov = func(args []interface{}) ([]interface{}, error) {
+					return []interface{}{5}, nil
+				}
+			} else {
+				p, err := c.provMap.Get(reqMeth)
+				if err != nil {
+					c.log.Fatalf("Could not find RequestHandler for method %v\n: %v\n", reqMeth, err)
+				}
+				prov = p
 			}
 
 			reqArgs, err := dec.DecodeSlice()
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode request method args: %v", err)
+				c.log.Fatalf("Could not decode request method args: %v", err)
 			}
 
-			fmt.Printf("We got a request, id %v, for method %v, with args: %v\n", reqID, reqMeth, reqArgs)
-			go c.sendResponse(reqID, nil, nil)
+			c.log.Printf("Got a request %v for method %v(%v)\n", reqID, reqMeth, reqArgs)
+
+			go func() {
+				i, err := prov(reqArgs)
+
+				// TODO look at the note on RequestHandler for an explanation on how this might
+				// be improved
+				enc := func() error {
+					return c.enc.Encode(i)
+				}
+				c.log.Printf("Sending a response to %v\n", reqID)
+				c.sendResponse(reqID, err, enc)
+				c.log.Printf("Response sent to %v\n", reqID)
+			}()
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
@@ -444,7 +475,7 @@ func (c *Client) sendResponse(reqID uint32, respErr error, e encoder) error {
 
 	// TODO actually encode the response vals
 	// err = e()
-	err = enc.Encode([]interface{}{})
+	err = enc.EncodeInt(5)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not encode response vals")
 	}
@@ -505,7 +536,7 @@ func (c *Client) nextReqID() uint32 {
 
 func (c *Client) panicOrReturn(e error) error {
 	if e != nil && c.PanicOnError {
-		panic(e)
+		c.log.Panic(e)
 	}
 	return e
 }

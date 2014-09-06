@@ -15,7 +15,7 @@ type syncRespMap struct {
 	theMap map[uint32]*responseHolder
 }
 
-func newSyncMap() *syncRespMap {
+func newSyncRespMap() *syncRespMap {
 	return &syncRespMap{
 		lock:   new(sync.Mutex),
 		theMap: make(map[uint32]*responseHolder),
@@ -50,17 +50,17 @@ func (s *syncRespMap) Get(k uint32) (res *responseHolder, retErr error) {
 
 type syncProviderMap struct {
 	lock   *sync.Mutex
-	theMap map[string]*responseHolder
+	theMap map[string]RequestHandler
 }
 
-func newSyncMap() *syncProviderMap {
+func newSyncProviderMap() *syncProviderMap {
 	return &syncProviderMap{
 		lock:   new(sync.Mutex),
-		theMap: make(map[uint32]*responseHolder),
+		theMap: make(map[string]RequestHandler),
 	}
 }
 
-func (s *syncProviderMap) Put(k uint32, v *responseHolder) error {
+func (s *syncProviderMap) Put(k string, v RequestHandler) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -72,15 +72,13 @@ func (s *syncProviderMap) Put(k uint32, v *responseHolder) error {
 	return nil
 }
 
-func (s *syncProviderMap) Get(k uint32) (res *responseHolder, retErr error) {
+func (s *syncProviderMap) Get(k string) (res RequestHandler, retErr error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	res, present := s.theMap[k]
 	if !present {
 		retErr = errgo.Newf("Key does not exist for %v", k)
-	} else {
-		delete(s.theMap, k)
 	}
 
 	return
