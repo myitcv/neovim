@@ -48,7 +48,7 @@ type subTask int
 type RequestHandler func([]interface{}) ([]interface{}, error)
 
 const (
-	_MethodInit string = "_init"
+	_MethodInit string = "go_init"
 )
 
 const (
