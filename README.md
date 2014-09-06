@@ -68,6 +68,12 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 ## Todo list
 
 * Neovim hooks up stdin and stdout back to front
+* Remove `example_test.go` - it is superseded by `example` and associated tests
+* Ensure that example gives examples (!) of testing API requests, handling requests and events
+* Consider using `internal` in Go 1.4 for better layout of package
+* Better definition of logging level-based interface for plugins
+* Stop using KillChannel in generated plugin-host; move to Tomb
+* Need some way for plugins to be loaded at startup...
 * Support Go package acting as a server, i.e. receiving requests from Neovim
 * Cleanly handle Neovim instances quitting - need to kill goroutines for reading, subscription manager etc
 * Need a test to confirm we have cleaned up all goroutines

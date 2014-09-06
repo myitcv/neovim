@@ -9,6 +9,10 @@ implements a tool for generating the MSGPACK-based API against a Neovim instance
 All API methods are supported, as are notifications. See Subscription for an example
 of how to register a subscription on a given topic.
 
+Example Plugin
+
+For an example plugin see http://godoc.org/github.com/myitcv/neovim/example
+
 Client
 
 Everything starts from Client:
@@ -49,8 +53,9 @@ package neovim
 
 import (
 	"io"
-	"log"
+	_log "log"
 	"net"
+	"os"
 	"os/exec"
 	"sync/atomic"
 
@@ -60,12 +65,12 @@ import (
 
 // NewUnixClient is a convenience method for creating a new *Client. Method signature matches
 // that of net.DialUnix
-func NewUnixClient(_net string, laddr, raddr *net.UnixAddr) (*Client, error) {
+func NewUnixClient(_net string, laddr, raddr *net.UnixAddr, log Logger) (*Client, error) {
 	c, err := net.DialUnix(_net, laddr, raddr)
 	if err != nil {
 		return nil, errgo.Notef(err, "Could not establish connection to Neovim, _net %v, laddr %v, %v", _net, laddr, raddr)
 	}
-	return NewClient(c)
+	return NewClient(c, log)
 }
 
 // NewCmdClient creates a new Client that is linked via stdin/stdout to the
@@ -73,16 +78,16 @@ func NewUnixClient(_net string, laddr, raddr *net.UnixAddr) (*Client, error) {
 // --embedded-mode is added if it is missing, and the exec.Cmd is started
 // as part of creating the client. Calling Close() will close stdin on the
 // embedded Neovim instance, thereby ending the process
-func NewCmdClient(c *exec.Cmd) (*Client, error) {
+func NewCmdClient(c *exec.Cmd, log Logger) (*Client, error) {
 	stdin, err := c.StdinPipe()
 	if err != nil {
-		log.Fatalf("Could not get a stdin pipe to embedded nvim: %v\n", err)
+		return nil, errgo.Notef(err, "Could not get a stdin pipe to embedded nvim")
 	}
 	stdout, err := c.StdoutPipe()
 	if err != nil {
-		log.Fatalf("Could not get a stdout pipe to embedded nvim: %v\n", err)
+		return nil, errgo.Notef(err, "Could not get a stdout pipe to embedded nvim")
 	}
-	wrap := &stdWrapper{stdin: stdin, stdout: stdout}
+	wrap := &StdWrapper{Stdin: stdin, Stdout: stdout}
 
 	// ensure that we have --embedded-mode
 	found := false
@@ -98,19 +103,29 @@ func NewCmdClient(c *exec.Cmd) (*Client, error) {
 
 	err = c.Start()
 	if err != nil {
-		log.Fatalf("Could not start the cmd: %v\n", err)
+		return nil, errgo.Notef(err, "Could not start the embedded nvim")
 	}
 
-	return NewClient(wrap)
+	return NewClient(wrap, log)
+}
+
+func loggerOrStderr(log Logger) (res Logger) {
+	return
 }
 
 // NewClient creates a new Client
-func NewClient(c io.ReadWriteCloser) (*Client, error) {
+func NewClient(c io.ReadWriteCloser, log Logger) (*Client, error) {
+	if log == nil {
+		log = _log.New(os.Stderr, "neovim ", _log.Llongfile|_log.Ldate|_log.Ltime)
+	}
+
 	res := &Client{rw: c}
-	res.respMap = newSyncMap()
+	res.respMap = newSyncRespMap()
+	res.provMap = newSyncProviderMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
 	res.subChan = make(chan subWrapper)
+	res.KillChannel = make(chan struct{})
 
 	// do not need to put this in the tomb because
 	// the closing of the the reader will handle the exit
@@ -118,6 +133,17 @@ func NewClient(c io.ReadWriteCloser) (*Client, error) {
 	go res.doListen()
 
 	return res, nil
+}
+
+func (c *Client) RegisterProvider(m string, r RequestHandler) error {
+	if m == _MethodInit {
+		return errgo.Newf("Cannot register a provider with the protected method %v", _MethodInit)
+	}
+	err := c.provMap.Put(m, r)
+	if err != nil {
+		return errgo.Notef(err, "Could not store RequestHanlder in provider map:")
+	}
+	return nil
 }
 
 // Subscribe subscribes to a topic of events from Neovim. The
@@ -189,27 +215,76 @@ func (c *Client) doListen() error {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			log.Fatalf("Could not decode message slice length: %v", err)
+			c.log.Fatalf("Could not decode message slice length: %v", err)
 		}
 
 		t, err := dec.DecodeInt()
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			log.Fatalf("Could not decode message type: %v", err)
+			c.log.Fatalf("Could not decode message type: %v", err)
 		}
 
 		switch t {
 		// TODO implement support for handling requests in a Go client, i.e.
 		// Neovim making a request to the Go client, and the Go client sending
 		// a response
+		case 0:
+			reqID, err := dec.DecodeUint32()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				c.log.Fatalf("Could not decode request id: %v", err)
+			}
+
+			reqMeth, err := dec.DecodeString()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				c.log.Fatalf("Could not decode request method name: %v", err)
+			}
+
+			var prov RequestHandler
+			if reqMeth == _MethodInit {
+				prov = func(args []interface{}) ([]interface{}, error) {
+					return []interface{}{5}, nil
+				}
+			} else {
+				p, err := c.provMap.Get(reqMeth)
+				if err != nil {
+					c.log.Fatalf("Could not find RequestHandler for method %v\n: %v\n", reqMeth, err)
+				}
+				prov = p
+			}
+
+			reqArgs, err := dec.DecodeSlice()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				c.log.Fatalf("Could not decode request method args: %v", err)
+			}
+
+			c.log.Printf("Got a request %v for method %v(%v)\n", reqID, reqMeth, reqArgs)
+
+			go func() {
+				i, err := prov(reqArgs)
+
+				// TODO look at the note on RequestHandler for an explanation on how this might
+				// be improved
+				enc := func() error {
+					return c.enc.Encode(i)
+				}
+				c.log.Printf("Sending a response to %v\n", reqID)
+				c.sendResponse(reqID, err, enc)
+				c.log.Printf("Response sent to %v\n", reqID)
+			}()
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode request id: %v", err)
+				c.log.Fatalf("Could not decode request id: %v", err)
 			}
 
 			// do we have an error?
@@ -217,10 +292,10 @@ func (c *Client) doListen() error {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode response error: %v", err)
+				c.log.Fatalf("Could not decode response error: %v", err)
 			}
 			if re != nil {
-				log.Fatalf("Got a response error for request %v: %v", reqID, re)
+				c.log.Fatalf("Got a response error for request %v: %v", reqID, re)
 			}
 
 			// no, carry on
@@ -228,14 +303,14 @@ func (c *Client) doListen() error {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not get response holder for %v: %v", reqID, err)
+				c.log.Fatalf("Could not get response holder for %v: %v", reqID, err)
 			}
 
 			res, err := rh.dec()
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode response: %v\n", err)
+				c.log.Fatalf("Could not decode response: %v\n", err)
 			}
 
 			resp := &response{obj: res, err: nil}
@@ -246,7 +321,7 @@ func (c *Client) doListen() error {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode topic: %v", err)
+				c.log.Fatalf("Could not decode topic: %v", err)
 			}
 
 			// TODO we could make a decode part of the subscription
@@ -255,7 +330,7 @@ func (c *Client) doListen() error {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode obj payload: %v", err)
+				c.log.Fatalf("Could not decode obj payload: %v", err)
 			}
 
 			ev := &SubscriptionEvent{
@@ -265,7 +340,7 @@ func (c *Client) doListen() error {
 
 			subEvents <- ev
 		default:
-			log.Fatalf("Unexpected type of message: %v\n", t)
+			c.log.Fatalf("Unexpected type of message: %v\n", t)
 		}
 	}
 
@@ -325,7 +400,7 @@ func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
 						k <- event
 					}
 				} else {
-					log.Fatalf("Got an event for which we have no subs on topic %v\n", event.Topic)
+					c.log.Fatalf("Got an event for which we have no subs on topic %v\n", event.Topic)
 				}
 			case w := <-c.subChan:
 				if w.task == _Sub {
@@ -374,6 +449,44 @@ func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
 		// return the actual error
 		return nil
 	})
+}
+
+func (c *Client) sendResponse(reqID uint32, respErr error, e encoder) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	reqType := 1
+	enc := c.enc
+
+	err := enc.EncodeSliceLen(4)
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode request length")
+	}
+
+	err = enc.EncodeInt(reqType)
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode response type")
+	}
+
+	err = enc.EncodeUint32(reqID)
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode reqID")
+	}
+
+	// TODO support for response errors
+	err = enc.EncodeNil()
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode response error")
+	}
+
+	// TODO actually encode the response vals
+	// err = e()
+	err = enc.EncodeInt(5)
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode response vals")
+	}
+
+	return nil
 }
 
 func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan *response, error) {
@@ -429,7 +542,7 @@ func (c *Client) nextReqID() uint32 {
 
 func (c *Client) panicOrReturn(e error) error {
 	if e != nil && c.PanicOnError {
-		panic(e)
+		c.log.Panic(e)
 	}
 	return e
 }
