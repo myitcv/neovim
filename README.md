@@ -88,4 +88,3 @@ thread](https://github.com/neovim/neovim/pull/1121#issuecomment-53873091)
 * More benchmark tests for performance
 * Make notification decoding can be made more efficient (currently uses generic `DecodeSlice`)
 * Fix function and variable names (there are a few anomalies like `Client.GetVvar`)
-
