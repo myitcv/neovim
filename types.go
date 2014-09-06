@@ -20,7 +20,8 @@ type Client struct {
 	dec     *msgpack.Decoder
 	enc     *msgpack.Encoder
 	nextReq uint32
-	respMap *syncMap
+	respMap *syncRespMap
+	provMap *syncProviderMap
 	lock    sync.Mutex
 	subChan chan subWrapper
 	t       tomb.Tomb
@@ -41,7 +42,14 @@ type Plugin interface {
 
 type subTask int
 
+// TODO we might modify this to return an encode instead
+// but this would require exposing the enc on Client
+// Needs some thought
 type RequestHandler func([]interface{}) ([]interface{}, error)
+
+const (
+	_MethodInit string = "_init"
+)
 
 const (
 	_Sub subTask = iota

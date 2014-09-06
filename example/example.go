@@ -46,6 +46,7 @@ func (n *Example) subLoop(events chan *neovim.SubscriptionEvent) {
 		case <-n.client.KillChannel:
 			return
 		case <-events:
+			n.log.Println("Got a text changed event")
 			// Make an API request
 			cb, _ := n.client.GetCurrentBuffer()
 			bc, _ := cb.GetSlice(0, -1, true, true)
