@@ -68,6 +68,7 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 ## Todo list
 
 * Neovim hooks up stdin and stdout back to front
+* Ensure that example gives examples (!) of testing API requests, handling requests and events
 * Consider using `internal` in Go 1.4 for better layout of package
 * Better definition of logging level-based interface for plugins
 * Stop using KillChannel in generated plugin-host; move to Tomb
