@@ -47,7 +47,7 @@ const (
 	clientListRuntimePaths  = "vim_list_runtime_paths"
 	clientOutWrite          = "vim_out_write"
 	clientPushKeys          = "vim_push_keys"
-	clientRegisterProvider  = "vim_register_provider"
+	clientregisterProvider  = "vim_register_provider"
 	clientReplaceTermcodes  = "vim_replace_termcodes"
 	clientSetCurrentBuffer  = "vim_set_current_buffer"
 	clientSetCurrentLine    = "vim_set_current_line"
@@ -1750,7 +1750,7 @@ func (c *Client) PushKeys(str string) error {
 
 }
 
-// RegisterProvider waiting for documentation from Neovim
+// registerProvider waiting for documentation from Neovim
 func (c *Client) registerProvider(method string) error {
 
 	enc := func() (_err error) {
@@ -1773,9 +1773,9 @@ func (c *Client) registerProvider(method string) error {
 
 		return
 	}
-	respChan, err := c.makeCall(clientRegisterProvider, enc, dec)
+	respChan, err := c.makeCall(clientregisterProvider, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.RegisterProvider"))
+		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.registerProvider"))
 	}
 	resp := <-respChan
 	if resp == nil {
