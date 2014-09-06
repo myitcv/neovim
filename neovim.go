@@ -61,12 +61,12 @@ import (
 
 // NewUnixClient is a convenience method for creating a new *Client. Method signature matches
 // that of net.DialUnix
-func NewUnixClient(_net string, laddr, raddr *net.UnixAddr, l Logger) (*Client, error) {
+func NewUnixClient(_net string, laddr, raddr *net.UnixAddr, log Logger) (*Client, error) {
 	c, err := net.DialUnix(_net, laddr, raddr)
 	if err != nil {
 		return nil, errgo.Notef(err, "Could not establish connection to Neovim, _net %v, laddr %v, %v", _net, laddr, raddr)
 	}
-	return NewClient(c, l)
+	return NewClient(c, log)
 }
 
 // NewCmdClient creates a new Client that is linked via stdin/stdout to the
@@ -77,11 +77,11 @@ func NewUnixClient(_net string, laddr, raddr *net.UnixAddr, l Logger) (*Client, 
 func NewCmdClient(c *exec.Cmd, log Logger) (*Client, error) {
 	stdin, err := c.StdinPipe()
 	if err != nil {
-		log.Fatalf("Could not get a stdin pipe to embedded nvim: %v\n", err)
+		return nil, errgo.Notef(err, "Could not get a stdin pipe to embedded nvim")
 	}
 	stdout, err := c.StdoutPipe()
 	if err != nil {
-		log.Fatalf("Could not get a stdout pipe to embedded nvim: %v\n", err)
+		return nil, errgo.Notef(err, "Could not get a stdout pipe to embedded nvim")
 	}
 	wrap := &StdWrapper{Stdin: stdin, Stdout: stdout}
 
@@ -99,14 +99,22 @@ func NewCmdClient(c *exec.Cmd, log Logger) (*Client, error) {
 
 	err = c.Start()
 	if err != nil {
-		log.Fatalf("Could not start the cmd: %v\n", err)
+		return nil, errgo.Notef(err, "Could not start the embedded nvim")
 	}
 
 	return NewClient(wrap, log)
 }
 
+func loggerOrStderr(log Logger) (res Logger) {
+	return
+}
+
 // NewClient creates a new Client
 func NewClient(c io.ReadWriteCloser, log Logger) (*Client, error) {
+	if log == nil {
+		log = _log.New(os.Stderr, "neovim ", _log.Llongfile|_log.Ldate|_log.Ltime)
+	}
+
 	res := &Client{rw: c}
 	res.respMap = newSyncRespMap()
 	res.provMap = newSyncProviderMap()
@@ -114,12 +122,6 @@ func NewClient(c io.ReadWriteCloser, log Logger) (*Client, error) {
 	res.enc = msgpack.NewEncoder(c)
 	res.subChan = make(chan subWrapper)
 	res.KillChannel = make(chan struct{})
-
-	if log != nil {
-		res.log = log
-	} else {
-		res.log = _log.New(os.Stderr, "neovim ", _log.Llongfile|_log.Ldate|_log.Ltime)
-	}
 
 	// do not need to put this in the tomb because
 	// the closing of the the reader will handle the exit
