@@ -49,7 +49,7 @@ package neovim
 
 import (
 	"io"
-	"log"
+	_log "log"
 	"net"
 	"os"
 	"os/exec"
@@ -62,6 +62,7 @@ import (
 // NewUnixClient is a convenience method for creating a new *Client. Method signature matches
 // that of net.DialUnix
 func NewUnixClient(_net string, laddr, raddr *net.UnixAddr, l Logger) (*Client, error) {
+	_log.Fatal("Test")
 	c, err := net.DialUnix(_net, laddr, raddr)
 	if err != nil {
 		return nil, errgo.Notef(err, "Could not establish connection to Neovim, _net %v, laddr %v, %v", _net, laddr, raddr)
@@ -74,7 +75,7 @@ func NewUnixClient(_net string, laddr, raddr *net.UnixAddr, l Logger) (*Client, 
 // --embedded-mode is added if it is missing, and the exec.Cmd is started
 // as part of creating the client. Calling Close() will close stdin on the
 // embedded Neovim instance, thereby ending the process
-func NewCmdClient(c *exec.Cmd, l Logger) (*Client, error) {
+func NewCmdClient(c *exec.Cmd, log Logger) (*Client, error) {
 	stdin, err := c.StdinPipe()
 	if err != nil {
 		log.Fatalf("Could not get a stdin pipe to embedded nvim: %v\n", err)
@@ -102,21 +103,21 @@ func NewCmdClient(c *exec.Cmd, l Logger) (*Client, error) {
 		log.Fatalf("Could not start the cmd: %v\n", err)
 	}
 
-	return NewClient(wrap, l)
+	return NewClient(wrap, log)
 }
 
 // NewClient creates a new Client
-func NewClient(c io.ReadWriteCloser, l Logger) (*Client, error) {
+func NewClient(c io.ReadWriteCloser, log Logger) (*Client, error) {
 	res := &Client{rw: c}
 	res.respMap = newSyncMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
 	res.subChan = make(chan subWrapper)
 
-	if l != nil {
-		res.log = l
+	if log != nil {
+		res.log = log
 	} else {
-		res.log = log.New(os.Stderr, "neovim ", log.Llongfile|log.Ldate|log.Ltime)
+		res.log = _log.New(os.Stderr, "neovim ", _log.Llongfile|_log.Ldate|_log.Ltime)
 	}
 
 	// do not need to put this in the tomb because
@@ -196,31 +197,33 @@ func (c *Client) doListen() error {
 
 	dec := c.dec
 	for {
+		c.log.Println("Listening for request")
 		_, err := dec.DecodeSliceLen()
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			log.Fatalf("Could not decode message slice length: %v", err)
+			c.log.Fatalf("Could not decode message slice length: %v", err)
 		}
 
 		t, err := dec.DecodeInt()
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			log.Fatalf("Could not decode message type: %v", err)
+			c.log.Fatalf("Could not decode message type: %v", err)
 		}
 
 		switch t {
 		// TODO implement support for handling requests in a Go client, i.e.
 		// Neovim making a request to the Go client, and the Go client sending
 		// a response
+		case 0:
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode request id: %v", err)
+				c.log.Fatalf("Could not decode request id: %v", err)
 			}
 
 			// do we have an error?
@@ -228,10 +231,10 @@ func (c *Client) doListen() error {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode response error: %v", err)
+				c.log.Fatalf("Could not decode response error: %v", err)
 			}
 			if re != nil {
-				log.Fatalf("Got a response error for request %v: %v", reqID, re)
+				c.log.Fatalf("Got a response error for request %v: %v", reqID, re)
 			}
 
 			// no, carry on
@@ -239,14 +242,14 @@ func (c *Client) doListen() error {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not get response holder for %v: %v", reqID, err)
+				c.log.Fatalf("Could not get response holder for %v: %v", reqID, err)
 			}
 
 			res, err := rh.dec()
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode response: %v\n", err)
+				c.log.Fatalf("Could not decode response: %v\n", err)
 			}
 
 			resp := &response{obj: res, err: nil}
@@ -257,7 +260,7 @@ func (c *Client) doListen() error {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode topic: %v", err)
+				c.log.Fatalf("Could not decode topic: %v", err)
 			}
 
 			// TODO we could make a decode part of the subscription
@@ -266,7 +269,7 @@ func (c *Client) doListen() error {
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatalf("Could not decode obj payload: %v", err)
+				c.log.Fatalf("Could not decode obj payload: %v", err)
 			}
 
 			ev := &SubscriptionEvent{
@@ -276,7 +279,7 @@ func (c *Client) doListen() error {
 
 			subEvents <- ev
 		default:
-			log.Fatalf("Unexpected type of message: %v\n", t)
+			c.log.Fatalf("Unexpected type of message: %v\n", t)
 		}
 	}
 
@@ -336,7 +339,7 @@ func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
 						k <- event
 					}
 				} else {
-					log.Fatalf("Got an event for which we have no subs on topic %v\n", event.Topic)
+					c.log.Fatalf("Got an event for which we have no subs on topic %v\n", event.Topic)
 				}
 			case w := <-c.subChan:
 				if w.task == _Sub {

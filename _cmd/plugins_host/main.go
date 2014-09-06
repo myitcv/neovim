@@ -5,6 +5,7 @@ import (
 	_log "log"
 	"os"
 	"reflect"
+	"runtime"
 
 	"github.com/myitcv/neovim"
 	"github.com/myitcv/neovim/example"
@@ -87,7 +88,7 @@ func (p *pluginLog) SetPrefix(prefix string) {
 }
 
 func main() {
-	transport := &neovim.StdWrapper{Stdin: os.Stdin, Stdout: os.Stdout}
+	transport := &neovim.StdWrapper{Stdin: os.Stdout, Stdout: os.Stdin}
 
 	pid := os.Getpid()
 	logFileName := fmt.Sprintf("/tmp/neovim_go_plugin_host_%v", pid)
@@ -118,12 +119,15 @@ func main() {
 	p2 = &example.Example{} // see below
 	tp2 := reflect.TypeOf(p2)
 	log.Printf("Connecting %v\n", tp2)
-	go p2.Init(client, &pluginLog{l: log, p: tp2.String()})
+	p2.Init(client, &pluginLog{l: log, p: tp2.String()})
 	if err != nil {
 		log.Fatalf("Could not Init %v: %v\n", tp2, err)
 	}
 	log.Printf("Successfully call Init on %v\n", tp2)
 
+	buf := make([]byte, 1000000)
+	n := runtime.Stack(buf, true)
+	log.Println("We have the following stack:", string(buf[0:n]))
 	// list continues...
 	<-client.KillChannel
 }

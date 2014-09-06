@@ -16,11 +16,14 @@ type Example struct {
 
 func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 	n.client = c
+	l.Println("We are in the Example")
 
 	// Tell Neovim to broadcast TextChanged*
 	topic := "text_changed"
 	com := fmt.Sprintf(`au TextChanged,TextChangedI <buffer> call send_event(0, "%v", [])`, topic)
 	_ = c.Command(com)
+
+	l.Println("Ran command")
 
 	// Setup a subscription
 	sub, _ := c.Subscribe(topic)

@@ -61,9 +61,9 @@ func (t *ExampleTest) TearDownTest(c *C) {
 	<-done
 }
 
-func (t *ExampleTest) TestGetANumber(c *C) {
-	_ = t.client.Command("scriptcall get_a_number")
-}
+// func (t *ExampleTest) TestGetANumber(c *C) {
+// 	_ = t.client.Command("scriptcall get_a_number")
+// }
 
 func (t *ExampleTest) TestReflect(c *C) {
 	i := new(neovim.Plugin)
