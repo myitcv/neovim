@@ -48,6 +48,7 @@ Hence errors may be inspected using functions like errgo.Details for example:
 package neovim
 
 import (
+	"fmt"
 	"io"
 	_log "log"
 	"net"
@@ -217,6 +218,29 @@ func (c *Client) doListen() error {
 		// Neovim making a request to the Go client, and the Go client sending
 		// a response
 		case 0:
+			reqID, err := dec.DecodeUint32()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				log.Fatalf("Could not decode request id: %v", err)
+			}
+
+			reqMeth, err := dec.DecodeString()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				log.Fatalf("Could not decode request method name: %v", err)
+			}
+
+			reqArgs, err := dec.DecodeSlice()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				log.Fatalf("Could not decode request method args: %v", err)
+			}
+
+			fmt.Printf("We got a request, id %v, for method %v, with args: %v\n", reqID, reqMeth, reqArgs)
+			go c.sendResponse(reqID, nil, nil)
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
@@ -388,6 +412,44 @@ func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
 		// return the actual error
 		return nil
 	})
+}
+
+func (c *Client) sendResponse(reqID uint32, respErr error, e encoder) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	reqType := 1
+	enc := c.enc
+
+	err := enc.EncodeSliceLen(4)
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode request length")
+	}
+
+	err = enc.EncodeInt(reqType)
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode response type")
+	}
+
+	err = enc.EncodeUint32(reqID)
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode reqID")
+	}
+
+	// TODO support for response errors
+	err = enc.EncodeNil()
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode response error")
+	}
+
+	// TODO actually encode the response vals
+	// err = e()
+	err = enc.Encode([]interface{}{})
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode response vals")
+	}
+
+	return nil
 }
 
 func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan *response, error) {
