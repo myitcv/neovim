@@ -67,6 +67,7 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
+* Delete remote `plugin-host` branch
 * Neovim hooks up stdin and stdout back to front
 * Remove `example_test.go` - it is superseded by `example` and associated tests
 * Ensure that example gives examples (!) of testing API requests, handling requests and events
