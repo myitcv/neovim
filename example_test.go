@@ -70,29 +70,29 @@ func ExampleSubscription() {
 	// We got [1]
 }
 
-// func ExampleClient_GetCurrentBuffer() {
-// 	cmd := exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
-// 	cmd.Dir = "/tmp"
+func ExampleClient_GetCurrentBuffer() {
+	cmd := exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
+	cmd.Dir = "/tmp"
 
-// 	client, err := neovim.NewCmdClient(cmd)
-// 	if err != nil {
-// 		log.Fatalf("Could not create new client: %v", errgo.Details(err))
-// 	}
-// 	b, err := client.GetCurrentBuffer()
-// 	if err != nil {
-// 		log.Fatalf("Could not get current buffer: %v", errgo.Details(err))
-// 	}
-// 	n, err := b.GetName()
-// 	if err != nil {
-// 		log.Fatalf("Could not get name for buffer %v: %v", b, errgo.Details(err))
-// 	}
-// 	fmt.Printf("Current buffer is: %v %v\n", b.ID, n)
+	client, err := neovim.NewCmdClient(cmd, nil)
+	if err != nil {
+		log.Fatalf("Could not create new client: %v", errgo.Details(err))
+	}
+	b, err := client.GetCurrentBuffer()
+	if err != nil {
+		log.Fatalf("Could not get current buffer: %v", errgo.Details(err))
+	}
+	n, err := b.GetName()
+	if err != nil {
+		log.Fatalf("Could not get name for buffer %v: %v", b, errgo.Details(err))
+	}
+	fmt.Printf("Current buffer is: %v %v\n", b.ID, n)
 
-// 	err = client.Close()
-// 	if err != nil {
-// 		log.Fatalf("Could not close client: %v\n", err)
-// 	}
+	err = client.Close()
+	if err != nil {
+		log.Fatalf("Could not close client: %v\n", err)
+	}
 
-// 	// Output:
-// 	// Current buffer is: 2
-// }
+	// Output:
+	// Current buffer is: 2
+}
