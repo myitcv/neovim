@@ -9,6 +9,10 @@ implements a tool for generating the MSGPACK-based API against a Neovim instance
 All API methods are supported, as are notifications. See Subscription for an example
 of how to register a subscription on a given topic.
 
+Example Plugin
+
+For an example plugin see http://godoc.org/github.com/myitcv/neovim/example
+
 Client
 
 Everything starts from Client:
