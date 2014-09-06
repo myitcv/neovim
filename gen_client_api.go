@@ -1751,7 +1751,7 @@ func (c *Client) PushKeys(str string) error {
 }
 
 // RegisterProvider waiting for documentation from Neovim
-func (c *Client) RegisterProvider(method string) error {
+func (c *Client) registerProvider(method string) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)

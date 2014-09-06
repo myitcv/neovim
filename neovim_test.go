@@ -43,7 +43,7 @@ func (t *NeovimTest) SetUpTest(c *C) {
 	t.nvim.Dir = "/tmp"
 
 	// now we can create a new client
-	client, err := neovim.NewCmdClient(t.nvim)
+	client, err := neovim.NewCmdClient(t.nvim, nil)
 	if err != nil {
 		log.Fatalf("Could not setup client: %v", errgo.Details(err))
 	}
@@ -165,10 +165,11 @@ func (t *NeovimTest) TestArrayEval(c *C) {
 	}
 }
 
-// Needs changes in Neovim to allow this
 // func (t *NeovimTest) TestRegisterProvider(c *C) {
-// 	_ = t.client.RegisterProvider("my_first_method")
-// 	_ = t.client.Command("call my_first_method()")
+// 	_ = t.client.RegisterProvider("my_first_method", func(args []interface{}) ([]interface{}, error) {
+// 		return nil, nil
+// 	})
+// 	_ = t.client.Command("scriptcall my_first_method")
 // }
 
 func (t *NeovimTest) BenchmarkCommandAndEval(c *C) {
