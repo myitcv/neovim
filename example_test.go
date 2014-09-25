@@ -49,7 +49,7 @@ func ExampleSubscription() {
 		done <- struct{}{}
 	}()
 
-	command := fmt.Sprintf(`call send_event(0, "%v", 1)`, topic)
+	command := fmt.Sprintf(`call rpcnotify(0, "%v", 1)`, topic)
 	_ = client.Command(command)
 
 	<-received

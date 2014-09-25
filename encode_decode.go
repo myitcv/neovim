@@ -7,15 +7,41 @@ package neovim
 import "github.com/juju/errgo"
 
 func (c *Client) decodeBuffer() (retVal Buffer, retErr error) {
-	b, err := c.dec.DecodeUint32()
+	b, err := c.dec.R.ReadByte()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode Buffer")
+		return retVal, errgo.Notef(err, "Could not decode control byte")
 	}
-	return Buffer{ID: b, client: c}, retErr
+
+	if b != 0xd4 {
+		return retVal, errgo.Newf("Expected code d4; got %v\n", b)
+	}
+
+	t, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode type")
+	}
+
+	if t != TypeBuffer {
+		return retVal, errgo.Notef(err, "Expected TypeBuffer; got: %v\n", t)
+	}
+
+	bid, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode buffer ID")
+	}
+	return Buffer{ID: uint32(bid), client: c}, retErr
 }
 
 func (c *Client) encodeBuffer(b Buffer) error {
-	err := c.enc.EncodeUint32(b.ID)
+	err := c.enc.W.WriteByte(0xd4)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Buffer ext type")
+	}
+	err = c.enc.EncodeUint8(TypeBuffer)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Buffer type")
+	}
+	err = c.enc.EncodeUint8(uint8(b.ID))
 	if err != nil {
 		return errgo.Notef(err, "Could not encode Buffer")
 	}

@@ -18,35 +18,10 @@ import (
 	"text/template"
 
 	"github.com/juju/errgo"
+	"github.com/myitcv/neovim/apidef"
 	sstrings "github.com/myitcv/strings"
 	"github.com/vmihailenco/msgpack"
 )
-
-// An API represents the API as advertised by Neovim
-type API struct {
-	Classes   []APIClass
-	Functions []APIFunction
-}
-
-// An APIClass represents a class as defined as part of the API
-type APIClass struct {
-	Name string
-}
-
-// An APIFunction represents a class as defined as part of the API
-type APIFunction struct {
-	Name              string
-	ReturnType        string
-	ID                uint32
-	CanFail           bool
-	ReceivesChannelID bool
-	Parameters        []APIFunctionParameter
-}
-
-// An APIFunctionParameter represents a function parameters as defined by an APIFunction
-type APIFunctionParameter struct {
-	Type, Name string
-}
 
 var generatedFunctions map[string]bool
 
@@ -75,7 +50,15 @@ func main() {
 		showUsage()
 	}
 
-	api, err := getAPI()
+	output, err := exec.Command(os.Getenv("NEOVIM_BIN"), "--api-info").CombinedOutput()
+	if err != nil {
+		log.Fatalf("Could not get current API dump: %v", errgo.Details(err))
+	}
+
+	br := bytes.NewReader(output)
+	ad := msgpack.NewDecoder(br)
+
+	api, err := apidef.GetAPI(ad)
 	if err != nil {
 		log.Fatalf("Could not get API from client: %v\n", err)
 	}
@@ -104,197 +87,6 @@ func main() {
 			fmt.Print("\n")
 		}
 	}
-}
-
-func getAPI() (*API, error) {
-	output, err := exec.Command(os.Getenv("NEOVIM_BIN"), "--api-msgpack-metadata").CombinedOutput()
-	if err != nil {
-		log.Fatalf("Could not get current API dump: %v", errgo.Details(err))
-	}
-
-	br := bytes.NewReader(output)
-	ad := msgpack.NewDecoder(br)
-
-	ml, err := ad.DecodeMapLen()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode map length")
-
-	}
-
-	resp := &API{}
-
-	for i := 0; i < ml; i++ {
-		k, err := ad.DecodeString()
-		if err != nil {
-			return nil, errgo.NoteMask(err, "Could not decode key of top level api map")
-		}
-
-		switch k {
-		case "classes":
-			classes, err := decodeAPIClassSlice(ad)
-			if err != nil {
-				return nil, errgo.NoteMask(err, "Could not decode class slice")
-			}
-			resp.Classes = classes
-		case "functions":
-			functions, err := decodeAPIFunctionSlice(ad)
-			if err != nil {
-				return nil, errgo.NoteMask(err, "Could not decode function slice")
-			}
-			resp.Functions = functions
-		}
-	}
-
-	return resp, nil
-}
-
-func decodeAPIClass(d *msgpack.Decoder) (APIClass, error) {
-	resp := APIClass{}
-	cn, err := d.DecodeString()
-	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode class name")
-	}
-
-	resp.Name = cn
-	return resp, nil
-}
-
-func decodeAPIClassSlice(d *msgpack.Decoder) ([]APIClass, error) {
-	sl, err := d.DecodeSliceLen()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
-	}
-
-	resp := make([]APIClass, sl)
-
-	for i := 0; i < sl; i++ {
-		nvc, err := decodeAPIClass(d)
-		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode class at index %v", i)
-		}
-		resp[i] = nvc
-	}
-	return resp, nil
-}
-
-func decodeAPIFunction(d *msgpack.Decoder) (APIFunction, error) {
-	resp := APIFunction{}
-	ml, err := d.DecodeMapLen()
-	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode map length")
-	}
-
-	for i := 0; i < ml; i++ {
-		k, err := d.DecodeString()
-		if err != nil {
-			return resp, errgo.NoteMask(err, "Could not decode function property key")
-		}
-
-		switch k {
-		case "name":
-			s, err := d.DecodeString()
-			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function name")
-			}
-			resp.Name = s
-		case "receives_channel_id":
-			b, err := d.DecodeBool()
-			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function receives_channel_id")
-			}
-			resp.ReceivesChannelID = b
-		case "can_fail":
-			b, err := d.DecodeBool()
-			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function can_fail")
-			}
-			resp.CanFail = b
-		case "return_type":
-			s, err := d.DecodeString()
-			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function return type")
-			}
-			resp.ReturnType = s
-		case "id":
-			i, err := d.DecodeUint32()
-			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function id")
-			}
-			resp.ID = i
-		case "parameters":
-			ps, err := decodeAPIFunctionParameterSlice(d)
-			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function parameters")
-			}
-			resp.Parameters = ps
-		default:
-			return resp, errgo.Newf("Unknown function property %v", k)
-		}
-	}
-
-	return resp, nil
-}
-
-func decodeAPIFunctionSlice(d *msgpack.Decoder) ([]APIFunction, error) {
-	sl, err := d.DecodeSliceLen()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
-	}
-
-	resp := make([]APIFunction, sl)
-
-	for i := 0; i < sl; i++ {
-		nvc, err := decodeAPIFunction(d)
-		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode function at index %v", i)
-		}
-		resp[i] = nvc
-	}
-	return resp, nil
-}
-
-func decodeAPIFunctionParameter(d *msgpack.Decoder) (APIFunctionParameter, error) {
-	resp := APIFunctionParameter{}
-
-	// we should have a slice of length 2
-	sl, err := d.DecodeSliceLen()
-	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode slice length")
-	}
-
-	if sl != 2 {
-		return resp, errgo.Newf("Expected lenght to be 2; got %v", sl)
-	}
-
-	pt, err := d.DecodeString()
-	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode class name")
-	}
-	resp.Type = pt
-	pn, err := d.DecodeString()
-	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode class name")
-	}
-	resp.Name = pn
-	return resp, nil
-}
-
-func decodeAPIFunctionParameterSlice(d *msgpack.Decoder) ([]APIFunctionParameter, error) {
-	sl, err := d.DecodeSliceLen()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
-	}
-
-	resp := make([]APIFunctionParameter, sl)
-
-	for i := 0; i < sl; i++ {
-		nvc, err := decodeAPIFunctionParameter(d)
-		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode function parameter at index %v", i)
-		}
-		resp[i] = nvc
-	}
-	return resp, nil
 }
 
 func loadGeneratedFunctions() {
@@ -408,7 +200,18 @@ func getType(s string) _type {
 	return res
 }
 
-func genMethodTemplates(fs []APIFunction) []methodTemplate {
+func genMethodTemplates(fs []apidef.APIFunction) []methodTemplate {
+	// TODO make this cleaner - remove vim_get_api_info
+	fs_copy := make([]apidef.APIFunction, len(fs)-1)
+	i := 0
+	for _, f := range fs {
+		if f.Name != "vim_get_api_info" {
+			fs_copy[i] = f
+			i++
+		}
+	}
+	fs = fs_copy
+
 	res := make([]methodTemplate, len(fs))
 
 	for i, f := range fs {
@@ -458,7 +261,7 @@ func genMethodTemplates(fs []APIFunction) []methodTemplate {
 
 		// params
 		// TODO this could be improved
-		var ofInterest []APIFunctionParameter
+		var ofInterest []apidef.APIFunctionParameter
 		switch m.Rec.Type.Name() {
 		case "Client":
 			ofInterest = f.Parameters
@@ -496,7 +299,7 @@ func (a byMethod) Len() int           { return len(a) }
 func (a byMethod) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byMethod) Less(i, j int) bool { return a[i].RawName < a[j].RawName }
 
-func genTypeTemplates(ts []APIClass) []_type {
+func genTypeTemplates(ts []apidef.APIClass) []_type {
 	var res []_type
 	for _, v := range typeMap {
 		if v.genHelper {
@@ -507,21 +310,21 @@ func genTypeTemplates(ts []APIClass) []_type {
 	return res
 }
 
-func genAPI(a *API) {
+func genAPI(a *apidef.API) {
 	// ensure we only have classes we know about
 	comp := make(map[string]int, len(knowClasses))
 	for _, k := range knowClasses {
 		comp[k]++
 	}
-	for _, k := range a.Classes {
+	for _, k := range a.Types {
 		if comp[k.Name] != 1 {
 			log.Fatalf("We got an unexpected class: %v\n", k.Name)
 		}
 	}
 
-	var funcsOfInterest []APIFunction
+	var funcsOfInterest []apidef.APIFunction
 	if generatedFunctions != nil {
-		funcsOfInterest = make([]APIFunction, 0)
+		funcsOfInterest = make([]apidef.APIFunction, 0)
 		for i := range a.Functions {
 			if _, ok := generatedFunctions[a.Functions[i].Name]; ok {
 				funcsOfInterest = append(funcsOfInterest, a.Functions[i])
@@ -548,7 +351,7 @@ func genAPI(a *API) {
 
 	api := api{}
 	api.Methods = genMethodTemplates(funcsOfInterest)
-	api.Types = genTypeTemplates(a.Classes)
+	api.Types = genTypeTemplates(a.Types)
 
 	err = t.Execute(os.Stdout, api)
 	if err != nil {
@@ -701,14 +504,14 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 
 var typeMap = map[string]_type{
 	"String": {
-		name:      "string",
-		enc:       "EncodeString",
-		dec:       "DecodeString",
+		name:      "[]byte",
+		enc:       "EncodeBytes",
+		dec:       "DecodeBytes",
 		primitive: true,
 		genHelper: true,
 	},
-	"StringArray": {
-		name: "[]string",
+	"ArrayOf(String)": {
+		name: "[][]byte",
 		enc:  "encodeStringSlice",
 		dec:  "decodeStringSlice",
 	},
@@ -718,11 +521,17 @@ var typeMap = map[string]_type{
 		dec:       "DecodeUint32",
 		primitive: true,
 	},
+	"ArrayOf(Integer, 2)": {
+		name: "[]int",
+		enc:  "encodeIntSlice",
+		dec:  "decodeIntSlice",
+	},
 	"Integer": {
 		name:      "int",
 		enc:       "EncodeInt",
 		dec:       "DecodeInt",
 		primitive: true,
+		genHelper: true,
 	},
 	"Boolean": {
 		name:      "bool",
@@ -742,7 +551,7 @@ var typeMap = map[string]_type{
 		dec:       "decodeBuffer",
 		genHelper: true,
 	},
-	"BufferArray": {
+	"ArrayOf(Buffer)": {
 		name: "[]Buffer",
 		enc:  "encodeBufferSlice",
 		dec:  "decodeBufferSlice",
@@ -753,7 +562,7 @@ var typeMap = map[string]_type{
 		dec:       "decodeWindow",
 		genHelper: true,
 	},
-	"WindowArray": {
+	"ArrayOf(Window)": {
 		name: "[]Window",
 		enc:  "encodeWindowSlice",
 		dec:  "decodeWindowSlice",
@@ -764,7 +573,7 @@ var typeMap = map[string]_type{
 		dec:       "decodeTabpage",
 		genHelper: true,
 	},
-	"TabpageArray": {
+	"ArrayOf(Tabpage)": {
 		name: "[]Tabpage",
 		enc:  "encodeTabpageSlice",
 		dec:  "decodeTabpageSlice",

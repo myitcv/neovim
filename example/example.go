@@ -20,7 +20,7 @@ func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 
 	// Tell Neovim to broadcast TextChanged*
 	topic := "text_changed"
-	com := fmt.Sprintf(`au TextChanged,TextChangedI <buffer> call send_event(0, "%v", [])`, topic)
+	com := fmt.Sprintf(`au TextChanged,TextChangedI <buffer> call rpcnotify(0, "%v", [])`, topic)
 	_ = c.Command(com)
 
 	l.Println("Ran command")
@@ -30,7 +30,7 @@ func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 	go n.subLoop(sub.Events)
 
 	// Handle an RPC request from Neovim
-	n.client.RegisterProvider("get_a_number", n.getANumber)
+	// n.client.RegisterProvider("get_a_number", n.getANumber)
 
 	return nil
 }
@@ -49,7 +49,7 @@ func (n *Example) subLoop(events chan *neovim.SubscriptionEvent) {
 			n.log.Println("Got a text changed event")
 			// Make an API request
 			cb, _ := n.client.GetCurrentBuffer()
-			bc, _ := cb.GetSlice(0, -1, true, true)
+			bc, _ := cb.GetLineSlice(0, -1, true, true)
 
 			// in practice we would use bc to do something useful
 			// just log for now
