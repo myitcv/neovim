@@ -156,19 +156,19 @@ func (c *Client) RegisterRequestHandler(m string, r RequestHandler) error {
 	return nil
 }
 
-func (c *Client) RegisterProvider(m string, r RequestHandler) error {
-	err := c.RegisterRequestHandler(m, r)
-	if err != nil {
-		return errgo.Notef(err, "Could not register request handler")
-	}
+// func (c *Client) RegisterProvider(m string, r RequestHandler) error {
+// 	err := c.RegisterRequestHandler(m, r)
+// 	if err != nil {
+// 		return errgo.Notef(err, "Could not register request handler")
+// 	}
 
-	err = c.registerProvider(m)
-	if err != nil {
-		return errgo.Notef(err, "Could not register provider in Neovim")
-	}
+// 	err = c.registerProvider(m)
+// 	if err != nil {
+// 		return errgo.Notef(err, "Could not register provider in Neovim")
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 // Subscribe subscribes to a topic of events from Neovim. The
 // *Subscription.Events channel will receive SubscriptionEvent's

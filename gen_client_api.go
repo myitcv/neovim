@@ -3,6 +3,8 @@ package neovim
 // **** THIS FILE IS GENERATED - DO NOT EDIT BY HAND
 
 import (
+	"fmt"
+
 	"github.com/juju/errgo"
 	"github.com/myitcv/neovim/apidef"
 )
@@ -17,20 +19,20 @@ const (
 
 const (
 	bufferDelLine           = "buffer_del_line"
-	bufferLineCount         = "buffer_line_count"
 	bufferGetLine           = "buffer_get_line"
+	bufferGetLineSlice      = "buffer_get_line_slice"
 	bufferGetMark           = "buffer_get_mark"
 	bufferGetName           = "buffer_get_name"
 	bufferGetNumber         = "buffer_get_number"
 	bufferGetOption         = "buffer_get_option"
-	bufferGetLineSlice      = "buffer_get_line_slice"
 	bufferGetVar            = "buffer_get_var"
 	bufferInsert            = "buffer_insert"
 	bufferIsValid           = "buffer_is_valid"
+	bufferLineCount         = "buffer_line_count"
 	bufferSetLine           = "buffer_set_line"
+	bufferSetLineSlice      = "buffer_set_line_slice"
 	bufferSetName           = "buffer_set_name"
 	bufferSetOption         = "buffer_set_option"
-	bufferSetLineSlice      = "buffer_set_line_slice"
 	bufferSetVar            = "buffer_set_var"
 	tabpageGetVar           = "tabpage_get_var"
 	tabpageGetWindow        = "tabpage_get_window"
@@ -56,8 +58,6 @@ const (
 	clientGetWindows        = "vim_get_windows"
 	clientListRuntimePaths  = "vim_list_runtime_paths"
 	clientOutWrite          = "vim_out_write"
-	clientPushKeys          = "vim_push_keys"
-	clientregisterProvider  = "vim_register_provider"
 	clientReplaceTermcodes  = "vim_replace_termcodes"
 	clientReportError       = "vim_report_error"
 	clientSetCurrentBuffer  = "vim_set_current_buffer"
@@ -131,54 +131,9 @@ func (b *Buffer) DelLine(index int) error {
 
 }
 
-// GetLineCount waiting for documentation from Neovim
-func (b *Buffer) GetLineCount() (int, error) {
-	var retVal int
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = b.client.dec.DecodeInt()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferLineCount, enc, dec)
-	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.LineCount"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(int)
-	return retVal, nil
-
-}
-
 // GetLine waiting for documentation from Neovim
 func (b *Buffer) GetLine(index int) (string, error) {
-	res, err := b.GetLineRaw(index)
-	return string(res), err
-}
-
-// GetLineRaw waiting for documentation from Neovim
-func (b *Buffer) GetLineRaw(index int) ([]byte, error) {
-	var retVal []byte
+	var retVal string
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(2)
 		if _err != nil {
@@ -216,214 +171,14 @@ func (b *Buffer) GetLineRaw(index int) ([]byte, error) {
 		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.([]byte)
-	return retVal, nil
-
-}
-
-// GetMark waiting for documentation from Neovim
-func (b *Buffer) GetMark(name string) ([]int, error) {
-	return b.GetMarkRaw([]byte(name))
-}
-
-// GetMarkRaw waiting for documentation from Neovim
-func (b *Buffer) GetMarkRaw(name []byte) ([]int, error) {
-	var retVal []int
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeBytes(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = b.client.decodeIntSlice()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferGetMark, enc, dec)
-	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetMark"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.([]int)
-	return retVal, nil
-
-}
-
-// GetName waiting for documentation from Neovim
-func (b *Buffer) GetName() (string, error) {
-	res, err := b.GetNameRaw()
-	return string(res), err
-}
-
-// GetNameRaw waiting for documentation from Neovim
-func (b *Buffer) GetNameRaw() ([]byte, error) {
-	var retVal []byte
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = b.client.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferGetName, enc, dec)
-	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetName"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.([]byte)
-	return retVal, nil
-
-}
-
-// GetNumber waiting for documentation from Neovim
-func (b *Buffer) GetNumber() (int, error) {
-	var retVal int
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = b.client.dec.DecodeInt()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferGetNumber, enc, dec)
-	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetNumber"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(int)
-	return retVal, nil
-
-}
-
-// GetOption waiting for documentation from Neovim
-func (b *Buffer) GetOption(name string) (interface{}, error) {
-	return b.GetOptionRaw([]byte(name))
-}
-
-// GetOptionRaw waiting for documentation from Neovim
-func (b *Buffer) GetOptionRaw(name []byte) (interface{}, error) {
-	var retVal interface{}
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeBytes(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_i, _err = b.client.dec.DecodeInterface()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferGetOption, enc, dec)
-	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetOption"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal = resp.obj.(interface{})
+	retVal = string(resp.obj.([]byte))
 	return retVal, nil
 
 }
 
 // GetLineSlice waiting for documentation from Neovim
 func (b *Buffer) GetLineSlice(start int, end int, includeStart bool, includeEnd bool) ([]string, error) {
-	res, err := b.GetLineSliceRaw(start, end, includeStart, includeEnd)
-
-	if res != nil {
-		res_s := make([]string, len(res))
-		for i := range res {
-			res_s[i] = string(res[i])
-		}
-
-		return res_s, err
-	}
-
-	return nil, err
-}
-
-// GetLineSliceRaw waiting for documentation from Neovim
-func (b *Buffer) GetLineSliceRaw(start int, end int, includeStart bool, includeEnd bool) ([][]byte, error) {
-	var retVal [][]byte
+	var retVal []string
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(5)
 		if _err != nil {
@@ -479,18 +234,139 @@ func (b *Buffer) GetLineSliceRaw(start int, end int, includeStart bool, includeE
 		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.([][]byte)
+	retVal = resp.obj.([]string)
 	return retVal, nil
 
 }
 
-// GetVar waiting for documentation from Neovim
-func (b *Buffer) GetVar(name string) (interface{}, error) {
-	return b.GetVarRaw([]byte(name))
+// GetMark waiting for documentation from Neovim
+func (b *Buffer) GetMark(name string) ([]int, error) {
+	var retVal []int
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeBytes([]byte(name))
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = b.client.decodeIntSlice()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferGetMark, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetMark"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.([]int)
+	return retVal, nil
+
 }
 
-// GetVarRaw waiting for documentation from Neovim
-func (b *Buffer) GetVarRaw(name []byte) (interface{}, error) {
+// GetName waiting for documentation from Neovim
+func (b *Buffer) GetName() (string, error) {
+	fmt.Println("*******************Calling BufferGetName")
+	var retVal string
+	enc := func() (_err error) {
+		fmt.Println("*******************Calling EncodeBytes from BufferGetName")
+		_err = b.client.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		fmt.Println("*******************Calling DecodeBytes from BufferGetName")
+		_i, _err = b.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferGetName, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetName"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = string(resp.obj.([]byte))
+	return retVal, nil
+
+}
+
+// GetNumber waiting for documentation from Neovim
+func (b *Buffer) GetNumber() (int, error) {
+	var retVal int
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = b.client.dec.DecodeInt()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferGetNumber, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetNumber"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(int)
+	return retVal, nil
+
+}
+
+// GetOption waiting for documentation from Neovim
+func (b *Buffer) GetOption(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(2)
@@ -503,7 +379,52 @@ func (b *Buffer) GetVarRaw(name []byte) (interface{}, error) {
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes(name)
+		_err = b.client.enc.EncodeBytes([]byte(name))
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = b.client.dec.DecodeInterface()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferGetOption, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetOption"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
+
+}
+
+// GetVar waiting for documentation from Neovim
+func (b *Buffer) GetVar(name string) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -536,19 +457,6 @@ func (b *Buffer) GetVarRaw(name []byte) (interface{}, error) {
 
 // Insert waiting for documentation from Neovim
 func (b *Buffer) Insert(lnum int, lines []string) error {
-	var lines_b [][]byte
-	if lines != nil {
-		lines_b = make([][]byte, len(lines))
-		for i := range lines {
-			lines_b[i] = []byte(lines[i])
-		}
-	}
-	return b.InsertRaw(lnum, lines_b)
-
-}
-
-// InsertRaw waiting for documentation from Neovim
-func (b *Buffer) InsertRaw(lnum int, lines [][]byte) error {
 
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(3)
@@ -636,13 +544,47 @@ func (b *Buffer) IsValid() (bool, error) {
 
 }
 
-// SetLineRaw waiting for documentation from Neovim
-func (b *Buffer) SetLine(index int, line string) error {
-	return b.SetLineRaw(index, []byte(line))
+// LineCount waiting for documentation from Neovim
+func (b *Buffer) LineCount() (int, error) {
+	var retVal int
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = b.client.dec.DecodeInt()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferLineCount, enc, dec)
+	if err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.LineCount"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(int)
+	return retVal, nil
+
 }
 
-// SetLineRaw waiting for documentation from Neovim
-func (b *Buffer) SetLineRaw(index int, line []byte) error {
+// SetLine waiting for documentation from Neovim
+func (b *Buffer) SetLine(index int, line string) error {
 
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(3)
@@ -661,7 +603,7 @@ func (b *Buffer) SetLineRaw(index int, line []byte) error {
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes(line)
+		_err = b.client.enc.EncodeBytes([]byte(line))
 
 		if _err != nil {
 			return
@@ -691,124 +633,8 @@ func (b *Buffer) SetLineRaw(index int, line []byte) error {
 
 }
 
-// SetName waiting for documentation from Neovim
-func (b *Buffer) SetName(name string) error {
-	return b.SetNameRaw([]byte(name))
-}
-
-// SetNameRaw waiting for documentation from Neovim
-func (b *Buffer) SetNameRaw(name []byte) error {
-
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeBytes(name)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = b.client.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferSetName, enc, dec)
-	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetName"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// SetOption waiting for documentation from Neovim
-func (b *Buffer) SetOption(name string, value interface{}) error {
-	return b.SetOptionRaw([]byte(name), value)
-}
-
-// SetOptionRaw waiting for documentation from Neovim
-func (b *Buffer) SetOptionRaw(name []byte, value interface{}) error {
-
-	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(3)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.encodeBuffer(*b)
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.EncodeBytes(name)
-
-		if _err != nil {
-			return
-		}
-
-		_err = b.client.enc.Encode(value)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = b.client.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := b.client.makeCall(bufferSetOption, enc, dec)
-	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetOption"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
 // SetLineSlice waiting for documentation from Neovim
 func (b *Buffer) SetLineSlice(start int, end int, includeStart bool, includeEnd bool, replacement []string) error {
-	var replacement_b [][]byte
-	if replacement != nil {
-		replacement_b = make([][]byte, len(replacement))
-		for i := range replacement {
-			replacement_b[i] = []byte(replacement[i])
-		}
-	}
-	return b.SetLineSliceRaw(start, end, includeStart, includeEnd, replacement_b)
-}
-
-// SetLineSliceRaw waiting for documentation from Neovim
-func (b *Buffer) SetLineSliceRaw(start int, end int, includeStart bool, includeEnd bool, replacement [][]byte) error {
 
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(6)
@@ -875,13 +701,102 @@ func (b *Buffer) SetLineSliceRaw(start int, end int, includeStart bool, includeE
 
 }
 
-// SetVar waiting for documentation from Neovim
-func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
-	return b.SetVarRaw([]byte(name), value)
+// SetName waiting for documentation from Neovim
+func (b *Buffer) SetName(name string) error {
+
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(2)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeBytes([]byte(name))
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = b.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferSetName, enc, dec)
+	if err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetName"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
 }
 
-// SetVarRaw waiting for documentation from Neovim
-func (b *Buffer) SetVarRaw(name []byte, value interface{}) (interface{}, error) {
+// SetOption waiting for documentation from Neovim
+func (b *Buffer) SetOption(name string, value interface{}) error {
+
+	enc := func() (_err error) {
+		_err = b.client.enc.EncodeSliceLen(3)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.encodeBuffer(*b)
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.EncodeBytes([]byte(name))
+
+		if _err != nil {
+			return
+		}
+
+		_err = b.client.enc.Encode(value)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_, _err = b.client.dec.DecodeBytes()
+
+		return
+	}
+	respChan, err := b.client.makeCall(bufferSetOption, enc, dec)
+	if err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetOption"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	return nil
+
+}
+
+// SetVar waiting for documentation from Neovim
+func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = b.client.enc.EncodeSliceLen(3)
@@ -894,7 +809,7 @@ func (b *Buffer) SetVarRaw(name []byte, value interface{}) (interface{}, error) 
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes(name)
+		_err = b.client.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -933,11 +848,6 @@ func (b *Buffer) SetVarRaw(name []byte, value interface{}) (interface{}, error) 
 
 // GetVar waiting for documentation from Neovim
 func (t *Tabpage) GetVar(name string) (interface{}, error) {
-	return t.GetVarRaw([]byte(name))
-}
-
-// GetVarRaw waiting for documentation from Neovim
-func (t *Tabpage) GetVarRaw(name []byte) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = t.client.enc.EncodeSliceLen(2)
@@ -950,7 +860,7 @@ func (t *Tabpage) GetVarRaw(name []byte) (interface{}, error) {
 			return
 		}
 
-		_err = t.client.enc.EncodeBytes(name)
+		_err = t.client.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -1100,11 +1010,6 @@ func (t *Tabpage) IsValid() (bool, error) {
 
 // SetVar waiting for documentation from Neovim
 func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
-	return t.SetVarRaw([]byte(name), value)
-}
-
-// SetVarRaw waiting for documentation from Neovim
-func (t *Tabpage) SetVarRaw(name []byte, value interface{}) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = t.client.enc.EncodeSliceLen(3)
@@ -1117,7 +1022,7 @@ func (t *Tabpage) SetVarRaw(name []byte, value interface{}) (interface{}, error)
 			return
 		}
 
-		_err = t.client.enc.EncodeBytes(name)
+		_err = t.client.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -1156,11 +1061,6 @@ func (t *Tabpage) SetVarRaw(name []byte, value interface{}) (interface{}, error)
 
 // ChangeDirectory waiting for documentation from Neovim
 func (c *Client) ChangeDirectory(dir string) error {
-	return c.ChangeDirectoryRaw([]byte(dir))
-}
-
-// ChangeDirectoryRaw waiting for documentation from Neovim
-func (c *Client) ChangeDirectoryRaw(dir []byte) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -1168,7 +1068,7 @@ func (c *Client) ChangeDirectoryRaw(dir []byte) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(dir)
+		_err = c.enc.EncodeBytes([]byte(dir))
 
 		if _err != nil {
 			return
@@ -1200,11 +1100,6 @@ func (c *Client) ChangeDirectoryRaw(dir []byte) error {
 
 // Command waiting for documentation from Neovim
 func (c *Client) Command(str string) error {
-	return c.CommandRaw([]byte(str))
-}
-
-// CommandRaw waiting for documentation from Neovim
-func (c *Client) CommandRaw(str []byte) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -1212,7 +1107,7 @@ func (c *Client) CommandRaw(str []byte) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(str)
+		_err = c.enc.EncodeBytes([]byte(str))
 
 		if _err != nil {
 			return
@@ -1277,11 +1172,6 @@ func (c *Client) DelCurrentLine() error {
 
 // ErrWrite waiting for documentation from Neovim
 func (c *Client) ErrWrite(str string) error {
-	return c.ErrWriteRaw([]byte(str))
-}
-
-// ErrWriteRaw waiting for documentation from Neovim
-func (c *Client) ErrWriteRaw(str []byte) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -1289,7 +1179,7 @@ func (c *Client) ErrWriteRaw(str []byte) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(str)
+		_err = c.enc.EncodeBytes([]byte(str))
 
 		if _err != nil {
 			return
@@ -1319,13 +1209,8 @@ func (c *Client) ErrWriteRaw(str []byte) error {
 
 }
 
-// EvalRaw waiting for documentation from Neovim
+// Eval waiting for documentation from Neovim
 func (c *Client) Eval(str string) (interface{}, error) {
-	return c.EvalRaw([]byte(str))
-}
-
-// EvalRaw waiting for documentation from Neovim
-func (c *Client) EvalRaw(str []byte) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -1333,7 +1218,7 @@ func (c *Client) EvalRaw(str []byte) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(str)
+		_err = c.enc.EncodeBytes([]byte(str))
 
 		if _err != nil {
 			return
@@ -1366,11 +1251,6 @@ func (c *Client) EvalRaw(str []byte) (interface{}, error) {
 
 // Feedkeys waiting for documentation from Neovim
 func (c *Client) Feedkeys(keys string, mode string) error {
-	return c.FeedkeysRaw([]byte(keys), []byte(mode))
-}
-
-// FeedkeysRaw waiting for documentation from Neovim
-func (c *Client) FeedkeysRaw(keys []byte, mode []byte) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(2)
@@ -1378,13 +1258,13 @@ func (c *Client) FeedkeysRaw(keys []byte, mode []byte) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(keys)
+		_err = c.enc.EncodeBytes([]byte(keys))
 
 		if _err != nil {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(mode)
+		_err = c.enc.EncodeBytes([]byte(mode))
 
 		if _err != nil {
 			return
@@ -1540,13 +1420,7 @@ func (c *Client) GetCurrentBuffer() (Buffer, error) {
 
 // GetCurrentLine waiting for documentation from Neovim
 func (c *Client) GetCurrentLine() (string, error) {
-	res, err := c.GetCurrentLineRaw()
-	return string(res), err
-}
-
-// GetCurrentLineRaw waiting for documentation from Neovim
-func (c *Client) GetCurrentLineRaw() ([]byte, error) {
-	var retVal []byte
+	var retVal string
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -1573,7 +1447,7 @@ func (c *Client) GetCurrentLineRaw() ([]byte, error) {
 		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.([]byte)
+	retVal = string(resp.obj.([]byte))
 	return retVal, nil
 
 }
@@ -1648,11 +1522,6 @@ func (c *Client) GetCurrentWindow() (Window, error) {
 
 // GetOption waiting for documentation from Neovim
 func (c *Client) GetOption(name string) (interface{}, error) {
-	return c.GetOptionRaw([]byte(name))
-}
-
-// GetOptionRaw waiting for documentation from Neovim
-func (c *Client) GetOptionRaw(name []byte) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -1660,7 +1529,7 @@ func (c *Client) GetOptionRaw(name []byte) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(name)
+		_err = c.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -1727,11 +1596,6 @@ func (c *Client) GetTabpages() ([]Tabpage, error) {
 
 // GetVar waiting for documentation from Neovim
 func (c *Client) GetVar(name string) (interface{}, error) {
-	return c.GetVarRaw([]byte(name))
-}
-
-// GetVarRaw waiting for documentation from Neovim
-func (c *Client) GetVarRaw(name []byte) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -1739,7 +1603,7 @@ func (c *Client) GetVarRaw(name []byte) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(name)
+		_err = c.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -1772,11 +1636,6 @@ func (c *Client) GetVarRaw(name []byte) (interface{}, error) {
 
 // GetVvar waiting for documentation from Neovim
 func (c *Client) GetVvar(name string) (interface{}, error) {
-	return c.GetVvarRaw([]byte(name))
-}
-
-// GetVvarRaw waiting for documentation from Neovim
-func (c *Client) GetVvarRaw(name []byte) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -1784,7 +1643,7 @@ func (c *Client) GetVvarRaw(name []byte) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(name)
+		_err = c.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -1851,20 +1710,7 @@ func (c *Client) GetWindows() ([]Window, error) {
 
 // ListRuntimePaths waiting for documentation from Neovim
 func (c *Client) ListRuntimePaths() ([]string, error) {
-	var res_s []string
-	res, err := c.ListRuntimePathsRaw()
-	if res != nil {
-		res_s := make([]string, len(res))
-		for i := range res {
-			res_s[i] = string(res[i])
-		}
-	}
-	return res_s, err
-}
-
-// ListRuntimePathsRaw waiting for documentation from Neovim
-func (c *Client) ListRuntimePathsRaw() ([][]byte, error) {
-	var retVal [][]byte
+	var retVal []string
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
 		if _err != nil {
@@ -1891,18 +1737,13 @@ func (c *Client) ListRuntimePathsRaw() ([][]byte, error) {
 		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.([][]byte)
+	retVal = resp.obj.([]string)
 	return retVal, nil
 
 }
 
 // OutWrite waiting for documentation from Neovim
 func (c *Client) OutWrite(str string) error {
-	return c.OutWriteRaw([]byte(str))
-}
-
-// OutWriteRaw waiting for documentation from Neovim
-func (c *Client) OutWriteRaw(str []byte) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -1910,7 +1751,7 @@ func (c *Client) OutWriteRaw(str []byte) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(str)
+		_err = c.enc.EncodeBytes([]byte(str))
 
 		if _err != nil {
 			return
@@ -1940,110 +1781,16 @@ func (c *Client) OutWriteRaw(str []byte) error {
 
 }
 
-// PushKeys waiting for documentation from Neovim
-func (c *Client) PushKeys(str string) error {
-	return c.PushKeysRaw([]byte(str))
-}
-
-// PushKeysRaw waiting for documentation from Neovim
-func (c *Client) PushKeysRaw(str []byte) error {
-
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeBytes(str)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = c.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := c.makeCall(clientPushKeys, enc, dec)
-	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.PushKeys"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
-// registerProvider waiting for documentation from Neovim
-func (c *Client) registerProvider(feature string) error {
-	return c.registerProviderRaw([]byte(feature))
-}
-
-// registerProviderRaw waiting for documentation from Neovim
-func (c *Client) registerProviderRaw(feature []byte) error {
-
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
-		if _err != nil {
-			return
-		}
-
-		_err = c.enc.EncodeBytes(feature)
-
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		_, _err = c.dec.DecodeBytes()
-
-		return
-	}
-	respChan, err := c.makeCall(clientregisterProvider, enc, dec)
-	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.registerProvider"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	return nil
-
-}
-
 // ReplaceTermcodes waiting for documentation from Neovim
 func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special bool) (string, error) {
-	res, err := c.ReplaceTermcodesRaw([]byte(str), fromPart, doLt, special)
-	return string(res), err
-}
-
-// ReplaceTermcodesRaw waiting for documentation from Neovim
-func (c *Client) ReplaceTermcodesRaw(str []byte, fromPart bool, doLt bool, special bool) ([]byte, error) {
-	var retVal []byte
+	var retVal string
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(4)
 		if _err != nil {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(str)
+		_err = c.enc.EncodeBytes([]byte(str))
 
 		if _err != nil {
 			return
@@ -2087,18 +1834,13 @@ func (c *Client) ReplaceTermcodesRaw(str []byte, fromPart bool, doLt bool, speci
 		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = resp.obj.([]byte)
+	retVal = string(resp.obj.([]byte))
 	return retVal, nil
 
 }
 
 // ReportError waiting for documentation from Neovim
 func (c *Client) ReportError(str string) error {
-	return c.ReportErrorRaw([]byte(str))
-}
-
-// ReportErrorRaw waiting for documentation from Neovim
-func (c *Client) ReportErrorRaw(str []byte) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -2106,7 +1848,7 @@ func (c *Client) ReportErrorRaw(str []byte) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(str)
+		_err = c.enc.EncodeBytes([]byte(str))
 
 		if _err != nil {
 			return
@@ -2177,11 +1919,6 @@ func (c *Client) SetCurrentBuffer(buffer Buffer) error {
 
 // SetCurrentLine waiting for documentation from Neovim
 func (c *Client) SetCurrentLine(line string) error {
-	return c.SetCurrentLineRaw([]byte(line))
-}
-
-// SetCurrentLineRaw waiting for documentation from Neovim
-func (c *Client) SetCurrentLineRaw(line []byte) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -2189,7 +1926,7 @@ func (c *Client) SetCurrentLineRaw(line []byte) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(line)
+		_err = c.enc.EncodeBytes([]byte(line))
 
 		if _err != nil {
 			return
@@ -2299,11 +2036,6 @@ func (c *Client) SetCurrentWindow(window Window) error {
 
 // SetOption waiting for documentation from Neovim
 func (c *Client) SetOption(name string, value interface{}) error {
-	return c.SetOptionRaw([]byte(name), value)
-}
-
-// SetOptionRaw waiting for documentation from Neovim
-func (c *Client) SetOptionRaw(name []byte, value interface{}) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(2)
@@ -2311,7 +2043,7 @@ func (c *Client) SetOptionRaw(name []byte, value interface{}) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(name)
+		_err = c.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -2349,11 +2081,6 @@ func (c *Client) SetOptionRaw(name []byte, value interface{}) error {
 
 // SetVar waiting for documentation from Neovim
 func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
-	return c.SetVarRaw([]byte(name), value)
-}
-
-// SetVarRaw waiting for documentation from Neovim
-func (c *Client) SetVarRaw(name []byte, value interface{}) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(2)
@@ -2361,7 +2088,7 @@ func (c *Client) SetVarRaw(name []byte, value interface{}) (interface{}, error) 
 			return
 		}
 
-		_err = c.enc.EncodeBytes(name)
+		_err = c.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -2400,11 +2127,6 @@ func (c *Client) SetVarRaw(name []byte, value interface{}) (interface{}, error) 
 
 // Strwidth waiting for documentation from Neovim
 func (c *Client) Strwidth(str string) (int, error) {
-	return c.StrwidthRaw([]byte(str))
-}
-
-// StrwidthRaw waiting for documentation from Neovim
-func (c *Client) StrwidthRaw(str []byte) (int, error) {
 	var retVal int
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -2412,7 +2134,7 @@ func (c *Client) StrwidthRaw(str []byte) (int, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(str)
+		_err = c.enc.EncodeBytes([]byte(str))
 
 		if _err != nil {
 			return
@@ -2445,11 +2167,6 @@ func (c *Client) StrwidthRaw(str []byte) (int, error) {
 
 // subscribe waiting for documentation from Neovim
 func (c *Client) subscribe(event string) error {
-	return c.subscribeRaw([]byte(event))
-}
-
-// subscribeRaw waiting for documentation from Neovim
-func (c *Client) subscribeRaw(event []byte) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -2457,7 +2174,7 @@ func (c *Client) subscribeRaw(event []byte) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(event)
+		_err = c.enc.EncodeBytes([]byte(event))
 
 		if _err != nil {
 			return
@@ -2489,11 +2206,6 @@ func (c *Client) subscribeRaw(event []byte) error {
 
 // unsubscribe waiting for documentation from Neovim
 func (c *Client) unsubscribe(event string) error {
-	return c.unsubscribeRaw([]byte(event))
-}
-
-// unsubscribeRaw waiting for documentation from Neovim
-func (c *Client) unsubscribeRaw(event []byte) error {
 
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(1)
@@ -2501,7 +2213,7 @@ func (c *Client) unsubscribeRaw(event []byte) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes(event)
+		_err = c.enc.EncodeBytes([]byte(event))
 
 		if _err != nil {
 			return
@@ -2650,11 +2362,6 @@ func (w *Window) GetHeight() (int, error) {
 
 // GetOption waiting for documentation from Neovim
 func (w *Window) GetOption(name string) (interface{}, error) {
-	return w.GetOptionRaw([]byte(name))
-}
-
-// GetOptionRaw waiting for documentation from Neovim
-func (w *Window) GetOptionRaw(name []byte) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(2)
@@ -2667,7 +2374,7 @@ func (w *Window) GetOptionRaw(name []byte) (interface{}, error) {
 			return
 		}
 
-		_err = w.client.enc.EncodeBytes(name)
+		_err = w.client.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -2778,11 +2485,6 @@ func (w *Window) GetTabpage() (Tabpage, error) {
 
 // GetVar waiting for documentation from Neovim
 func (w *Window) GetVar(name string) (interface{}, error) {
-	return w.GetVarRaw([]byte(name))
-}
-
-// GetVarRaw waiting for documentation from Neovim
-func (w *Window) GetVarRaw(name []byte) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(2)
@@ -2795,7 +2497,7 @@ func (w *Window) GetVarRaw(name []byte) (interface{}, error) {
 			return
 		}
 
-		_err = w.client.enc.EncodeBytes(name)
+		_err = w.client.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -2994,11 +2696,6 @@ func (w *Window) SetHeight(height int) error {
 
 // SetOption waiting for documentation from Neovim
 func (w *Window) SetOption(name string, value interface{}) error {
-	return w.SetOptionRaw([]byte(name), value)
-}
-
-// SetOptionRaw waiting for documentation from Neovim
-func (w *Window) SetOptionRaw(name []byte, value interface{}) error {
 
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(3)
@@ -3011,7 +2708,7 @@ func (w *Window) SetOptionRaw(name []byte, value interface{}) error {
 			return
 		}
 
-		_err = w.client.enc.EncodeBytes(name)
+		_err = w.client.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -3049,11 +2746,6 @@ func (w *Window) SetOptionRaw(name []byte, value interface{}) error {
 
 // SetVar waiting for documentation from Neovim
 func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
-	return w.SetVarRaw([]byte(name), value)
-}
-
-// SetVarRaw waiting for documentation from Neovim
-func (w *Window) SetVarRaw(name []byte, value interface{}) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
 		_err = w.client.enc.EncodeSliceLen(3)
@@ -3066,7 +2758,7 @@ func (w *Window) SetVarRaw(name []byte, value interface{}) (interface{}, error) 
 			return
 		}
 
-		_err = w.client.enc.EncodeBytes(name)
+		_err = w.client.enc.EncodeBytes([]byte(name))
 
 		if _err != nil {
 			return
@@ -3266,45 +2958,6 @@ func (c *Client) decodeWindowSlice() ([]Window, error) {
 	return res, nil
 }
 
-func (c *Client) encodeStringSlice(s [][]byte) error {
-	err := c.enc.EncodeSliceLen(len(s))
-	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
-	}
-
-	for i := 0; i < len(s); i++ {
-
-		err := c.enc.EncodeBytes(s[i])
-
-		if err != nil {
-			return errgo.Notef(err, "Could not encode []byte at index %v", i)
-		}
-	}
-
-	return nil
-}
-
-func (c *Client) decodeStringSlice() ([][]byte, error) {
-	l, err := c.dec.DecodeSliceLen()
-	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
-	}
-
-	res := make([][]byte, l)
-
-	for i := 0; i < l; i++ {
-
-		b, err := c.dec.DecodeBytes()
-
-		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode []byte at index %v", i)
-		}
-		res[i] = b
-	}
-
-	return res, nil
-}
-
 func (c *Client) encodeIntSlice(s []int) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
@@ -3339,6 +2992,45 @@ func (c *Client) decodeIntSlice() ([]int, error) {
 			return nil, errgo.Notef(err, "Could not decode int at index %v", i)
 		}
 		res[i] = b
+	}
+
+	return res, nil
+}
+
+func (c *Client) encodeStringSlice(s []string) error {
+	err := c.enc.EncodeSliceLen(len(s))
+	if err != nil {
+		return errgo.NoteMask(err, "Could not encode slice length")
+	}
+
+	for i := 0; i < len(s); i++ {
+
+		err := c.enc.EncodeBytes([]byte(s[i]))
+
+		if err != nil {
+			return errgo.Notef(err, "Could not encode string at index %v", i)
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) decodeStringSlice() ([]string, error) {
+	l, err := c.dec.DecodeSliceLen()
+	if err != nil {
+		return nil, errgo.NoteMask(err, "Could not decode slice length")
+	}
+
+	res := make([]string, l)
+
+	for i := 0; i < l; i++ {
+
+		b, err := c.dec.DecodeBytes()
+
+		if err != nil {
+			return nil, errgo.Notef(err, "Could not decode string at index %v", i)
+		}
+		res[i] = string(b)
 	}
 
 	return res, nil
