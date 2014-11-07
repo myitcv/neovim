@@ -504,14 +504,14 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 
 var typeMap = map[string]_type{
 	"String": {
-		name:      "[]byte",
+		name:      "string",
 		enc:       "EncodeBytes",
 		dec:       "DecodeBytes",
 		primitive: true,
 		genHelper: true,
 	},
 	"ArrayOf(String)": {
-		name: "[][]byte",
+		name: "[]string",
 		enc:  "encodeStringSlice",
 		dec:  "decodeStringSlice",
 	},

@@ -101,7 +101,7 @@ func (t *NeovimTest) TestClientGetCurrentBuffer(c *C) {
 
 func (t *NeovimTest) TestBufferGetLength(c *C) {
 	b, _ := t.client.GetCurrentBuffer()
-	l, _ := b.GetLineCount()
+	l, _ := b.LineCount()
 	c.Assert(l, Equals, 1)
 }
 
@@ -115,14 +115,14 @@ func (t *NeovimTest) TestBufferSetLine(c *C) {
 	line1 := "This is line 1"
 	_ = b.SetLine(0, line1)
 	l, _ := b.GetLine(0)
-	length, _ := b.GetLineCount()
+	length, _ := b.LineCount()
 
 	c.Assert(length, Equals, 1)
 	c.Assert(l, Equals, line1)
 
 	_ = b.DelLine(0)
 	l, _ = b.GetLine(0)
-	length, _ = b.GetLineCount()
+	length, _ = b.LineCount()
 
 	c.Assert(length, Equals, 1)
 	c.Assert(l, Equals, "")
@@ -168,7 +168,7 @@ func (t *NeovimTest) TestGetSetLine(c *C) {
 
 func (t *NeovimTest) TestGetLineSlice(c *C) {
 	cb, _ := t.client.GetCurrentBuffer()
-	lc, _ := cb.GetLineCount()
+	lc, _ := cb.LineCount()
 	c.Assert(lc, Equals, 1)
 
 	new_lines := []string{"This is", "a test"}
@@ -181,7 +181,7 @@ func (t *NeovimTest) TestGetLineSlice(c *C) {
 		c.Assert(lines[i], Equals, new_lines[i])
 	}
 
-	lc, _ = cb.GetLineCount()
+	lc, _ = cb.LineCount()
 	c.Assert(lc, Equals, 2)
 
 }
@@ -189,7 +189,7 @@ func (t *NeovimTest) TestGetLineSlice(c *C) {
 func (t *NeovimTest) TestBufferInsert(c *C) {
 	// append the lines to the end of the buffer
 	// cb.SetLineSlice(3, -1, true, true, new_lines)
-	// lc, _ = cb.GetLineCount()
+	// lc, _ = cb.LineCount()
 	// lines, _ = cb.GetLineSlice(0, -1, true, true)
 	// fmt.Println(lines)
 	// c.Assert(lc, Equals, 4)
