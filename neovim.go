@@ -75,7 +75,7 @@ func NewUnixClient(_net string, laddr, raddr *net.UnixAddr, log Logger) (*Client
 
 // NewCmdClient creates a new Client that is linked via stdin/stdout to the
 // supplied exec.Cmd, which is assumed to launch Neovim. The Neovim flag
-// --embedded-mode is added if it is missing, and the exec.Cmd is started
+// --embed is added if it is missing, and the exec.Cmd is started
 // as part of creating the client. Calling Close() will close stdin on the
 // embedded Neovim instance, thereby ending the process
 func NewCmdClient(c *exec.Cmd, log Logger) (*Client, error) {
@@ -89,16 +89,16 @@ func NewCmdClient(c *exec.Cmd, log Logger) (*Client, error) {
 	}
 	wrap := &StdWrapper{Stdin: stdin, Stdout: stdout}
 
-	// ensure that we have --embedded-mode
+	// ensure that we have --embed
 	found := false
 	for i := range c.Args {
-		if c.Args[i] == "--embedded-mode" {
+		if c.Args[i] == "--embed" {
 			found = true
 		}
 	}
 
 	if !found {
-		c.Args = append(c.Args, "--embedded-mode")
+		c.Args = append(c.Args, "--embed")
 	}
 
 	err = c.Start()
@@ -124,6 +124,7 @@ func NewClient(c io.ReadWriteCloser, log Logger) (*Client, error) {
 	res.provMap = newSyncProviderMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
+	res.log = log
 	res.subChan = make(chan subWrapper)
 	res.KillChannel = make(chan struct{})
 
@@ -132,17 +133,40 @@ func NewClient(c io.ReadWriteCloser, log Logger) (*Client, error) {
 	// from this go routine
 	go res.doListen()
 
+	// now get our channel ID
+	chanId, _, err := res.GetAPIInfo()
+	if err != nil {
+		// TODO need to cleanup here
+		return nil, errgo.NoteMask(err, "Could not get channel ID for client")
+	}
+	res.ChannelID = chanId
+
 	return res, nil
 }
 
-func (c *Client) RegisterProvider(m string, r RequestHandler) error {
+func (c *Client) RegisterRequestHandler(m string, r RequestHandler) error {
 	if m == _MethodInit {
 		return errgo.Newf("Cannot register a provider with the protected method %v", _MethodInit)
 	}
 	err := c.provMap.Put(m, r)
 	if err != nil {
-		return errgo.Notef(err, "Could not store RequestHanlder in provider map:")
+		return errgo.Notef(err, "Could not store RequestHanlder in provider map")
 	}
+
+	return nil
+}
+
+func (c *Client) RegisterProvider(m string, r RequestHandler) error {
+	err := c.RegisterRequestHandler(m, r)
+	if err != nil {
+		return errgo.Notef(err, "Could not register request handler")
+	}
+
+	err = c.registerProvider(m)
+	if err != nil {
+		return errgo.Notef(err, "Could not register provider in Neovim")
+	}
+
 	return nil
 }
 
@@ -264,8 +288,6 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode request method args: %v", err)
 			}
 
-			c.log.Printf("Got a request %v for method %v(%v)\n", reqID, reqMeth, reqArgs)
-
 			go func() {
 				i, err := prov(reqArgs)
 
@@ -274,9 +296,7 @@ func (c *Client) doListen() error {
 				enc := func() error {
 					return c.enc.Encode(i)
 				}
-				c.log.Printf("Sending a response to %v\n", reqID)
 				c.sendResponse(reqID, err, enc)
-				c.log.Printf("Response sent to %v\n", reqID)
 			}()
 		case 1:
 			// handle response
@@ -287,7 +307,6 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode request id: %v", err)
 			}
 
-			// do we have an error?
 			re, err := dec.DecodeInterface()
 			if err == io.EOF {
 				break
@@ -295,7 +314,14 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode response error: %v", err)
 			}
 			if re != nil {
-				c.log.Fatalf("Got a response error for request %v: %v", reqID, re)
+				re := re.([]interface{})
+				// b := re[1].([]byte)
+				errBytes := re[1].([]uint8)
+				errString := make([]byte, len(errBytes))
+				for i := range errBytes {
+					errString[i] = byte(errBytes[i])
+				}
+				c.log.Fatalf("Got a response error for request %v: %v", reqID, string(errString))
 			}
 
 			// no, carry on
@@ -522,7 +548,7 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 		return nil, errgo.NoteMask(err, "Could not encode request ID")
 	}
 
-	err = enc.EncodeString(string(reqMethID))
+	err = enc.EncodeBytes([]byte(reqMethID))
 	if err != nil {
 		return nil, errgo.NoteMask(err, "Could not encode request method ID")
 	}
