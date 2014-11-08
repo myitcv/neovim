@@ -3,9 +3,9 @@
 set -e
 
 # Use the old approach to building until https://github.com/neovim/neovim/pull/1335 is merged
-source <(curl -fsSL https://raw.githubusercontent.com/neovim/neovim/master/.ci/common.sh)
+# source <(curl -fsSL https://raw.githubusercontent.com/neovim/neovim/master/.ci/common.sh)
 
-set_environment /opt/neovim-deps
+# set_environment /opt/neovim-deps
 
 if [ ! -d $TRAVIS_BUILD_DIR/_neovim ]
 then
