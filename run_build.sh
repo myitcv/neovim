@@ -2,6 +2,22 @@
 
 set -e
 
+# Use the old approach to building until https://github.com/neovim/neovim/pull/1335 is merged
+source <(curl -fsSL https://raw.githubusercontent.com/neovim/neovim/master/.ci/common.sh)
+
+set_environment /opt/neovim-deps
+
+if [ ! -d $TRAVIS_BUILD_DIR/_neovim ]
+then
+  git clone -b provider-autocmd https://github.com/tarruda/neovim.git $TRAVIS_BUILD_DIR/_neovim
+fi
+
+pushd $TRAVIS_BUILD_DIR/_neovim
+git fetch origin
+git rebase origin/master
+make
+popd
+
 # check that the generated API matches what we have committed
 # (this ensures that the Neovim API hasn't moved on without us
 # knowing)

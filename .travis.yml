@@ -1,7 +1,8 @@
 language: go
 
-before_install:
-  eval "$(curl -Ss https://raw.githubusercontent.com/neovim/bot-ci/master/scripts/travis-setup.sh) nightly-x64"
+# Until https://github.com/neovim/neovim/pull/1335 is merged
+# before_install:
+#   eval "$(curl -Ss https://raw.githubusercontent.com/neovim/bot-ci/master/scripts/travis-setup.sh) nightly-x64"
 
 install:
   go get -d -t -v ./... && go build -v ./...
