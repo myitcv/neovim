@@ -1,7 +1,8 @@
 language: go
 
 # Until https://github.com/neovim/neovim/pull/1335 is merged
-# before_install:
+before_install:
+  - git config --global user.name "TravisCI"
 #   eval "$(curl -Ss https://raw.githubusercontent.com/neovim/bot-ci/master/scripts/travis-setup.sh) nightly-x64"
 
 install:
