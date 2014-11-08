@@ -16,18 +16,16 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/juju/errgo"
 	"github.com/myitcv/neovim/apidef"
-	sstrings "github.com/myitcv/strings"
 	"github.com/vmihailenco/msgpack"
 )
 
 var generatedFunctions map[string]bool
 
 var log = _log.New(os.Stdout, "", _log.Lshortfile)
-
-var knowClasses = []string{"Buffer", "Window", "Tabpage"}
 
 var fCustomPrint = flag.Bool("c", false, "custom print")
 var fPrintAPI = flag.Bool("p", false, "print the API")
@@ -188,8 +186,9 @@ func (v *variable) Client() string {
 }
 
 type api struct {
-	Methods []methodTemplate
-	Types   []_type
+	Methods  []methodTemplate
+	Types    []_type
+	APITypes []apidef.APIClass
 }
 
 func getType(s string) _type {
@@ -224,7 +223,7 @@ func genMethodTemplates(fs []apidef.APIFunction) []methodTemplate {
 
 		// name
 		m.RawName = f.Name
-		m.Name = sstrings.Camelize(splits[1])
+		m.Name = camelize(splits[1])
 
 		// TODO this is gross
 		switch m.RawName {
@@ -241,7 +240,7 @@ func genMethodTemplates(fs []apidef.APIFunction) []methodTemplate {
 		case "vim":
 			recType = getType("Client")
 		case "buffer", "window", "tabpage":
-			recType = getType(sstrings.Camelize(recID))
+			recType = getType(camelize(recID))
 		default:
 			log.Fatalf("Do not know how to deal with receiver type %v\n", recID)
 		}
@@ -274,7 +273,7 @@ func genMethodTemplates(fs []apidef.APIFunction) []methodTemplate {
 		m.Params = make([]variable, len(ofInterest))
 		for i, v := range ofInterest {
 			p := getType(v.Type)
-			m.Params[i].name = sstrings.Camelize(v.Name)
+			m.Params[i].name = camelize(v.Name)
 			m.Params[i].name = strings.ToLower(string(m.Params[i].name[0])) + m.Params[i].name[1:]
 			m.Params[i].Type = p
 		}
@@ -311,17 +310,6 @@ func genTypeTemplates(ts []apidef.APIClass) []_type {
 }
 
 func genAPI(a *apidef.API) {
-	// ensure we only have classes we know about
-	comp := make(map[string]int, len(knowClasses))
-	for _, k := range knowClasses {
-		comp[k]++
-	}
-	for _, k := range a.Types {
-		if comp[k.Name] != 1 {
-			log.Fatalf("We got an unexpected class: %v\n", k.Name)
-		}
-	}
-
 	var funcsOfInterest []apidef.APIFunction
 	if generatedFunctions != nil {
 		funcsOfInterest = make([]apidef.APIFunction, 0)
@@ -339,7 +327,7 @@ func genAPI(a *apidef.API) {
 	}
 
 	fm := make(template.FuncMap)
-	fm["camelize"] = sstrings.Camelize
+	fm["camelize"] = camelize
 	fm["to_lower"] = strings.ToLower
 
 	t := template.New("api")
@@ -352,6 +340,7 @@ func genAPI(a *apidef.API) {
 	api := api{}
 	api.Methods = genMethodTemplates(funcsOfInterest)
 	api.Types = genTypeTemplates(a.Types)
+	api.APITypes = a.Types
 
 	err = t.Execute(os.Stdout, api)
 	if err != nil {
@@ -370,6 +359,11 @@ package neovim
 import "github.com/juju/errgo"
 
 // constants representing method ids
+
+const (
+	{{range .APITypes }}Type{{.Name}} uint8 = {{.Id}}
+	{{end}}
+)
 
 const (
 	{{range .Methods }}{{.Rec.Type.Name | to_lower}}{{.Name}} = "{{.RawName}}"
@@ -505,9 +499,8 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 var typeMap = map[string]_type{
 	"String": {
 		name:      "string",
-		enc:       "EncodeBytes",
-		dec:       "DecodeBytes",
-		primitive: true,
+		enc:       "encodeString",
+		dec:       "decodeString",
 		genHelper: true,
 	},
 	"ArrayOf(String)": {
@@ -581,4 +574,20 @@ var typeMap = map[string]_type{
 	"Client": {
 		name: "Client",
 	},
+}
+
+func camelize(s string) string {
+	var buf bytes.Buffer
+	sk := false
+	for i, v := range s {
+		if v == '_' {
+			sk = true
+		} else if sk || i == 0 {
+			buf.WriteRune(unicode.ToUpper(v))
+			sk = false
+		} else {
+			buf.WriteRune(v)
+		}
+	}
+	return buf.String()
 }

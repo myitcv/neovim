@@ -79,3 +79,19 @@ func (c *Client) encodeTabpage(b Tabpage) error {
 	}
 	return nil
 }
+
+func (c *Client) decodeString() (retVal string, retErr error) {
+	b, err := c.dec.DecodeBytes()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode string raw bytes")
+	}
+	return string(b), retErr
+}
+
+func (c *Client) encodeString(s string) error {
+	err := c.enc.EncodeBytes([]byte(s))
+	if err != nil {
+		return errgo.Notef(err, "Could not encode string raw bytes")
+	}
+	return nil
+}

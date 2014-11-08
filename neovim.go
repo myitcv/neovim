@@ -60,6 +60,7 @@ import (
 	"sync/atomic"
 
 	"github.com/juju/errgo"
+	"github.com/myitcv/neovim/apidef"
 	"github.com/vmihailenco/msgpack"
 )
 
@@ -134,7 +135,7 @@ func NewClient(c io.ReadWriteCloser, log Logger) (*Client, error) {
 	go res.doListen()
 
 	// now get our channel ID
-	chanId, _, err := res.GetAPIInfo()
+	chanId, _, err := res.getAPIInfo()
 	if err != nil {
 		// TODO need to cleanup here
 		return nil, errgo.NoteMask(err, "Could not get channel ID for client")
@@ -571,4 +572,59 @@ func (c *Client) panicOrReturn(e error) error {
 		c.log.Panic(e)
 	}
 	return e
+}
+
+func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
+	var retChanID uint8
+	var retAPI *apidef.API
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		l, _err := c.dec.DecodeSliceLen()
+		if _err != nil {
+			return
+		}
+
+		if l != 2 {
+			return nil, errgo.Newf("Expected slice len to be 2; got %v", l)
+		}
+
+		chanID, _err := c.dec.DecodeUint8()
+		if _err != nil {
+			return
+		}
+
+		api, _err := apidef.GetAPI(c.dec)
+		if _err != nil {
+			return
+		}
+
+		_i = []interface{}{chanID, api}
+
+		return
+	}
+	respChan, err := c.makeCall("vim_get_api_info", enc, dec)
+	if err != nil {
+		return retChanID, retAPI, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetBuffers"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retChanID, retAPI, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retChanID, retAPI, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal := resp.obj.([]interface{})
+	retChanID = retVal[0].(uint8)
+	retAPI = retVal[1].(*apidef.API)
+	return retChanID, retAPI, nil
+
 }
