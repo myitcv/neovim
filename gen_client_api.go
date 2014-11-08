@@ -2,19 +2,14 @@ package neovim
 
 // **** THIS FILE IS GENERATED - DO NOT EDIT BY HAND
 
-import (
-	"fmt"
-
-	"github.com/juju/errgo"
-	"github.com/myitcv/neovim/apidef"
-)
+import "github.com/juju/errgo"
 
 // constants representing method ids
 
 const (
-	TypeBuffer uint8 = 0
-	TypeTabpage
-	TypeWindow
+	TypeBuffer  uint8 = 0
+	TypeWindow  uint8 = 1
+	TypeTabpage uint8 = 2
 )
 
 const (
@@ -41,11 +36,11 @@ const (
 	tabpageSetVar           = "tabpage_set_var"
 	clientChangeDirectory   = "vim_change_directory"
 	clientCommand           = "vim_command"
+	clientCommandOutput     = "vim_command_output"
 	clientDelCurrentLine    = "vim_del_current_line"
 	clientErrWrite          = "vim_err_write"
 	clientEval              = "vim_eval"
 	clientFeedkeys          = "vim_feedkeys"
-	clientGetAPIInfo        = "vim_get_api_info"
 	clientGetBuffers        = "vim_get_buffers"
 	clientGetCurrentBuffer  = "vim_get_current_buffer"
 	clientGetCurrentLine    = "vim_get_current_line"
@@ -56,6 +51,7 @@ const (
 	clientGetVar            = "vim_get_var"
 	clientGetVvar           = "vim_get_vvar"
 	clientGetWindows        = "vim_get_windows"
+	clientInput             = "vim_input"
 	clientListRuntimePaths  = "vim_list_runtime_paths"
 	clientOutWrite          = "vim_out_write"
 	clientReplaceTermcodes  = "vim_replace_termcodes"
@@ -155,7 +151,7 @@ func (b *Buffer) GetLine(index int) (string, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeBytes()
+		_i, _err = b.client.decodeString()
 
 		return
 	}
@@ -171,7 +167,7 @@ func (b *Buffer) GetLine(index int) (string, error) {
 		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = string(resp.obj.([]byte))
+	retVal = resp.obj.(string)
 	return retVal, nil
 
 }
@@ -253,7 +249,7 @@ func (b *Buffer) GetMark(name string) ([]int, error) {
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes([]byte(name))
+		_err = b.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -286,10 +282,8 @@ func (b *Buffer) GetMark(name string) ([]int, error) {
 
 // GetName waiting for documentation from Neovim
 func (b *Buffer) GetName() (string, error) {
-	fmt.Println("*******************Calling BufferGetName")
 	var retVal string
 	enc := func() (_err error) {
-		fmt.Println("*******************Calling EncodeBytes from BufferGetName")
 		_err = b.client.enc.EncodeSliceLen(1)
 		if _err != nil {
 			return
@@ -304,8 +298,7 @@ func (b *Buffer) GetName() (string, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		fmt.Println("*******************Calling DecodeBytes from BufferGetName")
-		_i, _err = b.client.dec.DecodeBytes()
+		_i, _err = b.client.decodeString()
 
 		return
 	}
@@ -321,7 +314,7 @@ func (b *Buffer) GetName() (string, error) {
 		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = string(resp.obj.([]byte))
+	retVal = resp.obj.(string)
 	return retVal, nil
 
 }
@@ -379,7 +372,7 @@ func (b *Buffer) GetOption(name string) (interface{}, error) {
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes([]byte(name))
+		_err = b.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -424,7 +417,7 @@ func (b *Buffer) GetVar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes([]byte(name))
+		_err = b.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -603,7 +596,7 @@ func (b *Buffer) SetLine(index int, line string) error {
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes([]byte(line))
+		_err = b.client.encodeString(line)
 
 		if _err != nil {
 			return
@@ -715,7 +708,7 @@ func (b *Buffer) SetName(name string) error {
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes([]byte(name))
+		_err = b.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -759,7 +752,7 @@ func (b *Buffer) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes([]byte(name))
+		_err = b.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -809,7 +802,7 @@ func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = b.client.enc.EncodeBytes([]byte(name))
+		_err = b.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -860,7 +853,7 @@ func (t *Tabpage) GetVar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = t.client.enc.EncodeBytes([]byte(name))
+		_err = t.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -1022,7 +1015,7 @@ func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = t.client.enc.EncodeBytes([]byte(name))
+		_err = t.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -1068,7 +1061,7 @@ func (c *Client) ChangeDirectory(dir string) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(dir))
+		_err = c.encodeString(dir)
 
 		if _err != nil {
 			return
@@ -1107,7 +1100,7 @@ func (c *Client) Command(str string) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(str))
+		_err = c.encodeString(str)
 
 		if _err != nil {
 			return
@@ -1134,6 +1127,46 @@ func (c *Client) Command(str string) error {
 	}
 
 	return nil
+
+}
+
+// CommandOutput waiting for documentation from Neovim
+func (c *Client) CommandOutput(str string) (string, error) {
+	var retVal string
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.encodeString(str)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.decodeString()
+
+		return
+	}
+	respChan, err := c.makeCall(clientCommandOutput, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.CommandOutput"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(string)
+	return retVal, nil
 
 }
 
@@ -1179,7 +1212,7 @@ func (c *Client) ErrWrite(str string) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(str))
+		_err = c.encodeString(str)
 
 		if _err != nil {
 			return
@@ -1218,7 +1251,7 @@ func (c *Client) Eval(str string) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(str))
+		_err = c.encodeString(str)
 
 		if _err != nil {
 			return
@@ -1258,13 +1291,13 @@ func (c *Client) Feedkeys(keys string, mode string) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(keys))
+		_err = c.encodeString(keys)
 
 		if _err != nil {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(mode))
+		_err = c.encodeString(mode)
 
 		if _err != nil {
 			return
@@ -1291,62 +1324,6 @@ func (c *Client) Feedkeys(keys string, mode string) error {
 	}
 
 	return nil
-
-}
-
-// GetBuffers waiting for documentation from Neovim
-func (c *Client) GetAPIInfo() (uint8, *apidef.API, error) {
-	var retChanID uint8
-	var retAPI *apidef.API
-	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
-		if _err != nil {
-			return
-		}
-
-		return
-	}
-	dec := func() (_i interface{}, _err error) {
-
-		l, _err := c.dec.DecodeSliceLen()
-		if _err != nil {
-			return
-		}
-
-		if l != 2 {
-			return nil, errgo.Newf("Expected slice len to be 2; got %v", l)
-		}
-
-		chanID, _err := c.dec.DecodeUint8()
-		if _err != nil {
-			return
-		}
-
-		api, _err := apidef.GetAPI(c.dec)
-		if _err != nil {
-			return
-		}
-
-		_i = []interface{}{chanID, api}
-
-		return
-	}
-	respChan, err := c.makeCall(clientGetAPIInfo, enc, dec)
-	if err != nil {
-		return retChanID, retAPI, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetBuffers"))
-	}
-	resp := <-respChan
-	if resp == nil {
-		return retChanID, retAPI, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
-	}
-	if resp.err != nil {
-		return retChanID, retAPI, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
-	}
-
-	retVal := resp.obj.([]interface{})
-	retChanID = retVal[0].(uint8)
-	retAPI = retVal[1].(*apidef.API)
-	return retChanID, retAPI, nil
 
 }
 
@@ -1431,7 +1408,7 @@ func (c *Client) GetCurrentLine() (string, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeBytes()
+		_i, _err = c.decodeString()
 
 		return
 	}
@@ -1447,7 +1424,7 @@ func (c *Client) GetCurrentLine() (string, error) {
 		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = string(resp.obj.([]byte))
+	retVal = resp.obj.(string)
 	return retVal, nil
 
 }
@@ -1529,7 +1506,7 @@ func (c *Client) GetOption(name string) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(name))
+		_err = c.encodeString(name)
 
 		if _err != nil {
 			return
@@ -1603,7 +1580,7 @@ func (c *Client) GetVar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(name))
+		_err = c.encodeString(name)
 
 		if _err != nil {
 			return
@@ -1643,7 +1620,7 @@ func (c *Client) GetVvar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(name))
+		_err = c.encodeString(name)
 
 		if _err != nil {
 			return
@@ -1708,6 +1685,46 @@ func (c *Client) GetWindows() ([]Window, error) {
 
 }
 
+// Input waiting for documentation from Neovim
+func (c *Client) Input(keys string) (int, error) {
+	var retVal int
+	enc := func() (_err error) {
+		_err = c.enc.EncodeSliceLen(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.encodeString(keys)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.DecodeInt()
+
+		return
+	}
+	respChan, err := c.makeCall(clientInput, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Input"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(int)
+	return retVal, nil
+
+}
+
 // ListRuntimePaths waiting for documentation from Neovim
 func (c *Client) ListRuntimePaths() ([]string, error) {
 	var retVal []string
@@ -1751,7 +1768,7 @@ func (c *Client) OutWrite(str string) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(str))
+		_err = c.encodeString(str)
 
 		if _err != nil {
 			return
@@ -1790,7 +1807,7 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(str))
+		_err = c.encodeString(str)
 
 		if _err != nil {
 			return
@@ -1818,7 +1835,7 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeBytes()
+		_i, _err = c.decodeString()
 
 		return
 	}
@@ -1834,7 +1851,7 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
 	}
 
-	retVal = string(resp.obj.([]byte))
+	retVal = resp.obj.(string)
 	return retVal, nil
 
 }
@@ -1848,7 +1865,7 @@ func (c *Client) ReportError(str string) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(str))
+		_err = c.encodeString(str)
 
 		if _err != nil {
 			return
@@ -1926,7 +1943,7 @@ func (c *Client) SetCurrentLine(line string) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(line))
+		_err = c.encodeString(line)
 
 		if _err != nil {
 			return
@@ -2043,7 +2060,7 @@ func (c *Client) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(name))
+		_err = c.encodeString(name)
 
 		if _err != nil {
 			return
@@ -2088,7 +2105,7 @@ func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(name))
+		_err = c.encodeString(name)
 
 		if _err != nil {
 			return
@@ -2134,7 +2151,7 @@ func (c *Client) Strwidth(str string) (int, error) {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(str))
+		_err = c.encodeString(str)
 
 		if _err != nil {
 			return
@@ -2174,7 +2191,7 @@ func (c *Client) subscribe(event string) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(event))
+		_err = c.encodeString(event)
 
 		if _err != nil {
 			return
@@ -2213,7 +2230,7 @@ func (c *Client) unsubscribe(event string) error {
 			return
 		}
 
-		_err = c.enc.EncodeBytes([]byte(event))
+		_err = c.encodeString(event)
 
 		if _err != nil {
 			return
@@ -2374,7 +2391,7 @@ func (w *Window) GetOption(name string) (interface{}, error) {
 			return
 		}
 
-		_err = w.client.enc.EncodeBytes([]byte(name))
+		_err = w.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -2497,7 +2514,7 @@ func (w *Window) GetVar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = w.client.enc.EncodeBytes([]byte(name))
+		_err = w.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -2708,7 +2725,7 @@ func (w *Window) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = w.client.enc.EncodeBytes([]byte(name))
+		_err = w.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -2758,7 +2775,7 @@ func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = w.client.enc.EncodeBytes([]byte(name))
+		_err = w.client.encodeString(name)
 
 		if _err != nil {
 			return
@@ -3005,7 +3022,7 @@ func (c *Client) encodeStringSlice(s []string) error {
 
 	for i := 0; i < len(s); i++ {
 
-		err := c.enc.EncodeBytes([]byte(s[i]))
+		err := c.encodeString(s[i])
 
 		if err != nil {
 			return errgo.Notef(err, "Could not encode string at index %v", i)
@@ -3025,12 +3042,12 @@ func (c *Client) decodeStringSlice() ([]string, error) {
 
 	for i := 0; i < l; i++ {
 
-		b, err := c.dec.DecodeBytes()
+		b, err := c.decodeString()
 
 		if err != nil {
 			return nil, errgo.Notef(err, "Could not decode string at index %v", i)
 		}
-		res[i] = string(b)
+		res[i] = b
 	}
 
 	return res, nil
