@@ -13,8 +13,8 @@ then
 fi
 
 pushd $TRAVIS_BUILD_DIR/_neovim
-git fetch origin
-git rebase origin/master
+# git fetch origin
+# git rebase origin/master
 make
 popd
 
