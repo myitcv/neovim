@@ -7,9 +7,9 @@ import "github.com/juju/errgo"
 // constants representing method ids
 
 const (
-	TypeBuffer  uint8 = 0
-	TypeWindow  uint8 = 1
-	TypeTabpage uint8 = 2
+	typeBuffer  uint8 = 0
+	typeWindow  uint8 = 1
+	typeTabpage uint8 = 2
 )
 
 const (
@@ -2854,6 +2854,135 @@ func (w *Window) SetWidth(width int) error {
 
 	return nil
 
+}
+
+func (c *Client) decodeBuffer() (retVal Buffer, retErr error) {
+	b, err := c.dec.R.ReadByte()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode control byte")
+	}
+
+	// TODO: use appropriate constant
+	if b != 0xd4 {
+		return retVal, errgo.Newf("Expected code d4; got %v\n", b)
+	}
+
+	t, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode type")
+	}
+
+	if t != typeBuffer {
+		return retVal, errgo.Notef(err, "Expected typeBuffer; got: %v\n", t)
+	}
+
+	bid, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode Buffer ID")
+	}
+	return Buffer{ID: uint32(bid), client: c}, retErr
+}
+
+func (c *Client) encodeBuffer(b Buffer) error {
+	err := c.enc.W.WriteByte(0xd4)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Buffer ext type")
+	}
+	err = c.enc.EncodeUint8(typeBuffer)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Buffer type")
+	}
+	err = c.enc.EncodeUint8(uint8(b.ID))
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Buffer")
+	}
+	return nil
+}
+
+func (c *Client) decodeWindow() (retVal Window, retErr error) {
+	b, err := c.dec.R.ReadByte()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode control byte")
+	}
+
+	// TODO: use appropriate constant
+	if b != 0xd4 {
+		return retVal, errgo.Newf("Expected code d4; got %v\n", b)
+	}
+
+	t, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode type")
+	}
+
+	if t != typeWindow {
+		return retVal, errgo.Notef(err, "Expected typeWindow; got: %v\n", t)
+	}
+
+	bid, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode Window ID")
+	}
+	return Window{ID: uint32(bid), client: c}, retErr
+}
+
+func (c *Client) encodeWindow(b Window) error {
+	err := c.enc.W.WriteByte(0xd4)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Window ext type")
+	}
+	err = c.enc.EncodeUint8(typeWindow)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Window type")
+	}
+	err = c.enc.EncodeUint8(uint8(b.ID))
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Window")
+	}
+	return nil
+}
+
+func (c *Client) decodeTabpage() (retVal Tabpage, retErr error) {
+	b, err := c.dec.R.ReadByte()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode control byte")
+	}
+
+	// TODO: use appropriate constant
+	if b != 0xd4 {
+		return retVal, errgo.Newf("Expected code d4; got %v\n", b)
+	}
+
+	t, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode type")
+	}
+
+	if t != typeTabpage {
+		return retVal, errgo.Notef(err, "Expected typeTabpage; got: %v\n", t)
+	}
+
+	bid, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode Tabpage ID")
+	}
+	return Tabpage{ID: uint32(bid), client: c}, retErr
+}
+
+func (c *Client) encodeTabpage(b Tabpage) error {
+	err := c.enc.W.WriteByte(0xd4)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Tabpage ext type")
+	}
+	err = c.enc.EncodeUint8(typeTabpage)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Tabpage type")
+	}
+	err = c.enc.EncodeUint8(uint8(b.ID))
+	if err != nil {
+		return errgo.Notef(err, "Could not encode Tabpage")
+	}
+	return nil
 }
 
 // helper functions for types

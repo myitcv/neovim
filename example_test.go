@@ -27,7 +27,7 @@ func ExampleSubscription() {
 	topic := "topic1"
 	sub, err := client.Subscribe(topic)
 	if err != nil {
-		log.Fatalf("Could not subscribe to topic %v, with respChan %v and errChan %v: %v", sub.Topic, sub, errgo.Details(err))
+		log.Fatalf("Could not subscribe to topic %v: %v", topic, errgo.Details(err))
 	}
 
 	unsubbed := make(chan struct{})

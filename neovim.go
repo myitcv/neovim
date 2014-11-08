@@ -410,10 +410,6 @@ func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
 					return nil
 				}
 			}
-
-			// TODO we could improve this, instead of log.Fatal above
-			// return the actual error
-			return nil
 		})
 
 		for {
@@ -471,10 +467,6 @@ func (c *Client) doSubscriptionManager(se chan *SubscriptionEvent) {
 				}
 			}
 		}
-
-		// TODO we could improve this, instead of log.Fatal above
-		// return the actual error
-		return nil
 	})
 }
 

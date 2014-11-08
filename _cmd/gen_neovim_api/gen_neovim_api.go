@@ -384,7 +384,7 @@ import "github.com/juju/errgo"
 // constants representing method ids
 
 const (
-	{{range .APITypes }}Type{{.Name}} uint8 = {{.Id}}
+	{{range .APITypes }}type{{.Name}} uint8 = {{.Id}}
 	{{end}}
 )
 
@@ -397,6 +397,10 @@ const (
 
 {{range .Methods }}
 {{template "meth" .}}
+{{end}}
+
+{{range .APITypes }}
+{{template "type_enc_dec_meth" .}}
 {{end}}
 
 // helper functions for types
@@ -517,6 +521,50 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 {{define "meth_params"}}{{range $index, $element := .}}{{if gt $index 0}}, {{end}}{{ .Name }} {{.Type.Name}}{{end}}{{end}}
 
 {{define "meth_ret"}}({{if .}}{{.Type.Name}}, {{end}} error){{end}}
+{{define "type_enc_dec_meth"}}
+func (c *Client) decode{{.Name}}() (retVal {{.Name}}, retErr error) {
+	b, err := c.dec.R.ReadByte()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode control byte")
+	}
+
+	// TODO: use appropriate constant
+	if b != 0xd4 {
+		return retVal, errgo.Newf("Expected code d4; got %v\n", b)
+	}
+
+	t, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode type")
+	}
+
+	if t != type{{.Name}} {
+		return retVal, errgo.Notef(err, "Expected type{{.Name}}; got: %v\n", t)
+	}
+
+	bid, err := c.dec.DecodeUint8()
+	if err != nil {
+		return retVal, errgo.Notef(err, "Could not decode {{.Name}} ID")
+	}
+	return {{.Name}}{ID: uint32(bid), client: c}, retErr
+}
+
+func (c *Client) encode{{.Name}}(b {{.Name}}) error {
+	err := c.enc.W.WriteByte(0xd4)
+	if err != nil {
+		return errgo.Notef(err, "Could not encode {{.Name}} ext type")
+	}
+	err = c.enc.EncodeUint8(type{{.Name}})
+	if err != nil {
+		return errgo.Notef(err, "Could not encode {{.Name}} type")
+	}
+	err = c.enc.EncodeUint8(uint8(b.ID))
+	if err != nil {
+		return errgo.Notef(err, "Could not encode {{.Name}}")
+	}
+	return nil
+}
+{{end}}
 `
 
 var typeMap = map[string]_type{

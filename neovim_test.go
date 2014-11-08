@@ -152,6 +152,11 @@ func (t *NeovimTest) TestClientSubscribe(c *C) {
 	}
 
 	sub, _ := t.client.Subscribe(topic)
+
+	// This is intentionally notifying on the broadcast channel
+	// Doing so exercises the effect of the underlying call to
+	// vim_subscribe which notifies on all channels that have subscribed
+	// to a given topic
 	command := fmt.Sprintf(`call rpcnotify(0, "%v", %v)`, topic, strings.Join(vals, ","))
 	_ = t.client.Command(command)
 	resp := <-sub.Events
@@ -610,7 +615,8 @@ func (t *NeovimTest) BenchmarkClientunsubscribe(c *C) {
 	// implementation pending
 }
 func (t *NeovimTest) TestWindowGetBuffer(c *C) {
-	// implementation pending
+	cw, _ := t.client.GetCurrentWindow()
+	cw.GetBuffer()
 }
 func (t *NeovimTest) BenchmarkWindowGetBuffer(c *C) {
 	// implementation pending

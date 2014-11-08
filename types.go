@@ -36,6 +36,8 @@ type Client struct {
 	log          Logger
 }
 
+// Plugin is the interface implemented by writers of Neovim plugins using the
+// neovim package
 type Plugin interface {
 	Init(*Client, Logger) error
 	Shutdown() error
@@ -43,9 +45,8 @@ type Plugin interface {
 
 type subTask int
 
-// TODO we might modify this to return an encode instead
-// but this would require exposing the enc on Client
-// Needs some thought
+// RequestHandler is the type signature of callback handlers used in
+// RegisterRequestHandler
 type RequestHandler func([]interface{}) ([]interface{}, error)
 
 const (
@@ -101,6 +102,8 @@ type Tabpage struct {
 	client *Client
 }
 
+// Logger is a local definition of the inteface effectively exposed by
+// http://godoc.org/log
 type Logger interface {
 	Fatal(v ...interface{})
 	Fatalf(format string, v ...interface{})
@@ -128,6 +131,10 @@ type response struct {
 	err error
 }
 
+// StdWrapper is a wrapper around two io.WriterCloser and
+// io.ReadCloser instances that exposes itself as an
+// io.ReadWriteCloser. Typically used with os.Stdin and
+// os.Stdout or their pipe equivalents
 type StdWrapper struct {
 	Stdin  io.WriteCloser
 	Stdout io.ReadCloser
