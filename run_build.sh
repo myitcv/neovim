@@ -9,7 +9,7 @@ set_environment /opt/neovim-deps
 
 if [ ! -d $TRAVIS_BUILD_DIR/_neovim ]
 then
-  git clone -b provider-autocmd https://github.com/tarruda/neovim.git $TRAVIS_BUILD_DIR/_neovim
+  git clone -b myitcv-provider-autocmd https://github.com/myitcv/neovim.git $TRAVIS_BUILD_DIR/_neovim
 fi
 
 pushd $TRAVIS_BUILD_DIR/_neovim
