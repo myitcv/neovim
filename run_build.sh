@@ -10,7 +10,7 @@ set -x
 
 if [ ! -d $TRAVIS_BUILD_DIR/_neovim ]
 then
-  git clone -b myitcv-provider-autocmd https://github.com/myitcv/neovim-editor.git $TRAVIS_BUILD_DIR/_neovim
+  git clone -b provider-autocmd https://github.com/tarruda/neovim.git $TRAVIS_BUILD_DIR/_neovim
 fi
 
 pushd $TRAVIS_BUILD_DIR/_neovim
