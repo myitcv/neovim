@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 # Use the old approach to building until https://github.com/neovim/neovim/pull/1335 is merged
 # source <(curl -fsSL https://raw.githubusercontent.com/neovim/neovim/master/.ci/common.sh)
@@ -25,7 +26,7 @@ popd
 pushd $TRAVIS_BUILD_DIR/_cmd/gen_neovim_api/
 go get -d -t -v ./... && go build -v ./...
 x=`mktemp`
-NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/bin/nvim ./gen_neovim_api -g | gofmt > $x
+NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim ./gen_neovim_api -g | gofmt > $x
 diff $x ../../gen_client_api.go
 if [ $? -ne 0 ]
 then
@@ -35,5 +36,5 @@ fi
 rm $x
 popd
 
-NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/bin/nvim go test
-NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/bin/nvim go test -race
+NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim go test
+NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim go test -race

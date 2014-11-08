@@ -6,7 +6,6 @@ package neovim
 
 import (
 	"io"
-	"runtime"
 	"sync"
 
 	"github.com/vmihailenco/msgpack"
@@ -148,69 +147,3 @@ func (s *StdWrapper) Close() error {
 
 type encoder func() error
 type decoder func() (interface{}, error)
-
-type StackLogger struct {
-	_log Logger
-}
-
-func NewStackLogger(underlying Logger) Logger {
-	res := &StackLogger{}
-	res._log = underlying
-	return res
-}
-
-func (s *StackLogger) printStack() {
-	buf := make([]byte, 1e6)
-	i := runtime.Stack(buf, true)
-	s._log.Printf("Got SIGQUIT, dumping stacks:\n%v", string(buf[0:i]))
-}
-
-func (s *StackLogger) Fatal(v ...interface{}) {
-	s.printStack()
-	s._log.Fatal(v...)
-}
-func (s *StackLogger) Fatalf(format string, v ...interface{}) {
-	s.printStack()
-	s._log.Fatalf(format, v...)
-}
-func (s *StackLogger) Fatalln(v ...interface{}) {
-	s.printStack()
-	s._log.Fatalln(v...)
-}
-func (s *StackLogger) Flags() int {
-	return s._log.Flags()
-}
-func (s *StackLogger) Output(calldepth int, ss string) error {
-	s.printStack()
-	return s._log.Output(calldepth, ss)
-}
-func (s *StackLogger) Panic(v ...interface{}) {
-	s._log.Panic(v...)
-}
-func (s *StackLogger) Panicf(format string, v ...interface{}) {
-	s._log.Panicf(format, v...)
-}
-func (s *StackLogger) Panicln(v ...interface{}) {
-	s._log.Panicln(v...)
-}
-func (s *StackLogger) Prefix() string {
-	return s._log.Prefix()
-}
-func (s *StackLogger) Print(v ...interface{}) {
-	s.printStack()
-	s._log.Print(v...)
-}
-func (s *StackLogger) Printf(format string, v ...interface{}) {
-	s.printStack()
-	s._log.Printf(format, v...)
-}
-func (s *StackLogger) Println(v ...interface{}) {
-	s.printStack()
-	s._log.Println(v...)
-}
-func (s *StackLogger) SetFlags(flag int) {
-	s._log.SetFlags(flag)
-}
-func (s *StackLogger) SetPrefix(prefix string) {
-	s._log.SetPrefix(prefix)
-}
