@@ -172,6 +172,17 @@ func (t *NeovimTest) TestClientSubscribe(c *C) {
 	sub, _ = t.client.Subscribe(topic)
 }
 
+func (t *NeovimTest) TestAutocmdOnChannel(c *C) {
+	cb, _ := t.client.GetCurrentBuffer()
+	topic := fmt.Sprintf("Buffer[%v].TextChanged", cb.ID)
+	sub, _ := t.client.Subscribe(topic)
+	commandDef := fmt.Sprintf(`call rpc#define#AutocmdOnChannel(0, "%v", 0, "TextChanged", {"pattern": "<buffer=%v>"})`, topic, cb.ID)
+	t.client.Command(commandDef)
+	cb.Insert(0, []string{"This is a test"})
+	resp := <-sub.Events
+	fmt.Printf("We got a tick on the event: %v\n", resp)
+}
+
 func (t *NeovimTest) TestGetSetLine(c *C) {
 	cl := "This is our line"
 	t.client.SetCurrentLine(cl)
