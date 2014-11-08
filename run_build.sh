@@ -26,11 +26,17 @@ popd
 pushd $TRAVIS_BUILD_DIR/_cmd/gen_neovim_api/
 go get -d -t -v ./... && go build -v ./...
 x=`mktemp`
-NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim ./gen_neovim_api -g | gofmt > $x
-diff $x ../../gen_client_api.go
+NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/build/bin/nvim ./gen_neovim_api -g -o api.go.gen -t test.go.gen
+cat api.go.gen | gofmt | diff -- - ../../gen_client_api.go
 if [ $? -ne 0 ]
 then
   echo "Neovim exposed API differs from committed generated API"
+  exit 1
+fi
+cat test.go.gen | gofmt | diff -- - ../../gen_test.go
+if [ $? -ne 0 ]
+then
+  echo "Neovim exposed API differs that resulted in different test interfaces"
   exit 1
 fi
 rm $x

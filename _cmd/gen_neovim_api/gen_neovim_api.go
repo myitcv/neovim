@@ -5,11 +5,11 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	_log "log"
 	"os"
 	"os/exec"
@@ -30,7 +30,8 @@ var log = _log.New(os.Stdout, "", _log.Lshortfile)
 var fCustomPrint = flag.Bool("c", false, "custom print")
 var fPrintAPI = flag.Bool("p", false, "print the API")
 var fGenAPI = flag.Bool("g", false, "generate code from the API")
-var fGenList = flag.String("f", "", "file containing the list of API functions to generate")
+var fAPIOutFile = flag.String("o", "", "the output file for the generated API")
+var fTestOutFile = flag.String("t", "", "the output file for the generated test interface")
 
 func showUsage() {
 	fmt.Fprintf(os.Stderr, "Usage: %v [-p] [-g] [-f filename]\n\n", os.Args[0])
@@ -71,7 +72,6 @@ func main() {
 		os.Stdout.Write(j)
 		os.Stdout.WriteString("\n")
 	case *fGenAPI:
-		loadGeneratedFunctions()
 		genAPI(api)
 	case *fCustomPrint:
 		for _, v := range api.Functions {
@@ -83,24 +83,6 @@ func main() {
 				fmt.Print("nil")
 			}
 			fmt.Print("\n")
-		}
-	}
-}
-
-func loadGeneratedFunctions() {
-	if *fGenList != "" {
-		generatedFunctions = make(map[string]bool)
-		f, err := os.Open(*fGenList)
-		if err != nil {
-			log.Fatalf("Could not open -f supplied file to read list of API functions: %v\n", err)
-		}
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			fn := strings.TrimSpace(scanner.Text())
-			generatedFunctions[fn] = true
-		}
-		if err := scanner.Err(); err != nil {
-			log.Fatalf("Error reading from the -f supplied file: %v\n", err)
 		}
 	}
 }
@@ -330,6 +312,7 @@ func genAPI(a *apidef.API) {
 	fm["camelize"] = camelize
 	fm["to_lower"] = strings.ToLower
 
+	// generate the API
 	t := template.New("api")
 	t.Funcs(fm)
 	_, err := t.Parse(clientAPITemplate)
@@ -342,14 +325,54 @@ func genAPI(a *apidef.API) {
 	api.Types = genTypeTemplates(a.Types)
 	api.APITypes = a.Types
 
-	err = t.Execute(os.Stdout, api)
+	var apiOutFile io.Writer
+	if *fAPIOutFile != "" {
+		apiOutFile, err = os.OpenFile(*fAPIOutFile, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			log.Fatalf("Could not create API out file: %v\n", err)
+		}
+	} else {
+		apiOutFile = os.Stdout
+	}
+	err = t.Execute(apiOutFile, api)
 	if err != nil {
+		fmt.Println()
+		log.Fatalf("Error generating API: %v\n", err)
+	}
 
-		// ensure we are on a newline
+	// generate the test interface
+	tt := template.New("test interface")
+	_, err = tt.Parse(clientAPITestInferface)
+	if err != nil {
+		log.Fatalf("Could not parse client API test interface template: %v\n", err)
+	}
+	var testOutFile io.Writer
+	if *fTestOutFile != "" {
+		testOutFile, err = os.OpenFile(*fTestOutFile, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			log.Fatalf("Could not create API out file: %v\n", err)
+		}
+	} else {
+		testOutFile = os.Stdout
+	}
+	err = tt.Execute(testOutFile, api)
+	if err != nil {
 		fmt.Println()
 		log.Fatalf("Error generating API: %v\n", err)
 	}
 }
+
+var clientAPITestInferface = `
+package neovim_test
+
+import "gopkg.in/check.v1"
+
+type neovimTester interface {
+	{{range .Methods }}Test{{.Rec.Type.Name}}{{.Name}}(*check.C)
+	Benchmark{{.Rec.Type.Name}}{{.Name}}(*check.C)
+	{{end}}
+}
+`
 
 var clientAPITemplate = `
 package neovim
