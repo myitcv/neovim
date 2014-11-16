@@ -16,15 +16,16 @@ type neovimMethodID string
 
 // A Client represents a connection to a single Neovim instance
 type Client struct {
-	rw      io.ReadWriteCloser
-	dec     *msgpack.Decoder
-	enc     *msgpack.Encoder
-	nextReq uint32
-	respMap *syncRespMap
-	provMap *syncProviderMap
-	lock    sync.Mutex
-	subChan chan subWrapper
-	t       tomb.Tomb
+	rw           io.ReadWriteCloser
+	dec          *msgpack.Decoder
+	enc          *msgpack.Encoder
+	nextReq      uint32
+	respMap      *syncRespMap
+	syncProvMap  *syncProviderMap
+	asyncProvMap *asyncProviderMap
+	lock         sync.Mutex
+	subChan      chan subWrapper
+	t            tomb.Tomb
 
 	// PanicOnError can be set to have the Client panic when an error would
 	// otherwise have been returned via an API method. Note: any attempt to
@@ -32,9 +33,12 @@ type Client struct {
 	// This is useful for debugging.
 	PanicOnError bool
 	KillChannel  chan struct{}
-	ChannelID    uint8
 	log          Logger
 }
+
+type InitMethod func() error
+
+func NullInitMethod() error { return nil }
 
 // Plugin is the interface implemented by writers of Neovim plugins using the
 // neovim package
@@ -67,8 +71,8 @@ type subWrapper struct {
 // A Subscription represents a subscription to a Neovim event on a particular
 // topic.
 type Subscription struct {
-	Topic  string
-	Events chan *SubscriptionEvent
+	Topic string
+	AsyncDecoder
 }
 
 // A SubscriptionEvent contains the value Value announced via a notification
@@ -77,6 +81,16 @@ type SubscriptionEvent struct {
 	Topic string
 	Value []interface{}
 }
+
+type Runner func() (Encoder, error)
+type Encoder func(*msgpack.Encoder) error
+
+// Use for async notifications
+// Here the error would simply be reported to the log
+// (because there is nothing to return)
+type AsyncDecoder func(*msgpack.Decoder) error
+
+type SyncDecoder func(*msgpack.Decoder) (Runner, error)
 
 // Buffer represents a Neovim Buffer
 //

@@ -26,7 +26,7 @@ var _ = Suite(&ExampleTest{})
 func (t *ExampleTest) SetUpTest(c *C) {
 	t.nvim = exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
 	t.nvim.Dir = "/tmp"
-	client, err := neovim.NewCmdClient(t.nvim, nil)
+	client, err := neovim.NewCmdClient(neovim.NullInitMethod, t.nvim, nil)
 	if err != nil {
 		log.Fatalf("Could not setup client: %v", errgo.Details(err))
 	}
@@ -61,9 +61,9 @@ func (t *ExampleTest) TearDownTest(c *C) {
 	<-done
 }
 
-// func (t *ExampleTest) TestGetANumber(c *C) {
-// 	_ = t.client.Command("scriptcall get_a_number")
-// }
+func (t *ExampleTest) TestGetANumber(c *C) {
+	_ = t.client.Command("call GetANumber()")
+}
 
 func (t *ExampleTest) TestReflect(c *C) {
 	i := new(neovim.Plugin)
@@ -72,10 +72,5 @@ func (t *ExampleTest) TestReflect(c *C) {
 	x1 := reflect.TypeOf(new(Example))
 	if x1.Implements(plugInt) {
 		fmt.Println(x1.Elem())
-	}
-
-	x2 := reflect.TypeOf(new(Banana))
-	if x2.Implements(plugInt) {
-		fmt.Println(x2.Elem())
 	}
 }

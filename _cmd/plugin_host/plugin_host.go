@@ -15,6 +15,88 @@ import (
 	// list continues...
 )
 
+type pluginHost struct {
+	client *neovim.Client
+	log    neovim.Logger
+}
+
+func main() {
+	transport := &neovim.StdWrapper{Stdin: os.Stdout, Stdout: os.Stdin}
+
+	// pid := os.Getpid()
+	// TODO enable unique file name
+	// logFileName := fmt.Sprintf("/tmp/neovim_go_plugin_host_%v", pid)
+	logFileName := fmt.Sprintf("/tmp/neovim_go_plugin_host")
+	logFile, err := os.Create(logFileName)
+	if err != nil {
+		_log.Fatalf("Could not create log file %v: %v\n", logFileName, err)
+	}
+	log := _log.New(logFile, "", _log.Llongfile|_log.Ldate|_log.Ltime)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGQUIT)
+
+	// to help with debugging
+	// all this process to receive SIGQUIT and dump the stack
+	go func() {
+		for {
+			select {
+			case <-sig:
+				buf := make([]byte, 1e6)
+				i := runtime.Stack(buf, true)
+				log.Printf("Got SIGQUIT, dumping stacks:\n%v", string(buf[0:i]))
+			}
+		}
+	}()
+
+	host := &pluginHost{}
+
+	client, err := neovim.NewClient(host.DoInit, transport, log)
+	if err != nil {
+		log.Fatalf("Could not connect to Neovim: %v\n", err)
+	}
+	host.client = client
+	host.log = log
+	client.Run()
+
+	// TODO we could move the plugin init to an init-like method
+	// that is called when we call plugin_load from nvim
+
+	log.Println("Successfully connected to Neovim")
+
+	// list of types implementing neovim.Plugin
+
+	// var p1 neovim.Plugin
+	// p1 = &neogo.Neogo{}
+	// err = p1.Init(client)
+	// if err != nil {
+	// 	log.Fatalf("Could not Init %v: %v\n", reflect.TypeOf(p1), err)
+	// }
+	// log.Printf("Successfully call Init on %v\n", reflect.TypeOf(p1))
+
+	// list continues...
+	<-client.KillChannel
+	log.Printf("Got Kill Channel\n")
+}
+
+func (p *pluginHost) DoInit() error {
+	log := p.log
+	client := p.client
+
+	var p2 neovim.Plugin
+	p2 = &example.Example{} // see below
+	tp2 := reflect.TypeOf(p2)
+	log.Printf("Connecting %v\n", tp2)
+	err := p2.Init(client, &pluginLog{l: log, p: tp2.String()})
+	if err != nil {
+		log.Fatalf("Could not Init %v: %v\n", tp2, err)
+	}
+	log.Printf("Successfully called Init on %v\n", tp2)
+
+	// TODO we should return an error here
+	return nil
+}
+
 type pluginLog struct {
 	l neovim.Logger
 	p string
@@ -87,61 +169,4 @@ func (p *pluginLog) SetFlags(flag int) {
 
 func (p *pluginLog) SetPrefix(prefix string) {
 	panic("Not supported")
-}
-
-func main() {
-	transport := &neovim.StdWrapper{Stdin: os.Stdout, Stdout: os.Stdin}
-
-	pid := os.Getpid()
-	logFileName := fmt.Sprintf("/tmp/neovim_go_plugin_host_%v", pid)
-	logFile, err := os.Create(logFileName)
-	if err != nil {
-		_log.Fatalf("Could not create log file %v: %v\n", logFileName, err)
-	}
-	log := _log.New(logFile, "", _log.Llongfile|_log.Ldate|_log.Ltime)
-
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGQUIT)
-
-	go func() {
-		for {
-			select {
-			case <-sig:
-				buf := make([]byte, 1e6)
-				i := runtime.Stack(buf, true)
-				log.Printf("Got SIGQUIT, dumping stacks:\n%v", string(buf[0:i]))
-			}
-		}
-	}()
-
-	client, err := neovim.NewClient(transport, log)
-	if err != nil {
-		log.Fatalf("Could not connect to Neovim: %v\n", err)
-	}
-
-	log.Println("Successfully connected to Neovim")
-
-	// list of types implementing neovim.Plugin
-
-	// var p1 neovim.Plugin
-	// p1 = &neogo.Neogo{}
-	// err = p1.Init(client)
-	// if err != nil {
-	// 	log.Fatalf("Could not Init %v: %v\n", reflect.TypeOf(p1), err)
-	// }
-	// log.Printf("Successfully call Init on %v\n", reflect.TypeOf(p1))
-
-	var p2 neovim.Plugin
-	p2 = &example.Example{} // see below
-	tp2 := reflect.TypeOf(p2)
-	log.Printf("Connecting %v\n", tp2)
-	p2.Init(client, &pluginLog{l: log, p: tp2.String()})
-	if err != nil {
-		log.Fatalf("Could not Init %v: %v\n", tp2, err)
-	}
-	log.Printf("Successfully called Init on %v\n", tp2)
-
-	// list continues...
-	<-client.KillChannel
-	log.Printf("Got Kill Channel %v\n", tp2)
 }

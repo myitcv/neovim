@@ -50,17 +50,17 @@ func (s *syncRespMap) Get(k uint32) (res *responseHolder, retErr error) {
 
 type syncProviderMap struct {
 	lock   *sync.Mutex
-	theMap map[string]RequestHandler
+	theMap map[string]SyncDecoder
 }
 
 func newSyncProviderMap() *syncProviderMap {
 	return &syncProviderMap{
 		lock:   new(sync.Mutex),
-		theMap: make(map[string]RequestHandler),
+		theMap: make(map[string]SyncDecoder),
 	}
 }
 
-func (s *syncProviderMap) Put(k string, v RequestHandler) error {
+func (s *syncProviderMap) Put(k string, v SyncDecoder) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -72,7 +72,43 @@ func (s *syncProviderMap) Put(k string, v RequestHandler) error {
 	return nil
 }
 
-func (s *syncProviderMap) Get(k string) (res RequestHandler, retErr error) {
+func (s *syncProviderMap) Get(k string) (res SyncDecoder, retErr error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	res, present := s.theMap[k]
+	if !present {
+		retErr = errgo.Newf("Key does not exist for %v", k)
+	}
+
+	return
+}
+
+type asyncProviderMap struct {
+	lock   *sync.Mutex
+	theMap map[string]AsyncDecoder
+}
+
+func newAsyncProviderMap() *asyncProviderMap {
+	return &asyncProviderMap{
+		lock:   new(sync.Mutex),
+		theMap: make(map[string]AsyncDecoder),
+	}
+}
+
+func (s *asyncProviderMap) Put(k string, v AsyncDecoder) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if _, present := s.theMap[k]; present {
+		return errgo.Newf("Key already exists for key %v", k)
+	}
+
+	s.theMap[k] = v
+	return nil
+}
+
+func (s *asyncProviderMap) Get(k string) (res AsyncDecoder, retErr error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
