@@ -52,12 +52,9 @@ func (t *NeovimTest) SetUpTest(c *C) {
 	if err != nil {
 		log.Fatalf("Could not setup client: %v", errgo.Details(err))
 	}
-
-	// TODO need to handle nvim subprocess bombing out...
-
-	// this is important; all tests below ignore errors...
 	client.PanicOnError = true
 	t.client = client
+	client.Run()
 }
 
 func (t *NeovimTest) TearDownTest(c *C) {

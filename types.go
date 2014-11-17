@@ -82,15 +82,27 @@ type SubscriptionEvent struct {
 	Value []interface{}
 }
 
-type Runner func() (Encoder, error)
-type Encoder func(*msgpack.Encoder) error
+type Runner interface {
+	Run() (Encoder, error, error)
+}
+type Encoder interface {
+	Encode(*msgpack.Encoder) error
+}
+
+// *** IMPORTANT *** the Decoder passed will be reused
+// and will be used on a different goroutine to the Runner
+// it returns
 
 // Use for async notifications
 // Here the error would simply be reported to the log
 // (because there is nothing to return)
-type AsyncDecoder func(*msgpack.Decoder) error
+type AsyncDecoder interface {
+	Decode(*msgpack.Decoder) (Runner, error)
+}
 
-type SyncDecoder func(*msgpack.Decoder) (Runner, error)
+type SyncDecoder interface {
+	Decode(*msgpack.Decoder) (Runner, error)
+}
 
 // Buffer represents a Neovim Buffer
 //

@@ -32,6 +32,7 @@ func (t *ExampleTest) SetUpTest(c *C) {
 	}
 	client.PanicOnError = true
 	t.client = client
+	client.Run()
 
 	plug := &Example{}
 	err = plug.Init(t.client, log.New(os.Stderr, "", log.LstdFlags))

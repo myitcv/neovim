@@ -78,6 +78,8 @@ func ExampleClient_GetCurrentBuffer() {
 	if err != nil {
 		log.Fatalf("Could not create new client: %v", errgo.Details(err))
 	}
+	client.Run()
+
 	b, err := client.GetCurrentBuffer()
 	if err != nil {
 		log.Fatalf("Could not get current buffer: %v", errgo.Details(err))

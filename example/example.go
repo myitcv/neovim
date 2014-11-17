@@ -42,12 +42,12 @@ type BufCreate struct {
 	BufNumber int
 }
 
-func (n *Example) GetANumber() (int, error) {
+func (n *Example) GetANumber() (int, error, error) {
 	log.Printf("Got a request to getANumber\n")
-	return 42, nil
+	return 42, nil, nil
 }
 
-func (n *Example) subLoop(ch chan BufCreate) {
+func (n *Example) subLoop(ch chan *BufCreate) {
 	for {
 		select {
 		case <-n.client.KillChannel:

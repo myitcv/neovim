@@ -130,49 +130,54 @@ func NewClient(im InitMethod, c io.ReadWriteCloser, log Logger) (*Client, error)
 	res.subChan = make(chan subWrapper)
 	res.KillChannel = make(chan struct{})
 
-	err := res.syncProvMap.Put(_MethodInit, newInitMethodDecoder(im))
+	err := res.syncProvMap.Put(_MethodInit, &initMethodDecoder{InitMethod: im})
 	if err != nil {
 		return nil, errgo.Notef(err, "Could not add init method handler")
 	}
 
-	go res.doListen()
+	return res, nil
+}
+
+func (c *Client) Run() {
+	go c.doListen()
+}
+
+type initMethodDecoder struct {
+	InitMethod
+}
+
+type initMethodRunner struct {
+	InitMethod
+}
+
+type initMethodEncoder struct{}
+
+func (i *initMethodDecoder) Decode(dec *msgpack.Decoder) (Runner, error) {
+	l, err := dec.DecodeSliceLen()
+	if err != nil {
+		return nil, err
+	}
+
+	if l != 0 {
+		return nil, errgo.Newf("Expected 0 arguments, not %v", l)
+	}
+
+	res := &initMethodRunner{InitMethod: i.InitMethod}
 
 	return res, nil
 }
 
-func newInitMethodDecoder(im InitMethod) SyncDecoder {
-	res := func(dec *msgpack.Decoder) (Runner, error) {
-
-		l, err := dec.DecodeSliceLen()
-		if err != nil {
-			return nil, err
-		}
-
-		if l != 0 {
-			return nil, errgo.Newf("Expected 0 arguments, not %v", l)
-		}
-
-		runner := func() (Encoder, error) {
-			err := im()
-			if err != nil {
-				return nil, err
-			}
-
-			encoder := func(enc *msgpack.Encoder) error {
-				err := enc.EncodeNil()
-				if err != nil {
-					return err
-				}
-
-				return nil
-			}
-
-			return encoder, nil
-		}
-
-		return runner, nil
+func (i *initMethodEncoder) Encode(enc *msgpack.Encoder) error {
+	err := enc.EncodeNil()
+	if err != nil {
+		return err
 	}
-	return res
+
+	return nil
+}
+
+func (i *initMethodRunner) Run() (Encoder, error, error) {
+	return &initMethodEncoder{}, nil, i.InitMethod()
 }
 
 func (c *Client) RegisterSyncRequestHandler(m string, d SyncDecoder) error {
@@ -256,20 +261,23 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not find RequestHandler for method %v\n: %v\n", reqMeth, err)
 			}
 
-			runner, err := decoder(dec)
+			runner, err := decoder.Decode(dec)
 			if err == io.EOF {
 				break
 			} else if err != nil {
 				c.log.Fatalf("Could not decode request method args: %v", err)
 			}
 
-			go func() {
-				encoder, err := runner()
-				err = c.sendResponse(reqID, err, encoder)
+			go func(rr Runner) {
+				encoder, mErr, err := rr.Run()
+				if err != nil {
+					c.log.Fatalf("Could not run method: %v\n", err)
+				}
+				err = c.sendResponse(reqID, mErr, encoder)
 				if err != nil {
 					c.log.Fatalf("Could not send response: %v\n", err)
 				}
-			}()
+			}(runner)
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
@@ -327,11 +335,17 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not find async handler for topic %v\n: %v\n", topic, err)
 			}
 
-			err = decoder(dec)
+			runner, err := decoder.Decode(dec)
 			if err == io.EOF {
 				break
 			} else if err != nil {
 				c.log.Fatalf("Could not decode request method args: %v", err)
+			}
+
+			// TODO make async?
+			_, _, err = runner.Run()
+			if err != nil {
+				c.log.Fatalf("Could not run async notification")
 			}
 
 		default:
@@ -345,6 +359,10 @@ func (c *Client) doListen() error {
 }
 
 func (c *Client) sendResponse(reqID uint32, respErr error, e Encoder) error {
+	if e == nil {
+		c.log.Fatalf("Need to send an encoder...")
+	}
+
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -372,7 +390,7 @@ func (c *Client) sendResponse(reqID uint32, respErr error, e Encoder) error {
 		return errgo.NoteMask(err, "Could not encode response error")
 	}
 
-	err = e(enc)
+	err = e.Encode(enc)
 	if err != nil {
 		return errgo.NoteMask(err, "Could not encode response vals")
 	}
