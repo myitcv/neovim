@@ -257,7 +257,7 @@ func (c *Client) doListen() error {
 
 			decoder, err := c.syncProvMap.Get(reqMeth)
 			if err != nil {
-				c.log.Fatalf("Could not find RequestHandler for method %v\n: %v\n", reqMeth, err)
+				c.log.Fatalf("Could not find RequestHandler for method [%v]: %v\n", reqMeth, err)
 			}
 
 			runner, err := decoder.Decode(dec)

@@ -17,7 +17,7 @@ func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 	n.log = l
 
 	g := n.NewGetANumberDecoder()
-	err := n.client.RegisterSyncRequestHandler("GetANumber", g)
+	err := n.client.RegisterSyncRequestHandler(":function:GetANumber", g)
 	if err != nil {
 		n.log.Fatalf("Could not register sync request handler: %v\n", err)
 	}

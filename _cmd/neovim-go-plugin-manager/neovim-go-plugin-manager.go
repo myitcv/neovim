@@ -28,7 +28,7 @@ var fPackage = flag.String("package", "", "the package in which the plugins are 
 var homeDir = os.Getenv("HOME")
 var pluginDir = fmt.Sprintf("%v/.nvim/plugins/go", homeDir)
 var configFilePath = fmt.Sprintf("%v/plugins.json", pluginDir)
-var pluginHostPath = fmt.Sprintf("%v/neovim-go-plugin-manager", pluginDir)
+var pluginHostPath = fmt.Sprintf("%v/plugins_host", pluginDir)
 
 func main() {
 	flag.Parse()
@@ -40,8 +40,12 @@ func main() {
 	if *fPackage == "" {
 		log.Fatalf("Need to specify a package")
 	}
-	newPluginHost := install(*fPackage)
-	err := os.Rename(newPluginHost, pluginHostPath)
+	newPluginHostTmpDir := install(*fPackage)
+	err := os.Rename(newPluginHostTmpDir+"/plugin_host.go", pluginDir+"/plugin_host.go")
+	if err != nil {
+		log.Fatalf("Could not move new plugin host source into place: %v\n", err)
+	}
+	err = os.Rename(newPluginHostTmpDir+"/plugin_host", pluginDir+"/plugin_host")
 	if err != nil {
 		log.Fatalf("Could not move new plugin host into place: %v\n", err)
 	}
@@ -160,14 +164,14 @@ func install(pkg string) string {
 	if err != nil {
 		log.Fatalf("Could not write plugin host: %v\n", err)
 	}
-	c = newCommand(envo, "go", "build", "-o", "neovim-go-plugin-manager")
+	c = newCommand(envo, "go", "build", "-o", "plugin_host")
 	output, err = c.CombinedOutput()
 	fmt.Printf("We have output: %v\n", string(output))
 	if err != nil {
 		log.Fatalf("Could not go build plugin host: %v\n", err)
 	}
 
-	return tmpDir + "/neovim-go-plugin-manager"
+	return tmpDir
 
 }
 
