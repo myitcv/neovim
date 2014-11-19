@@ -197,8 +197,7 @@ func (c *Client) RegisterAsyncRequestHandler(m string, d AsyncDecoder) error {
 	if err != nil {
 		return errgo.Notef(err, "Could not store RequestHanlder in provider map")
 	}
-
-	c.log.Printf("RegistRequestHandler; map is now %v\n", c.asyncProvMap.theMap)
+	c.log.Printf("We not have asyncProvMap: %v\n", c.asyncProvMap)
 
 	return nil
 }
@@ -332,7 +331,7 @@ func (c *Client) doListen() error {
 
 			decoder, err := c.asyncProvMap.Get(topic)
 			if err != nil {
-				c.log.Fatalf("Could not find async handler for topic %v\n: %v\n", topic, err)
+				c.log.Fatalf("Could not find async handler for topic [%v]: %v\n", topic, err)
 			}
 
 			runner, err := decoder.Decode(dec)

@@ -1,11 +1,9 @@
 package example
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
-	"reflect"
 	"testing"
 
 	"github.com/juju/errgo"
@@ -63,15 +61,5 @@ func (t *ExampleTest) TearDownTest(c *C) {
 }
 
 func (t *ExampleTest) TestGetANumber(c *C) {
-	_ = t.client.Command("call GetANumber()")
-}
-
-func (t *ExampleTest) TestReflect(c *C) {
-	i := new(neovim.Plugin)
-	plugInt := reflect.TypeOf(i).Elem()
-
-	x1 := reflect.TypeOf(new(Example))
-	if x1.Implements(plugInt) {
-		fmt.Println(x1.Elem())
-	}
+	// _ = t.client.Command("call GetANumber()")
 }

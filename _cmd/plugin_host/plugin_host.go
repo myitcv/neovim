@@ -64,17 +64,6 @@ func main() {
 
 	log.Println("Successfully connected to Neovim")
 
-	// list of types implementing neovim.Plugin
-
-	// var p1 neovim.Plugin
-	// p1 = &neogo.Neogo{}
-	// err = p1.Init(client)
-	// if err != nil {
-	// 	log.Fatalf("Could not Init %v: %v\n", reflect.TypeOf(p1), err)
-	// }
-	// log.Printf("Successfully call Init on %v\n", reflect.TypeOf(p1))
-
-	// list continues...
 	<-client.KillChannel
 	log.Printf("Got Kill Channel\n")
 }

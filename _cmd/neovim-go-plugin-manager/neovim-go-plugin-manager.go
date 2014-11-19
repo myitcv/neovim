@@ -3,10 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go/ast"
+	"go/build"
+	"go/parser"
+	"go/token"
 	"log"
 	"os"
 	"os/exec"
+	"strings"
+	"text/template"
 	"time"
+
+	_ "golang.org/x/tools/go/gcimporter"
+	"golang.org/x/tools/go/types"
 )
 
 type Plugins struct {
@@ -17,8 +26,9 @@ var fInit = flag.Bool("init", false, "create the plugin host directory and corre
 var fPackage = flag.String("package", "", "the package in which the plugins are defined")
 
 var homeDir = os.Getenv("HOME")
-var pluginDir = fmt.Sprintf("%v/.vim/go", homeDir)
+var pluginDir = fmt.Sprintf("%v/.nvim/plugins/go", homeDir)
 var configFilePath = fmt.Sprintf("%v/plugins.json", pluginDir)
+var pluginHostPath = fmt.Sprintf("%v/neovim-go-plugin-manager", pluginDir)
 
 func main() {
 	flag.Parse()
@@ -27,13 +37,14 @@ func main() {
 		doInit()
 		return
 	}
-	// if *fPackage == "" {
-	// 	log.Fatalf("Need to specify a package")
-	// }
-	// if len(flag.Args()) == 0 {
-	// 	log.Fatalf("Need to specify at least one plugin type to install")
-	// }
-	// install(*fPackage, flag.Args())
+	if *fPackage == "" {
+		log.Fatalf("Need to specify a package")
+	}
+	newPluginHost := install(*fPackage)
+	err := os.Rename(newPluginHost, pluginHostPath)
+	if err != nil {
+		log.Fatalf("Could not move new plugin host into place: %v\n", err)
+	}
 }
 
 func doInit() {
@@ -43,16 +54,16 @@ func doInit() {
 	log.Printf("HOME set: %v\n", homeDir)
 	log.Println("Checking that plugin directory exists")
 	pluginDir := fmt.Sprintf("%v/.vim/go", homeDir)
-	pd, err := os.MkdirAll(pluginDir, 0755)
+	err := os.MkdirAll(pluginDir, 0755)
 	if err != nil {
 		log.Fatalf("Error: %v\n", pluginDir, err)
 	}
 	log.Println("Checking that config file is in place")
 
-	statConfigFile, err := os.Stat(configFilePath)
+	_, err = os.Stat(configFilePath)
 	if err != nil {
 		// file does not exist
-		configFile, err := os.Create(configFilePath)
+		_, err = os.Create(configFilePath)
 		if err != nil {
 			log.Fatalf("Could not create config file at %v: %v\n", configFilePath, err)
 		}
@@ -68,22 +79,13 @@ type pluginType struct {
 	Package, Type string
 }
 
-func install(pkg string, plugins ...string) {
+func install(pkg string) string {
 	/*
-		we need to collate a list plugins and their exported types
-		things to report (and test)
-		1. plugins that don't export any types
-		2. plugins that don't compile (or pass tests)
-
-		We should output for info the types we have found on a per package basis
-
 		TODO
 
 		1. Test this on windows
 
 		Options
-
-		1. Do you want to use isolated GOPATH - default false
 
 		The steps required to achieve this:
 
@@ -101,6 +103,10 @@ func install(pkg string, plugins ...string) {
 	if err != nil {
 		log.Fatalf("Could not create a temp directory: %v\n", err)
 	}
+	err = os.Chdir(tmpDir)
+	if err != nil {
+		log.Fatalf("Could not change to temp directory: %v\n", err)
+	}
 	// defer func() {
 	// 	log.Printf("Cleaning up temp directory %v\n", tmpDir)
 	// 	os.RemoveAll(tmpDir)
@@ -109,26 +115,60 @@ func install(pkg string, plugins ...string) {
 	log.Printf("Working directory is %v\n", tmpDir)
 
 	envo := make(map[string]string)
-	envo["GOPATH"] = tmpDir
 
 	log.Printf("Just about to go get -d -t %v\n", pkg)
-	c := newCommand(envo, "go", "get", "-d", "-t", pkg)
-	err = c.Run()
+	// c := newCommand(envo, "go", "get", "-d", "-t", pkg)
+	c := newCommand(envo, "go", "get", pkg)
+	// c := newCommand(envo, "go", "version")
+	// err = c.Run()
+	output, err := c.CombinedOutput()
+	fmt.Printf("We have output: %v\n", string(output))
 	if err != nil {
-		log.Fatalf("Could not go get plugin package: %v\n", err)
+		log.Fatalf("Could not go get plugin package: %v\n", string(output))
 	}
 	log.Printf("Now running go test %v\n", pkg)
 	c = newCommand(envo, "go", "test", pkg)
-	err = c.Run()
+	output, err = c.CombinedOutput()
+	fmt.Printf("We have output: %v\n", string(output))
 	if err != nil {
 		log.Fatalf("Could not go test plugin: %v\n", err)
 	}
 
-	// TODO at this point it would be good to verify that the types provided
-	// are in fact part of this package and furthermore that they implement
-	// the neovim.Plugin interface
+	// Now we need to get the exported types that implement the neovim.Plugin
+	// interface
 
-	// check that the plugin directory exists
+	fmt.Printf("Now getting the types: %v\n", pkg)
+	pluginTypes := getPluginImplementingTypes(pkg)
+
+	realPluginTypes := make([]pluginType, 0)
+	for _, t := range pluginTypes {
+		elem := pluginType{
+			Package: t.Pkg().Name(),
+			Type:    t.Name(),
+		}
+		realPluginTypes = append(realPluginTypes, elem)
+	}
+
+	temp := template.New("plugin_host")
+	template.Must(temp.Parse(pluginHostTemplate))
+	pluginHostOutFile, err := os.OpenFile(tmpDir+"/plugin_host.go", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatalf("Could not create API out file: %v\n", err)
+	}
+
+	err = temp.Execute(pluginHostOutFile, realPluginTypes)
+	if err != nil {
+		log.Fatalf("Could not write plugin host: %v\n", err)
+	}
+	c = newCommand(envo, "go", "build", "-o", "neovim-go-plugin-manager")
+	output, err = c.CombinedOutput()
+	fmt.Printf("We have output: %v\n", string(output))
+	if err != nil {
+		log.Fatalf("Could not go build plugin host: %v\n", err)
+	}
+
+	return tmpDir + "/neovim-go-plugin-manager"
+
 }
 
 func newCommand(envo map[string]string, name string, args ...string) *exec.Cmd {
@@ -148,6 +188,78 @@ func newCommand(envo map[string]string, name string, args ...string) *exec.Cmd {
 	return res
 }
 
+func getPluginImplementingTypes(pkg string) []types.Object {
+	pp, err := build.Import(pkg, ".", 0)
+	if err != nil {
+		log.Fatalf("Could not import: %v\n", err)
+	}
+	fileSet := token.NewFileSet()
+	astPkgs, err := parser.ParseDir(fileSet, pp.Dir, func(info os.FileInfo) bool {
+		name := info.Name()
+		return !info.IsDir() && !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go") && !strings.HasSuffix(name, "_test.go")
+	}, parser.AllErrors)
+	if err != nil {
+		log.Fatalf("Could not parse dir: %v\n", err)
+	}
+
+	exPkg := astPkgs["example"]
+	files := make([]*ast.File, 0)
+	for _, v := range exPkg.Files {
+		files = append(files, v)
+	}
+
+	p, err := types.Check(pp.Dir, fileSet, files)
+	if err != nil {
+		log.Fatalf("Could not type check!: %v\n", err)
+	}
+
+	var nvim *types.Package
+	for _, v := range p.Imports() {
+		if v.Path() == "github.com/myitcv/neovim" {
+			nvim = v
+			break
+		}
+	}
+
+	if nvim == nil {
+		log.Fatalf("Could not get neovim package")
+	}
+
+	pi := getPluginInterface(nvim)
+	if pi == nil {
+		log.Fatalf("Could not get plugin interface!")
+	}
+
+	res := make([]types.Object, 0)
+
+	scope := p.Scope()
+	for _, n := range scope.Names() {
+		obj := scope.Lookup(n)
+
+		if types.Implements(types.NewPointer(obj.Type()), pi) && obj.Exported() {
+			res = append(res, obj)
+		}
+	}
+
+	return res
+}
+
+func getPluginInterface(p *types.Package) *types.Interface {
+	scope := p.Scope()
+	for _, n := range scope.Names() {
+		obj := scope.Lookup(n)
+
+		if typ, ok := obj.(*types.TypeName); ok {
+			if inf, ok := typ.Type().Underlying().(*types.Interface); ok {
+				if typ.Name() == "Plugin" {
+					return inf
+				}
+			}
+		}
+	}
+	return nil
+}
+
 var pluginHostTemplate = `
 package main
 
@@ -161,16 +273,23 @@ import (
 	"syscall"
 
 	"github.com/myitcv/neovim"
-	{{range .Packages }}
-	{{.}}
-	{{end}}
+	"github.com/myitcv/neovim/example"
+
+	// list continues...
 )
+
+type pluginHost struct {
+	client *neovim.Client
+	log    neovim.Logger
+}
 
 func main() {
 	transport := &neovim.StdWrapper{Stdin: os.Stdout, Stdout: os.Stdin}
 
-	pid := os.Getpid()
-	logFileName := fmt.Sprintf("/tmp/neovim_go_plugin_host_%v", pid)
+	// pid := os.Getpid()
+	// TODO enable unique file name
+	// logFileName := fmt.Sprintf("/tmp/neovim_go_plugin_host_%v", pid)
+	logFileName := fmt.Sprintf("/tmp/neovim_go_plugin_host")
 	logFile, err := os.Create(logFileName)
 	if err != nil {
 		_log.Fatalf("Could not create log file %v: %v\n", logFileName, err)
@@ -180,6 +299,8 @@ func main() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGQUIT)
 
+	// to help with debugging
+	// all this process to receive SIGQUIT and dump the stack
 	go func() {
 		for {
 			select {
@@ -191,30 +312,44 @@ func main() {
 		}
 	}()
 
-	client, err := neovim.NewClient(transport, log)
+	host := &pluginHost{}
+
+	client, err := neovim.NewClient(host.DoInit, transport, log)
 	if err != nil {
 		log.Fatalf("Could not connect to Neovim: %v\n", err)
 	}
+	host.client = client
+	host.log = log
+	client.Run()
+
+	// TODO we could move the plugin init to an init-like method
+	// that is called when we call plugin_load from nvim
 
 	log.Println("Successfully connected to Neovim")
 
-	// list of types implementing neovim.Plugin
+	<-client.KillChannel
+	log.Printf("Got Kill Channel\n")
+}
 
-	{{range $index, $element := .Types}}
+func (p *pluginHost) DoInit() error {
+	log := p.log
+	client := p.client
+	var err error
+
+	{{range $index, $element := .}}
 	var p{{$index}} neovim.Plugin
-	p{{$index}} = &example.Example{} // see below
+	p{{$index}} = &{{$element.Package}}.{{$element.Type}}{} // see below
 	tp{{$index}} := reflect.TypeOf(p{{$index}})
 	log.Printf("Connecting %v\n", tp{{$index}})
-	p{{$index}}.Init(client, &pluginLog{l: log, p: tp{{$index}}.String()})
+	err = p{{$index}}.Init(client, &pluginLog{l: log, p: tp{{$index}}.String()})
 	if err != nil {
 		log.Fatalf("Could not Init %v: %v\n", tp{{$index}}, err)
 	}
 	log.Printf("Successfully called Init on %v\n", tp{{$index}})
 	{{end}}
 
-	// list continues...
-	<-client.KillChannel
-	log.Printf("Got Kill Channel\n")
+	// TODO we should return an error here
+	return nil
 }
 
 type pluginLog struct {

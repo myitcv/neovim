@@ -15,7 +15,6 @@ type Example struct {
 func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 	n.client = c
 	n.log = l
-	l.Println("Example Init")
 
 	g := n.NewGetANumberDecoder()
 	err := n.client.RegisterSyncRequestHandler("GetANumber", g)
@@ -23,14 +22,15 @@ func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 		n.log.Fatalf("Could not register sync request handler: %v\n", err)
 	}
 
+	l.Println("**************************")
+
 	ch, d := n.NewBufCreateSub()
-	err = n.client.RegisterAsyncRequestHandler("BufCreate", d)
+	err = n.client.RegisterAsyncRequestHandler(":autocmd:BufCreate:*", d)
 	if err != nil {
 		n.log.Fatalf("Could not register async request handler: %v\n", err)
 	}
 	go n.subLoop(ch)
 
-	l.Println("Example Init done")
 	return nil
 }
 
