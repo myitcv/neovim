@@ -1,11 +1,9 @@
 package example
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
-	"reflect"
 	"testing"
 
 	"github.com/juju/errgo"
@@ -26,12 +24,13 @@ var _ = Suite(&ExampleTest{})
 func (t *ExampleTest) SetUpTest(c *C) {
 	t.nvim = exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
 	t.nvim.Dir = "/tmp"
-	client, err := neovim.NewCmdClient(t.nvim, nil)
+	client, err := neovim.NewCmdClient(neovim.NullInitMethod, t.nvim, nil)
 	if err != nil {
 		log.Fatalf("Could not setup client: %v", errgo.Details(err))
 	}
 	client.PanicOnError = true
 	t.client = client
+	client.Run()
 
 	plug := &Example{}
 	err = plug.Init(t.client, log.New(os.Stderr, "", log.LstdFlags))
@@ -61,21 +60,6 @@ func (t *ExampleTest) TearDownTest(c *C) {
 	<-done
 }
 
-// func (t *ExampleTest) TestGetANumber(c *C) {
-// 	_ = t.client.Command("scriptcall get_a_number")
-// }
-
-func (t *ExampleTest) TestReflect(c *C) {
-	i := new(neovim.Plugin)
-	plugInt := reflect.TypeOf(i).Elem()
-
-	x1 := reflect.TypeOf(new(Example))
-	if x1.Implements(plugInt) {
-		fmt.Println(x1.Elem())
-	}
-
-	x2 := reflect.TypeOf(new(Banana))
-	if x2.Implements(plugInt) {
-		fmt.Println(x2.Elem())
-	}
+func (t *ExampleTest) TestGetANumber(c *C) {
+	// _ = t.client.Command("call GetANumber()")
 }
