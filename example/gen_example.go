@@ -85,7 +85,7 @@ func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.SyncRunner, err
 	return &getANumberRunner{Example: g.Example}, nil
 }
 
-func (g *getANumberRunner) Run() (neovim.Encoder, error, error) {
+func (g *getANumberRunner) Run() (neovim.SyncEncoder, error, error) {
 	res := &getANumberEncoder{}
 
 	i, mErr, err := g.Example.GetANumber()

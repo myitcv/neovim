@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/vmihailenco/msgpack"
-	"gopkg.in/tomb.v2"
 )
 
 //go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "respSyncMap(uint32, *responseHolder)"
@@ -27,8 +26,10 @@ type Client struct {
 	respMap      *respSyncMap
 	syncProvMap  *syncProvSyncMap
 	asyncProvMap *asyncProvSyncMap
-	lock         sync.Mutex
-	t            tomb.Tomb
+
+	// used to prevent a race between Close and send
+	// TODO but maybe that's unnecessary?
+	lock sync.Mutex
 
 	// PanicOnError can be set to have the Client panic when an error would
 	// otherwise have been returned via an API method. Note: any attempt to
@@ -40,6 +41,8 @@ type Client struct {
 }
 
 type InitMethod func() error
+
+type ChannelID uint8
 
 func NullInitMethod() error { return nil }
 
@@ -63,10 +66,10 @@ type AsyncRunner interface {
 }
 
 type SyncRunner interface {
-	Run() (Encoder, error, error)
+	Run() (SyncEncoder, error, error)
 }
 
-type Encoder interface {
+type SyncEncoder interface {
 	Encode(*msgpack.Encoder) error
 }
 

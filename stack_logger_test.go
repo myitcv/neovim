@@ -6,6 +6,7 @@ import (
 	"github.com/myitcv/neovim"
 )
 
+// TODO this is pretty gross
 type stackLogger struct {
 	_log neovim.Logger
 }

@@ -79,11 +79,11 @@ func (t *NeovimTest) TestClientGetBuffers(c *C) {
 	c.Assert(ba, NotNil)
 }
 
-// func (t *NeovimTest) TestClientGetAPIInfo(c *C) {
-// 	chanID, api, _ := t.client.GetAPIInfo()
-// 	c.Assert(chanID > 0, Equals, true)
-// 	c.Assert(api, NotNil)
-// }
+func (t *NeovimTest) TestClientGetAPIInfo(c *C) {
+	chanID, api, _ := t.client.GetAPIInfo()
+	c.Assert(chanID > 0, Equals, true)
+	c.Assert(api, NotNil)
+}
 
 func (t *NeovimTest) TestConcurrentClientGetBuffers(c *C) {
 	var wg sync.WaitGroup
@@ -208,7 +208,7 @@ func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.SyncRunner, err
 	return &getANumberRunner{}, nil
 }
 
-func (g *getANumberRunner) Run() (neovim.Encoder, error, error) {
+func (g *getANumberRunner) Run() (neovim.SyncEncoder, error, error) {
 	res := &getANumberEncoder{}
 
 	i, mErr, err := getANumber()

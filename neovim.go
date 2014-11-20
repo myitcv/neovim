@@ -120,10 +120,6 @@ func NewCmdClient(im InitMethod, c *exec.Cmd, log Logger) (*Client, error) {
 	return NewClient(im, wrap, log)
 }
 
-func loggerOrStderr(log Logger) (res Logger) {
-	return
-}
-
 // NewClient creates a new Client
 func NewClient(im InitMethod, c io.ReadWriteCloser, log Logger) (*Client, error) {
 	if log == nil {
@@ -149,44 +145,6 @@ func NewClient(im InitMethod, c io.ReadWriteCloser, log Logger) (*Client, error)
 
 func (c *Client) Run() {
 	go c.doListen()
-}
-
-type initMethodDecoder struct {
-	InitMethod
-}
-
-type initMethodRunner struct {
-	InitMethod
-}
-
-type initMethodEncoder struct{}
-
-func (i *initMethodDecoder) Decode(dec *msgpack.Decoder) (SyncRunner, error) {
-	l, err := dec.DecodeSliceLen()
-	if err != nil {
-		return nil, err
-	}
-
-	if l != 0 {
-		return nil, errors.Errorf("Expected 0 arguments, not %v", l)
-	}
-
-	res := &initMethodRunner{InitMethod: i.InitMethod}
-
-	return res, nil
-}
-
-func (i *initMethodEncoder) Encode(enc *msgpack.Encoder) error {
-	err := enc.EncodeNil()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (i *initMethodRunner) Run() (Encoder, error, error) {
-	return &initMethodEncoder{}, nil, i.InitMethod()
 }
 
 func (c *Client) RegisterSyncRequestHandler(m string, d SyncDecoder) error {
@@ -218,11 +176,10 @@ func (c *Client) Close() error {
 	if err != nil {
 		return c.panicOrReturn(errors.Annotatef(err, "Could not cleanly close client"))
 	}
-	// c.t.Kill(nil)
-	// c.t.Wait()
 	return nil
 }
 
+// TODO split this beast apart
 func (c *Client) doListen() error {
 	dec := c.dec
 	for {
@@ -361,7 +318,7 @@ func (c *Client) doListen() error {
 	return nil
 }
 
-func (c *Client) sendResponse(reqID uint32, respErr error, e Encoder) error {
+func (c *Client) sendResponse(reqID uint32, respErr error, e SyncEncoder) error {
 	if e == nil {
 		c.log.Fatalf("Need to send an encoder...")
 	}
@@ -459,8 +416,8 @@ func (c *Client) panicOrReturn(e error) error {
 	return e
 }
 
-func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
-	var retChanID uint8
+func (c *Client) GetAPIInfo() (ChannelID, *apidef.API, error) {
+	var retChanID ChannelID
 	var retAPI *apidef.API
 	enc := func() (_err error) {
 		_err = c.enc.EncodeSliceLen(0)
@@ -508,7 +465,7 @@ func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
 	}
 
 	retVal := resp.obj.([]interface{})
-	retChanID = retVal[0].(uint8)
+	retChanID = ChannelID(retVal[0].(uint8))
 	retAPI = retVal[1].(*apidef.API)
 	return retChanID, retAPI, nil
 
