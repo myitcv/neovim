@@ -99,7 +99,7 @@ func NewCmdClient(im InitMethod, c *exec.Cmd, log Logger) (*Client, error) {
 	}
 
 	if !found {
-		c.Args = append(c.Args, "--embed")
+		c.Args = append(c.Args, "--embed", "-N")
 	}
 
 	err = c.Start()

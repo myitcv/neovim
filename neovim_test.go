@@ -45,12 +45,12 @@ func (t *NeovimTest) SetUpTest(c *C) {
 	t.nvim = exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
 	t.nvim.Dir = "/tmp"
 
-	dev_null, err := os.OpenFile("/dev/null", os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("Could not open /dev/null: %v\n", err)
-	}
-	underlying := log.New(dev_null, "", 0)
-	// underlying := log.New(os.Stdout, "", 0)
+	// dev_null, err := os.OpenFile("/dev/null", os.O_WRONLY, 0644)
+	// if err != nil {
+	// 	log.Fatalf("Could not open /dev/null: %v\n", err)
+	// }
+	// underlying := log.New(dev_null, "", 0)
+	underlying := log.New(os.Stdout, "", 0)
 	logger := newStackLogger(underlying)
 
 	// now we can create a new client
