@@ -4,10 +4,6 @@
 
 package neovim
 
-//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "respSyncMap(uint32, *responseHolder)"
-//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "syncProvSyncMap(string, SyncDecoder)"
-//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "asyncProvSyncMap(string, AsyncDecoder)"
-
 import (
 	"io"
 	"sync"
@@ -15,6 +11,10 @@ import (
 	"github.com/vmihailenco/msgpack"
 	"gopkg.in/tomb.v2"
 )
+
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "respSyncMap(uint32, *responseHolder)"
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "syncProvSyncMap(string, SyncDecoder)"
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "asyncProvSyncMap(string, AsyncDecoder)"
 
 type neovimMethodID string
 
@@ -28,7 +28,6 @@ type Client struct {
 	syncProvMap  *syncProvSyncMap
 	asyncProvMap *asyncProvSyncMap
 	lock         sync.Mutex
-	subChan      chan subWrapper
 	t            tomb.Tomb
 
 	// PanicOnError can be set to have the Client panic when an error would
@@ -51,8 +50,6 @@ type Plugin interface {
 	Shutdown() error
 }
 
-type subTask int
-
 // RequestHandler is the type signature of callback handlers used in
 // RegisterRequestHandler
 type RequestHandler func([]interface{}) ([]interface{}, error)
@@ -60,31 +57,6 @@ type RequestHandler func([]interface{}) ([]interface{}, error)
 const (
 	_MethodInit string = "plugin_load"
 )
-
-const (
-	_Sub subTask = iota
-	_Unsub
-)
-
-type subWrapper struct {
-	sub     *Subscription
-	errChan chan error
-	task    subTask
-}
-
-// A Subscription represents a subscription to a Neovim event on a particular
-// topic.
-type Subscription struct {
-	Topic string
-	AsyncDecoder
-}
-
-// A SubscriptionEvent contains the value Value announced via a notification
-// on topic Topic
-type SubscriptionEvent struct {
-	Topic string
-	Value []interface{}
-}
 
 type AsyncRunner interface {
 	Run() error

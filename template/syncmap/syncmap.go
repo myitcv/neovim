@@ -1,4 +1,3 @@
-// Template SyncMap type
 package syncmap
 
 import (

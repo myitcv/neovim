@@ -782,3 +782,15 @@ func (t *NeovimTest) TestWindowSetWidth(c *C) {
 func (t *NeovimTest) BenchmarkWindowSetWidth(c *C) {
 	// implementation pending
 }
+func (t *NeovimTest) TestClientUnsubscribe(c *C) {
+	// implementation pending
+}
+func (t *NeovimTest) BenchmarkClientUnsubscribe(c *C) {
+	// implementation pending
+}
+func (t *NeovimTest) TestClientSubscribe(c *C) {
+	// implementation pending
+}
+func (t *NeovimTest) BenchmarkClientSubscribe(c *C) {
+	// implementation pending
+}
