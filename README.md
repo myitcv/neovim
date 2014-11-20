@@ -67,32 +67,4 @@ place the generated, formatted source in `$GOPATH` as appropriate.
 
 ## Todo list
 
-* Delete remote `plugin-host` branch
-* Neovim hooks up stdin and stdout back to front
-* Remove `example_test.go` - it is superseded by `example` and associated tests
-* Ensure that example gives examples (!) of testing API requests, handling requests and events
-* Consider using `internal` in Go 1.4 for better layout of package
-* Better definition of logging level-based interface for plugins
-* Stop using KillChannel in generated plugin-host; move to Tomb
-* Need some way for plugins to be loaded at startup...
-* Support Go package acting as a server, i.e. receiving requests from Neovim
-* Cleanly handle Neovim instances quitting - need to kill goroutines for reading, subscription manager etc
-* Need a test to confirm we have cleaned up all goroutines
-* Move from `log.Fatal` to something better....will work now that we have `tomb`
-* Tidy up use of `PanicOnError` and ensure all errors that would otherwise have been return use `panic` if this is set
-* Ensure tests panic if there is an error so we can see the stack
-* Add support for functions that `CanFail`
-* Get full test coverage; can we auto-generate certain basic tests?
-* Test on more platforms
-* Tidy up the API generator - it's very messy. Very messy
-* Make the API generator optionally write the generated file into the appropriate place in `$GOPATH`
-* Check our use of types; e.g. what does `Integer` in the API really map to? `uint64`?
-* Look into semantics of current decision to make certain channels buffered
-* Look at how we verify at runtime whether the Neovim instance to which we have connected exposes an API
-with which we (a calling client) was compiled. This handshake will probably need some work on the Neovim
-side (versioning of the API perhaps?). See comments in [this
-thread](https://github.com/neovim/neovim/pull/1121#issuecomment-53873091)
-* More benchmark tests for performance
-* Make notification decoding can be made more efficient (currently uses generic `DecodeSlice`)
-* Fix function and variable names (there are a few anomalies like `Client.GetVvar`)
-
+The issues list will be updated shortly
