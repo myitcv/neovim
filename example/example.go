@@ -16,13 +16,13 @@ func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 	n.client = c
 	n.log = l
 
-	g := n.NewGetANumberDecoder()
+	g := n.newGetANumberDecoder()
 	err := n.client.RegisterSyncRequestHandler(":function:GetANumber", g)
 	if err != nil {
 		n.log.Fatalf("Could not register sync request handler: %v\n", err)
 	}
 
-	ch, d := n.NewBufCreateSub()
+	ch, d := n.newBufCreateSub()
 	err = n.client.RegisterAsyncRequestHandler(":autocmd:BufCreate:*", d)
 	if err != nil {
 		n.log.Fatalf("Could not register async request handler: %v\n", err)

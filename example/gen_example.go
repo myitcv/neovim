@@ -6,13 +6,13 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-func (e *Example) NewBufCreateSub() (chan *BufCreate, neovim.AsyncDecoder) {
+func (e *Example) newBufCreateSub() (chan *BufCreate, neovim.AsyncDecoder) {
 	ch := make(chan *BufCreate)
 	res := &bufCreateDecoder{ch: ch}
 	return ch, res
 }
 
-func (e *Example) NewGetANumberDecoder() neovim.SyncDecoder {
+func (e *Example) newGetANumberDecoder() neovim.SyncDecoder {
 	res := &getANumberDecoder{Example: e}
 	return res
 }
