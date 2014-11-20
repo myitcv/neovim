@@ -4,6 +4,10 @@
 
 package neovim
 
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "respSyncMap(uint32, *responseHolder)"
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "syncProvSyncMap(string, SyncDecoder)"
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "asyncProvSyncMap(string, AsyncDecoder)"
+
 import (
 	"io"
 	"sync"
@@ -20,9 +24,9 @@ type Client struct {
 	dec          *msgpack.Decoder
 	enc          *msgpack.Encoder
 	nextReq      uint32
-	respMap      *syncRespMap
-	syncProvMap  *syncProviderMap
-	asyncProvMap *asyncProviderMap
+	respMap      *respSyncMap
+	syncProvMap  *syncProvSyncMap
+	asyncProvMap *asyncProvSyncMap
 	lock         sync.Mutex
 	subChan      chan subWrapper
 	t            tomb.Tomb

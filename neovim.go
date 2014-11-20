@@ -131,9 +131,9 @@ func NewClient(im InitMethod, c io.ReadWriteCloser, log Logger) (*Client, error)
 	}
 
 	res := &Client{rw: c}
-	res.respMap = newSyncRespMap()
-	res.syncProvMap = newSyncProviderMap()
-	res.asyncProvMap = newAsyncProviderMap()
+	res.respMap = newrespSyncMap()
+	res.syncProvMap = newsyncProvSyncMap()
+	res.asyncProvMap = newasyncProvSyncMap()
 	res.dec = msgpack.NewDecoder(c)
 	res.enc = msgpack.NewEncoder(c)
 	res.log = log
