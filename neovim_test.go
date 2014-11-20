@@ -13,7 +13,7 @@ import (
 
 	"testing"
 
-	"github.com/juju/errgo"
+	"github.com/juju/errors"
 	"github.com/myitcv/neovim"
 	"github.com/vmihailenco/msgpack"
 
@@ -56,7 +56,7 @@ func (t *NeovimTest) SetUpTest(c *C) {
 	// now we can create a new client
 	client, err := neovim.NewCmdClient(neovim.NullInitMethod, t.nvim, logger)
 	if err != nil {
-		log.Fatalf("Could not setup client: %v", errgo.Details(err))
+		log.Fatalf("Could not setup client: %v", errors.Details(err))
 	}
 	client.PanicOnError = true
 	t.client = client
@@ -186,14 +186,14 @@ type getANumberEncoder struct {
 	i int
 }
 
-func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.Runner, error) {
+func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.SyncRunner, error) {
 	l, err := dec.DecodeSliceLen()
 	if err != nil {
 		return nil, err
 	}
 
 	if l != 1 {
-		return nil, errgo.Newf("Expected 1 argument, not %v", l)
+		return nil, errors.Errorf("Expected 1 argument, not %v", l)
 	}
 
 	l, err = dec.DecodeSliceLen()
@@ -202,7 +202,7 @@ func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.Runner, error) 
 	}
 
 	if l != 0 {
-		return nil, errgo.Newf("Expected 0 argument, not %v", l)
+		return nil, errors.Errorf("Expected 0 argument, not %v", l)
 	}
 
 	return &getANumberRunner{}, nil

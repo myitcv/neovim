@@ -1,7 +1,7 @@
 package example
 
 import (
-	"github.com/juju/errgo"
+	"github.com/juju/errors"
 	"github.com/myitcv/neovim"
 	"github.com/vmihailenco/msgpack"
 )
@@ -26,16 +26,16 @@ type bufCreateRunner struct {
 	v  *BufCreate
 }
 
-func (b *bufCreateDecoder) Decode(dec *msgpack.Decoder) (neovim.Runner, error) {
+func (b *bufCreateDecoder) Decode(dec *msgpack.Decoder) (neovim.AsyncRunner, error) {
 	val := &BufCreate{}
 
 	l, err := dec.DecodeSliceLen()
 	if err != nil {
-		return nil, errgo.Notef(err, "Could not decode slice len")
+		return nil, errors.Annotatef(err, "Could not decode slice len")
 	}
 
 	if l != 0 {
-		return nil, errgo.Newf("Expected 0 arguments, not %v", l)
+		return nil, errors.Errorf("Expected 0 arguments, not %v", l)
 	}
 
 	res := &bufCreateRunner{}
@@ -45,10 +45,10 @@ func (b *bufCreateDecoder) Decode(dec *msgpack.Decoder) (neovim.Runner, error) {
 	return res, nil
 }
 
-func (b *bufCreateRunner) Run() (neovim.Encoder, error, error) {
+func (b *bufCreateRunner) Run() error {
 	b.ch <- b.v
 
-	return nil, nil, nil
+	return nil
 }
 
 type getANumberDecoder struct {
@@ -63,14 +63,14 @@ type getANumberEncoder struct {
 	i int
 }
 
-func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.Runner, error) {
+func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.SyncRunner, error) {
 	l, err := dec.DecodeSliceLen()
 	if err != nil {
 		return nil, err
 	}
 
 	if l != 1 {
-		return nil, errgo.Newf("Expected 1 argument, not %v", l)
+		return nil, errors.Errorf("Expected 1 argument, not %v", l)
 	}
 
 	l, err = dec.DecodeSliceLen()
@@ -79,7 +79,7 @@ func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.Runner, error) 
 	}
 
 	if l != 0 {
-		return nil, errgo.Newf("Expected 0 argument, not %v", l)
+		return nil, errors.Errorf("Expected 0 argument, not %v", l)
 	}
 
 	return &getANumberRunner{Example: g.Example}, nil

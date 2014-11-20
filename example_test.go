@@ -10,7 +10,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/juju/errgo"
+	"github.com/juju/errors"
 	"github.com/myitcv/neovim"
 )
 
@@ -20,14 +20,14 @@ import (
 
 // 	client, err := neovim.NewCmdClient(neovim.NullInitMethod, cmd, nil)
 // 	if err != nil {
-// 		log.Fatalf("Could not create new client: %v", errgo.Details(err))
+// 		log.Fatalf("Could not create new client: %v", errors.Details(err))
 // 	}
 // 	client.PanicOnError = true
 
 // 	topic := "topic1"
 // 	sub, err := client.Subscribe(topic)
 // 	if err != nil {
-// 		log.Fatalf("Could not subscribe to topic %v: %v", topic, errgo.Details(err))
+// 		log.Fatalf("Could not subscribe to topic %v: %v", topic, errors.Details(err))
 // 	}
 
 // 	unsubbed := make(chan struct{})
@@ -76,17 +76,17 @@ func ExampleClient_GetCurrentBuffer() {
 
 	client, err := neovim.NewCmdClient(neovim.NullInitMethod, cmd, nil)
 	if err != nil {
-		log.Fatalf("Could not create new client: %v", errgo.Details(err))
+		log.Fatalf("Could not create new client: %v", errors.Details(err))
 	}
 	client.Run()
 
 	b, err := client.GetCurrentBuffer()
 	if err != nil {
-		log.Fatalf("Could not get current buffer: %v", errgo.Details(err))
+		log.Fatalf("Could not get current buffer: %v", errors.Details(err))
 	}
 	n, err := b.GetName()
 	if err != nil {
-		log.Fatalf("Could not get name for buffer %v: %v", b, errgo.Details(err))
+		log.Fatalf("Could not get name for buffer %v: %v", b, errors.Details(err))
 	}
 	fmt.Printf("Current buffer is: %v %v\n", b.ID, n)
 

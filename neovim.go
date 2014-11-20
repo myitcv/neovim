@@ -3,35 +3,39 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package neovim implements support for writing Neovim plugins in Go. It also
-implements a tool for generating the MSGPACK-based API against a Neovim instance.
+Package neovim implements support for writing Neovim plugins in Go. Communication
+with Neovim is via MSGPACK:
 
-All API methods are supported, as are notifications. See Subscription for an example
-of how to register a subscription on a given topic.
+https://github.com/msgpack/msgpack/blob/master/spec.md
+
+All Neovim API methods are supported. In addition there is support for handling synchronous
+method calls or asynchronous notifications from
+Neovim by registering handlers in your plugin. See the MSGPACK RPC spec for further details
+on these two types of callback:
+
+https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md
+
+Via a plugin manifest (details to follow) your plugin can bind these handlers to either
+Autocmds, Functions or Commands in Neovim.
+
+Status
+
+This project is still in alpha.
 
 Example Plugin
 
-For an example plugin see http://godoc.org/github.com/myitcv/neovim/example
+For a complete example, see the example.Example plugin http://godoc.org/github.com/myitcv/neovim/example
 
-Client
+Writing plugins
 
-Everything starts from Client:
-
-	_, err := neovim.NewUnixClient("unix", nil, &net.UnixAddr{Name: "/tmp/neovim"})
-	if err != nil {
-		log.Fatalf("Could not create new Unix client: %v", errgo.Details(err))
-	}
-
-See the examples for further usage patterns.
+Plugins implement the Plugin interface. Plugins are initialised with a Client that is passed
+to a plugin via the Init method they implement. The Client is used to communicate with a
+Neovim instance.
 
 Concurrency
 
 A single Client may safely be used by multiple goroutines. Calls to API methods are blocking
 by design.
-
-Generating the API
-
-See the github repo for details on re-generating the API.
 
 Compatibility
 
@@ -39,14 +43,20 @@ There are currently no checks to verify a connected Neovim instance exposes the 
 against which the neovim package was generated. This is future work (and probably needs
 some work on the Neovim side).
 
+See also
+
+The tool for generating the API
+The Neovim Go plugin manager
+The code generator used by plugin writers
+
 Errors
 
-Errors returned by this package are created using errgo at http://godoc.org/github.com/juju/errgo.
-Hence errors may be inspected using functions like errgo.Details for example:
+Errors returned by this package are created using errors at http://godoc.org/github.com/juju/errors.
+Hence errors may be inspected using functions like errors.Details for example:
 
 	_, err := client.GetCurrentBuffer()
 	if err != nil {
-		log.Fatalf("Could not get current buffer: %v", errgo.Details(err))
+		log.Fatalf("Could not get current buffer: %v", errors.Details(err))
 	}
 */
 package neovim
@@ -59,7 +69,7 @@ import (
 	"os/exec"
 	"sync/atomic"
 
-	"github.com/juju/errgo"
+	"github.com/juju/errors"
 	"github.com/myitcv/neovim/apidef"
 	"github.com/vmihailenco/msgpack"
 )
@@ -69,7 +79,7 @@ import (
 func NewUnixClient(im InitMethod, _net string, laddr, raddr *net.UnixAddr, log Logger) (*Client, error) {
 	c, err := net.DialUnix(_net, laddr, raddr)
 	if err != nil {
-		return nil, errgo.Notef(err, "Could not establish connection to Neovim, _net %v, laddr %v, %v", _net, laddr, raddr)
+		return nil, errors.Annotatef(err, "could not establish connection to Neovim, _net %v, laddr %v, %v", _net, laddr, raddr)
 	}
 	return NewClient(im, c, log)
 }
@@ -82,11 +92,11 @@ func NewUnixClient(im InitMethod, _net string, laddr, raddr *net.UnixAddr, log L
 func NewCmdClient(im InitMethod, c *exec.Cmd, log Logger) (*Client, error) {
 	stdin, err := c.StdinPipe()
 	if err != nil {
-		return nil, errgo.Notef(err, "Could not get a stdin pipe to embedded nvim")
+		return nil, errors.Annotatef(err, "could not get a stdin pipe to embedded nvim")
 	}
 	stdout, err := c.StdoutPipe()
 	if err != nil {
-		return nil, errgo.Notef(err, "Could not get a stdout pipe to embedded nvim")
+		return nil, errors.Annotatef(err, "could not get a stdout pipe to embedded nvim")
 	}
 	wrap := &StdWrapper{Stdin: stdin, Stdout: stdout}
 
@@ -104,7 +114,7 @@ func NewCmdClient(im InitMethod, c *exec.Cmd, log Logger) (*Client, error) {
 
 	err = c.Start()
 	if err != nil {
-		return nil, errgo.Notef(err, "Could not start the embedded nvim")
+		return nil, errors.Annotatef(err, "could not start the embedded nvim")
 	}
 
 	return NewClient(im, wrap, log)
@@ -132,7 +142,7 @@ func NewClient(im InitMethod, c io.ReadWriteCloser, log Logger) (*Client, error)
 
 	err := res.syncProvMap.Put(_MethodInit, &initMethodDecoder{InitMethod: im})
 	if err != nil {
-		return nil, errgo.Notef(err, "Could not add init method handler")
+		return nil, errors.Annotatef(err, "Could not add init method handler")
 	}
 
 	return res, nil
@@ -152,14 +162,14 @@ type initMethodRunner struct {
 
 type initMethodEncoder struct{}
 
-func (i *initMethodDecoder) Decode(dec *msgpack.Decoder) (Runner, error) {
+func (i *initMethodDecoder) Decode(dec *msgpack.Decoder) (SyncRunner, error) {
 	l, err := dec.DecodeSliceLen()
 	if err != nil {
 		return nil, err
 	}
 
 	if l != 0 {
-		return nil, errgo.Newf("Expected 0 arguments, not %v", l)
+		return nil, errors.Errorf("Expected 0 arguments, not %v", l)
 	}
 
 	res := &initMethodRunner{InitMethod: i.InitMethod}
@@ -182,11 +192,11 @@ func (i *initMethodRunner) Run() (Encoder, error, error) {
 
 func (c *Client) RegisterSyncRequestHandler(m string, d SyncDecoder) error {
 	if m == _MethodInit {
-		return errgo.Newf("Cannot register a provider with the protected method %v", _MethodInit)
+		return errors.Errorf("Cannot register a provider with the protected method %v", _MethodInit)
 	}
 	err := c.syncProvMap.Put(m, d)
 	if err != nil {
-		return errgo.Notef(err, "Could not store RequestHanlder in provider map")
+		return errors.Annotatef(err, "Could not store RequestHanlder in provider map")
 	}
 
 	return nil
@@ -195,7 +205,7 @@ func (c *Client) RegisterSyncRequestHandler(m string, d SyncDecoder) error {
 func (c *Client) RegisterAsyncRequestHandler(m string, d AsyncDecoder) error {
 	err := c.asyncProvMap.Put(m, d)
 	if err != nil {
-		return errgo.Notef(err, "Could not store RequestHanlder in provider map")
+		return errors.Annotatef(err, "Could not store RequestHanlder in provider map")
 	}
 
 	return nil
@@ -207,7 +217,7 @@ func (c *Client) Close() error {
 	defer c.lock.Unlock()
 	err := c.rw.Close()
 	if err != nil {
-		return c.panicOrReturn(errgo.Notef(err, "Could not cleanly close client"))
+		return c.panicOrReturn(errors.Annotatef(err, "Could not cleanly close client"))
 	}
 	// c.t.Kill(nil)
 	// c.t.Wait()
@@ -265,7 +275,7 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode request method args: %v", err)
 			}
 
-			go func(rr Runner) {
+			go func(rr SyncRunner) {
 				encoder, mErr, err := rr.Run()
 				if err != nil {
 					c.log.Fatalf("Could not run method: %v\n", err)
@@ -340,7 +350,7 @@ func (c *Client) doListen() error {
 			}
 
 			// TODO make async?
-			_, _, err = runner.Run()
+			err = runner.Run()
 			if err != nil {
 				c.log.Fatalf("Could not run async notification")
 			}
@@ -368,28 +378,28 @@ func (c *Client) sendResponse(reqID uint32, respErr error, e Encoder) error {
 
 	err := enc.EncodeSliceLen(4)
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode request length")
+		return errors.Annotate(err, "Could not encode request length")
 	}
 
 	err = enc.EncodeInt(reqType)
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode response type")
+		return errors.Annotate(err, "Could not encode response type")
 	}
 
 	err = enc.EncodeUint32(reqID)
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode reqID")
+		return errors.Annotate(err, "Could not encode reqID")
 	}
 
 	// TODO support for response errors with the respErr passed in
 	err = enc.EncodeNil()
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode response error")
+		return errors.Annotate(err, "Could not encode response error")
 	}
 
 	err = e.Encode(enc)
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode response vals")
+		return errors.Annotate(err, "Could not encode response vals")
 	}
 
 	return nil
@@ -410,32 +420,32 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 	rh := &responseHolder{dec: d, ch: res}
 	err := c.respMap.Put(reqID, rh)
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not store response holder")
+		return nil, errors.Annotate(err, "Could not store response holder")
 	}
 
 	err = enc.EncodeSliceLen(4)
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not encode request length")
+		return nil, errors.Annotate(err, "Could not encode request length")
 	}
 
 	err = enc.EncodeInt(reqType)
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not encode request type")
+		return nil, errors.Annotate(err, "Could not encode request type")
 	}
 
 	err = enc.EncodeUint32(reqID)
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not encode request ID")
+		return nil, errors.Annotate(err, "Could not encode request ID")
 	}
 
 	err = enc.EncodeBytes([]byte(reqMethID))
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not encode request method ID")
+		return nil, errors.Annotate(err, "Could not encode request method ID")
 	}
 
 	err = e()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not encode method args ")
+		return nil, errors.Annotate(err, "Could not encode method args ")
 	}
 
 	return res, nil
@@ -472,7 +482,7 @@ func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
 		}
 
 		if l != 2 {
-			return nil, errgo.Newf("Expected slice len to be 2; got %v", l)
+			return nil, errors.Errorf("Expected slice len to be 2; got %v", l)
 		}
 
 		chanID, _err := c.dec.DecodeUint8()
@@ -491,14 +501,14 @@ func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
 	}
 	respChan, err := c.makeCall("vim_get_api_info", enc, dec)
 	if err != nil {
-		return retChanID, retAPI, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetBuffers"))
+		return retChanID, retAPI, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetBuffers"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retChanID, retAPI, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retChanID, retAPI, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retChanID, retAPI, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retChanID, retAPI, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal := resp.obj.([]interface{})
@@ -528,7 +538,7 @@ func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
 
 // 	err := <-errChan
 // 	if err != nil {
-// 		return nil, c.panicOrReturn(errgo.NoteMask(err, "Could not register subscription"))
+// 		return nil, c.panicOrReturn(errors.Annotate(err, "Could not register subscription"))
 // 	}
 
 // 	return res, nil
@@ -547,7 +557,7 @@ func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
 
 // 	err := <-errChan
 // 	if err != nil {
-// 		return c.panicOrReturn(errgo.NoteMask(err, "Could not register unsubscribe"))
+// 		return c.panicOrReturn(errors.Annotate(err, "Could not register unsubscribe"))
 // 	}
 
 // 	return nil
@@ -572,14 +582,14 @@ func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
 // 					// if t.task == _Sub {
 // 					// 	err := c.subscribe(t.sub.Topic)
 // 					// 	if err != nil {
-// 					// 		t.errChan <- errgo.NoteMask(err, "Could not subscribe")
+// 					// 		t.errChan <- errors.Annotate(err, "Could not subscribe")
 // 					// 	} else {
 // 					// 		close(t.errChan)
 // 					// 	}
 // 					// } else if t.task == _Unsub {
 // 					// 	err := c.unsubscribe(t.sub.Topic)
 // 					// 	if err != nil {
-// 					// 		t.errChan <- errgo.NoteMask(err, "Could not unsubscribe")
+// 					// 		t.errChan <- errors.Annotate(err, "Could not unsubscribe")
 // 					// 	} else {
 // 					// 		close(t.errChan)
 // 					// 	}
@@ -618,7 +628,7 @@ func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
 // 					} else if _, ok := m[sub.Events]; ok {
 // 						// fatal error if we already have subscribed
 // 						// using this channel
-// 						w.errChan <- errgo.Newf("Already have subscription for topic %v with this channel: %v", sub.Topic, sub.Events)
+// 						w.errChan <- errors.Errorf("Already have subscription for topic %v with this channel: %v", sub.Topic, sub.Events)
 // 					} else {
 // 						// we are simply going to add to an existing
 // 						// subscription. Close the error channel
@@ -630,10 +640,10 @@ func (c *Client) getAPIInfo() (uint8, *apidef.API, error) {
 // 					close(unsub.Events)
 // 					m, ok := subs[unsub.Topic]
 // 					if !ok {
-// 						w.errChan <- errgo.Newf("We don't have any subscriptions for topic %v", unsub.Topic)
+// 						w.errChan <- errors.Errorf("We don't have any subscriptions for topic %v", unsub.Topic)
 // 					}
 // 					if _, ok := m[unsub.Events]; !ok {
-// 						w.errChan <- errgo.Newf("We don't have a subscription on topic %v for this channel %v", unsub.Topic, unsub.Events)
+// 						w.errChan <- errors.Errorf("We don't have a subscription on topic %v for this channel %v", unsub.Topic, unsub.Events)
 // 					}
 // 					delete(m, unsub.Events)
 // 					if len(m) == 0 {

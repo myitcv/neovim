@@ -7,7 +7,7 @@ package neovim
 import (
 	"sync"
 
-	"github.com/juju/errgo"
+	"github.com/juju/errors"
 )
 
 type syncRespMap struct {
@@ -27,7 +27,7 @@ func (s *syncRespMap) Put(k uint32, v *responseHolder) error {
 	defer s.lock.Unlock()
 
 	if _, present := s.theMap[k]; present {
-		return errgo.Newf("Key already exists for key %v", k)
+		return errors.Errorf("Key already exists for key %v", k)
 	}
 
 	s.theMap[k] = v
@@ -40,7 +40,7 @@ func (s *syncRespMap) Get(k uint32) (res *responseHolder, retErr error) {
 
 	res, present := s.theMap[k]
 	if !present {
-		retErr = errgo.Newf("Key does not exist for %v", k)
+		retErr = errors.Errorf("Key does not exist for %v", k)
 	} else {
 		delete(s.theMap, k)
 	}
@@ -65,7 +65,7 @@ func (s *syncProviderMap) Put(k string, v SyncDecoder) error {
 	defer s.lock.Unlock()
 
 	if _, present := s.theMap[k]; present {
-		return errgo.Newf("Key already exists for key %v", k)
+		return errors.Errorf("Key already exists for key %v", k)
 	}
 
 	s.theMap[k] = v
@@ -78,7 +78,7 @@ func (s *syncProviderMap) Get(k string) (res SyncDecoder, retErr error) {
 
 	res, present := s.theMap[k]
 	if !present {
-		retErr = errgo.Newf("Key does not exist for %v", k)
+		retErr = errors.Errorf("Key does not exist for %v", k)
 	}
 
 	return
@@ -101,7 +101,7 @@ func (s *asyncProviderMap) Put(k string, v AsyncDecoder) error {
 	defer s.lock.Unlock()
 
 	if _, present := s.theMap[k]; present {
-		return errgo.Newf("Key already exists for key %v", k)
+		return errors.Errorf("Key already exists for key %v", k)
 	}
 
 	s.theMap[k] = v
@@ -114,7 +114,7 @@ func (s *asyncProviderMap) Get(k string) (res AsyncDecoder, retErr error) {
 
 	res, present := s.theMap[k]
 	if !present {
-		retErr = errgo.Newf("Key does not exist for %v", k)
+		retErr = errors.Errorf("Key does not exist for %v", k)
 	}
 
 	return

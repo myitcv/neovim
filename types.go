@@ -82,9 +82,14 @@ type SubscriptionEvent struct {
 	Value []interface{}
 }
 
-type Runner interface {
+type AsyncRunner interface {
+	Run() error
+}
+
+type SyncRunner interface {
 	Run() (Encoder, error, error)
 }
+
 type Encoder interface {
 	Encode(*msgpack.Encoder) error
 }
@@ -97,11 +102,11 @@ type Encoder interface {
 // Here the error would simply be reported to the log
 // (because there is nothing to return)
 type AsyncDecoder interface {
-	Decode(*msgpack.Decoder) (Runner, error)
+	Decode(*msgpack.Decoder) (AsyncRunner, error)
 }
 
 type SyncDecoder interface {
-	Decode(*msgpack.Decoder) (Runner, error)
+	Decode(*msgpack.Decoder) (SyncRunner, error)
 }
 
 // Buffer represents a Neovim Buffer

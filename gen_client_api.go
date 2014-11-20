@@ -2,7 +2,7 @@ package neovim
 
 // **** THIS FILE IS GENERATED - DO NOT EDIT BY HAND
 
-import "github.com/juju/errgo"
+import "github.com/juju/errors"
 
 // constants representing method ids
 
@@ -113,14 +113,14 @@ func (b *Buffer) DelLine(index int) error {
 	}
 	respChan, err := b.client.makeCall(bufferDelLine, enc, dec)
 	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.DelLine"))
+		return b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.DelLine"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -157,14 +157,14 @@ func (b *Buffer) GetLine(index int) (string, error) {
 	}
 	respChan, err := b.client.makeCall(bufferGetLine, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetLine"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.GetLine"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(string)
@@ -220,14 +220,14 @@ func (b *Buffer) GetLineSlice(start int, end int, includeStart bool, includeEnd 
 	}
 	respChan, err := b.client.makeCall(bufferGetLineSlice, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetLineSlice"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.GetLineSlice"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.([]string)
@@ -265,14 +265,14 @@ func (b *Buffer) GetMark(name string) ([]int, error) {
 	}
 	respChan, err := b.client.makeCall(bufferGetMark, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetMark"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.GetMark"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.([]int)
@@ -304,14 +304,14 @@ func (b *Buffer) GetName() (string, error) {
 	}
 	respChan, err := b.client.makeCall(bufferGetName, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetName"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.GetName"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(string)
@@ -343,14 +343,14 @@ func (b *Buffer) GetNumber() (int, error) {
 	}
 	respChan, err := b.client.makeCall(bufferGetNumber, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetNumber"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.GetNumber"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(int)
@@ -388,14 +388,14 @@ func (b *Buffer) GetOption(name string) (interface{}, error) {
 	}
 	respChan, err := b.client.makeCall(bufferGetOption, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetOption"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.GetOption"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -433,14 +433,14 @@ func (b *Buffer) GetVar(name string) (interface{}, error) {
 	}
 	respChan, err := b.client.makeCall(bufferGetVar, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.GetVar"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.GetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -484,14 +484,14 @@ func (b *Buffer) Insert(lnum int, lines []string) error {
 	}
 	respChan, err := b.client.makeCall(bufferInsert, enc, dec)
 	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.Insert"))
+		return b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.Insert"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -522,14 +522,14 @@ func (b *Buffer) IsValid() (bool, error) {
 	}
 	respChan, err := b.client.makeCall(bufferIsValid, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.IsValid"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.IsValid"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(bool)
@@ -561,14 +561,14 @@ func (b *Buffer) LineCount() (int, error) {
 	}
 	respChan, err := b.client.makeCall(bufferLineCount, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.LineCount"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.LineCount"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(int)
@@ -612,14 +612,14 @@ func (b *Buffer) SetLine(index int, line string) error {
 	}
 	respChan, err := b.client.makeCall(bufferSetLine, enc, dec)
 	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetLine"))
+		return b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.SetLine"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -680,14 +680,14 @@ func (b *Buffer) SetLineSlice(start int, end int, includeStart bool, includeEnd 
 	}
 	respChan, err := b.client.makeCall(bufferSetLineSlice, enc, dec)
 	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetLineSlice"))
+		return b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.SetLineSlice"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -724,14 +724,14 @@ func (b *Buffer) SetName(name string) error {
 	}
 	respChan, err := b.client.makeCall(bufferSetName, enc, dec)
 	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetName"))
+		return b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.SetName"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -774,14 +774,14 @@ func (b *Buffer) SetOption(name string, value interface{}) error {
 	}
 	respChan, err := b.client.makeCall(bufferSetOption, enc, dec)
 	if err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetOption"))
+		return b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.SetOption"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -824,14 +824,14 @@ func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 	}
 	respChan, err := b.client.makeCall(bufferSetVar, enc, dec)
 	if err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Buffer.SetVar"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "Could not make call to Buffer.SetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, b.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, b.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, b.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, b.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -869,14 +869,14 @@ func (t *Tabpage) GetVar(name string) (interface{}, error) {
 	}
 	respChan, err := t.client.makeCall(tabpageGetVar, enc, dec)
 	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.GetVar"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "Could not make call to Tabpage.GetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -908,14 +908,14 @@ func (t *Tabpage) GetWindow() (Window, error) {
 	}
 	respChan, err := t.client.makeCall(tabpageGetWindow, enc, dec)
 	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.GetWindow"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "Could not make call to Tabpage.GetWindow"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(Window)
@@ -947,14 +947,14 @@ func (t *Tabpage) GetWindows() ([]Window, error) {
 	}
 	respChan, err := t.client.makeCall(tabpageGetWindows, enc, dec)
 	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.GetWindows"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "Could not make call to Tabpage.GetWindows"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.([]Window)
@@ -986,14 +986,14 @@ func (t *Tabpage) IsValid() (bool, error) {
 	}
 	respChan, err := t.client.makeCall(tabpageIsValid, enc, dec)
 	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.IsValid"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "Could not make call to Tabpage.IsValid"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(bool)
@@ -1037,14 +1037,14 @@ func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
 	}
 	respChan, err := t.client.makeCall(tabpageSetVar, enc, dec)
 	if err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Tabpage.SetVar"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "Could not make call to Tabpage.SetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, t.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, t.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, t.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, t.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -1077,14 +1077,14 @@ func (c *Client) ChangeDirectory(dir string) error {
 	}
 	respChan, err := c.makeCall(clientChangeDirectory, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ChangeDirectory"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.ChangeDirectory"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -1116,14 +1116,14 @@ func (c *Client) Command(str string) error {
 	}
 	respChan, err := c.makeCall(clientCommand, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Command"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.Command"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -1155,14 +1155,14 @@ func (c *Client) CommandOutput(str string) (string, error) {
 	}
 	respChan, err := c.makeCall(clientCommandOutput, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.CommandOutput"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.CommandOutput"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(string)
@@ -1189,14 +1189,14 @@ func (c *Client) DelCurrentLine() error {
 	}
 	respChan, err := c.makeCall(clientDelCurrentLine, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.DelCurrentLine"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.DelCurrentLine"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -1228,14 +1228,14 @@ func (c *Client) ErrWrite(str string) error {
 	}
 	respChan, err := c.makeCall(clientErrWrite, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ErrWrite"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.ErrWrite"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -1267,14 +1267,14 @@ func (c *Client) Eval(str string) (interface{}, error) {
 	}
 	respChan, err := c.makeCall(clientEval, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Eval"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.Eval"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -1313,14 +1313,14 @@ func (c *Client) Feedkeys(keys string, mode string) error {
 	}
 	respChan, err := c.makeCall(clientFeedkeys, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Feedkeys"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.Feedkeys"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -1346,14 +1346,14 @@ func (c *Client) GetBuffers() ([]Buffer, error) {
 	}
 	respChan, err := c.makeCall(clientGetBuffers, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetBuffers"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetBuffers"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.([]Buffer)
@@ -1380,14 +1380,14 @@ func (c *Client) GetCurrentBuffer() (Buffer, error) {
 	}
 	respChan, err := c.makeCall(clientGetCurrentBuffer, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentBuffer"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetCurrentBuffer"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(Buffer)
@@ -1414,14 +1414,14 @@ func (c *Client) GetCurrentLine() (string, error) {
 	}
 	respChan, err := c.makeCall(clientGetCurrentLine, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentLine"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetCurrentLine"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(string)
@@ -1448,14 +1448,14 @@ func (c *Client) GetCurrentTabpage() (Tabpage, error) {
 	}
 	respChan, err := c.makeCall(clientGetCurrentTabpage, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentTabpage"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetCurrentTabpage"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(Tabpage)
@@ -1482,14 +1482,14 @@ func (c *Client) GetCurrentWindow() (Window, error) {
 	}
 	respChan, err := c.makeCall(clientGetCurrentWindow, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetCurrentWindow"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetCurrentWindow"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(Window)
@@ -1522,14 +1522,14 @@ func (c *Client) GetOption(name string) (interface{}, error) {
 	}
 	respChan, err := c.makeCall(clientGetOption, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetOption"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetOption"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -1556,14 +1556,14 @@ func (c *Client) GetTabpages() ([]Tabpage, error) {
 	}
 	respChan, err := c.makeCall(clientGetTabpages, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetTabpages"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetTabpages"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.([]Tabpage)
@@ -1596,14 +1596,14 @@ func (c *Client) GetVar(name string) (interface{}, error) {
 	}
 	respChan, err := c.makeCall(clientGetVar, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetVar"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -1636,14 +1636,14 @@ func (c *Client) GetVvar(name string) (interface{}, error) {
 	}
 	respChan, err := c.makeCall(clientGetVvar, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetVvar"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetVvar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -1670,14 +1670,14 @@ func (c *Client) GetWindows() ([]Window, error) {
 	}
 	respChan, err := c.makeCall(clientGetWindows, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.GetWindows"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetWindows"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.([]Window)
@@ -1710,14 +1710,14 @@ func (c *Client) Input(keys string) (int, error) {
 	}
 	respChan, err := c.makeCall(clientInput, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Input"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.Input"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(int)
@@ -1744,14 +1744,14 @@ func (c *Client) ListRuntimePaths() ([]string, error) {
 	}
 	respChan, err := c.makeCall(clientListRuntimePaths, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ListRuntimePaths"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.ListRuntimePaths"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.([]string)
@@ -1784,14 +1784,14 @@ func (c *Client) OutWrite(str string) error {
 	}
 	respChan, err := c.makeCall(clientOutWrite, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.OutWrite"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.OutWrite"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -1841,14 +1841,14 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 	}
 	respChan, err := c.makeCall(clientReplaceTermcodes, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ReplaceTermcodes"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.ReplaceTermcodes"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(string)
@@ -1881,14 +1881,14 @@ func (c *Client) ReportError(str string) error {
 	}
 	respChan, err := c.makeCall(clientReportError, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.ReportError"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.ReportError"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -1920,14 +1920,14 @@ func (c *Client) SetCurrentBuffer(buffer Buffer) error {
 	}
 	respChan, err := c.makeCall(clientSetCurrentBuffer, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetCurrentBuffer"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.SetCurrentBuffer"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -1959,14 +1959,14 @@ func (c *Client) SetCurrentLine(line string) error {
 	}
 	respChan, err := c.makeCall(clientSetCurrentLine, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetCurrentLine"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.SetCurrentLine"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -1998,14 +1998,14 @@ func (c *Client) SetCurrentTabpage(tabpage Tabpage) error {
 	}
 	respChan, err := c.makeCall(clientSetCurrentTabpage, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetCurrentTabpage"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.SetCurrentTabpage"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -2037,14 +2037,14 @@ func (c *Client) SetCurrentWindow(window Window) error {
 	}
 	respChan, err := c.makeCall(clientSetCurrentWindow, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetCurrentWindow"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.SetCurrentWindow"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -2082,14 +2082,14 @@ func (c *Client) SetOption(name string, value interface{}) error {
 	}
 	respChan, err := c.makeCall(clientSetOption, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetOption"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.SetOption"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -2127,14 +2127,14 @@ func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
 	}
 	respChan, err := c.makeCall(clientSetVar, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.SetVar"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.SetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -2167,14 +2167,14 @@ func (c *Client) Strwidth(str string) (int, error) {
 	}
 	respChan, err := c.makeCall(clientStrwidth, enc, dec)
 	if err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.Strwidth"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.Strwidth"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(int)
@@ -2207,14 +2207,14 @@ func (c *Client) subscribe(event string) error {
 	}
 	respChan, err := c.makeCall(clientsubscribe, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.subscribe"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.subscribe"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -2246,14 +2246,14 @@ func (c *Client) unsubscribe(event string) error {
 	}
 	respChan, err := c.makeCall(clientunsubscribe, enc, dec)
 	if err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "Could not make call to Client.unsubscribe"))
+		return c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.unsubscribe"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return c.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return c.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return c.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -2284,14 +2284,14 @@ func (w *Window) GetBuffer() (Buffer, error) {
 	}
 	respChan, err := w.client.makeCall(windowGetBuffer, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetBuffer"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.GetBuffer"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(Buffer)
@@ -2323,14 +2323,14 @@ func (w *Window) GetCursor() ([]int, error) {
 	}
 	respChan, err := w.client.makeCall(windowGetCursor, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetCursor"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.GetCursor"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.([]int)
@@ -2362,14 +2362,14 @@ func (w *Window) GetHeight() (int, error) {
 	}
 	respChan, err := w.client.makeCall(windowGetHeight, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetHeight"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.GetHeight"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(int)
@@ -2407,14 +2407,14 @@ func (w *Window) GetOption(name string) (interface{}, error) {
 	}
 	respChan, err := w.client.makeCall(windowGetOption, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetOption"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.GetOption"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -2446,14 +2446,14 @@ func (w *Window) GetPosition() ([]int, error) {
 	}
 	respChan, err := w.client.makeCall(windowGetPosition, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetPosition"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.GetPosition"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.([]int)
@@ -2485,14 +2485,14 @@ func (w *Window) GetTabpage() (Tabpage, error) {
 	}
 	respChan, err := w.client.makeCall(windowGetTabpage, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetTabpage"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.GetTabpage"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(Tabpage)
@@ -2530,14 +2530,14 @@ func (w *Window) GetVar(name string) (interface{}, error) {
 	}
 	respChan, err := w.client.makeCall(windowGetVar, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetVar"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.GetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -2569,14 +2569,14 @@ func (w *Window) GetWidth() (int, error) {
 	}
 	respChan, err := w.client.makeCall(windowGetWidth, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.GetWidth"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.GetWidth"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(int)
@@ -2608,14 +2608,14 @@ func (w *Window) IsValid() (bool, error) {
 	}
 	respChan, err := w.client.makeCall(windowIsValid, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.IsValid"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.IsValid"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(bool)
@@ -2653,14 +2653,14 @@ func (w *Window) SetCursor(pos []int) error {
 	}
 	respChan, err := w.client.makeCall(windowSetCursor, enc, dec)
 	if err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetCursor"))
+		return w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.SetCursor"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -2697,14 +2697,14 @@ func (w *Window) SetHeight(height int) error {
 	}
 	respChan, err := w.client.makeCall(windowSetHeight, enc, dec)
 	if err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetHeight"))
+		return w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.SetHeight"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -2747,14 +2747,14 @@ func (w *Window) SetOption(name string, value interface{}) error {
 	}
 	respChan, err := w.client.makeCall(windowSetOption, enc, dec)
 	if err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetOption"))
+		return w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.SetOption"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -2797,14 +2797,14 @@ func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
 	}
 	respChan, err := w.client.makeCall(windowSetVar, enc, dec)
 	if err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetVar"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.SetVar"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return retVal, w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return retVal, w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return retVal, w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return retVal, w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	retVal = resp.obj.(interface{})
@@ -2842,14 +2842,14 @@ func (w *Window) SetWidth(width int) error {
 	}
 	respChan, err := w.client.makeCall(windowSetWidth, enc, dec)
 	if err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "Could not make call to Window.SetWidth"))
+		return w.client.panicOrReturn(errors.Annotate(err, "Could not make call to Window.SetWidth"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return w.client.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return w.client.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return w.client.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return w.client.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 
 	return nil
@@ -2859,26 +2859,26 @@ func (w *Window) SetWidth(width int) error {
 func (c *Client) decodeBuffer() (retVal Buffer, retErr error) {
 	b, err := c.dec.R.ReadByte()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode control byte")
+		return retVal, errors.Annotatef(err, "Could not decode control byte")
 	}
 
 	// TODO: use appropriate constant
 	if b != 0xd4 {
-		return retVal, errgo.Newf("Expected code d4; got %v\n", b)
+		return retVal, errors.Errorf("Expected code d4; got %v\n", b)
 	}
 
 	t, err := c.dec.DecodeUint8()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode type")
+		return retVal, errors.Annotatef(err, "Could not decode type")
 	}
 
 	if t != typeBuffer {
-		return retVal, errgo.Notef(err, "Expected typeBuffer; got: %v\n", t)
+		return retVal, errors.Annotatef(err, "Expected typeBuffer; got: %v\n", t)
 	}
 
 	bid, err := c.dec.DecodeUint8()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode Buffer ID")
+		return retVal, errors.Annotatef(err, "Could not decode Buffer ID")
 	}
 	return Buffer{ID: uint32(bid), client: c}, retErr
 }
@@ -2886,15 +2886,15 @@ func (c *Client) decodeBuffer() (retVal Buffer, retErr error) {
 func (c *Client) encodeBuffer(b Buffer) error {
 	err := c.enc.W.WriteByte(0xd4)
 	if err != nil {
-		return errgo.Notef(err, "Could not encode Buffer ext type")
+		return errors.Annotatef(err, "Could not encode Buffer ext type")
 	}
 	err = c.enc.EncodeUint8(typeBuffer)
 	if err != nil {
-		return errgo.Notef(err, "Could not encode Buffer type")
+		return errors.Annotatef(err, "Could not encode Buffer type")
 	}
 	err = c.enc.EncodeUint8(uint8(b.ID))
 	if err != nil {
-		return errgo.Notef(err, "Could not encode Buffer")
+		return errors.Annotatef(err, "Could not encode Buffer")
 	}
 	return nil
 }
@@ -2902,26 +2902,26 @@ func (c *Client) encodeBuffer(b Buffer) error {
 func (c *Client) decodeWindow() (retVal Window, retErr error) {
 	b, err := c.dec.R.ReadByte()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode control byte")
+		return retVal, errors.Annotatef(err, "Could not decode control byte")
 	}
 
 	// TODO: use appropriate constant
 	if b != 0xd4 {
-		return retVal, errgo.Newf("Expected code d4; got %v\n", b)
+		return retVal, errors.Errorf("Expected code d4; got %v\n", b)
 	}
 
 	t, err := c.dec.DecodeUint8()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode type")
+		return retVal, errors.Annotatef(err, "Could not decode type")
 	}
 
 	if t != typeWindow {
-		return retVal, errgo.Notef(err, "Expected typeWindow; got: %v\n", t)
+		return retVal, errors.Annotatef(err, "Expected typeWindow; got: %v\n", t)
 	}
 
 	bid, err := c.dec.DecodeUint8()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode Window ID")
+		return retVal, errors.Annotatef(err, "Could not decode Window ID")
 	}
 	return Window{ID: uint32(bid), client: c}, retErr
 }
@@ -2929,15 +2929,15 @@ func (c *Client) decodeWindow() (retVal Window, retErr error) {
 func (c *Client) encodeWindow(b Window) error {
 	err := c.enc.W.WriteByte(0xd4)
 	if err != nil {
-		return errgo.Notef(err, "Could not encode Window ext type")
+		return errors.Annotatef(err, "Could not encode Window ext type")
 	}
 	err = c.enc.EncodeUint8(typeWindow)
 	if err != nil {
-		return errgo.Notef(err, "Could not encode Window type")
+		return errors.Annotatef(err, "Could not encode Window type")
 	}
 	err = c.enc.EncodeUint8(uint8(b.ID))
 	if err != nil {
-		return errgo.Notef(err, "Could not encode Window")
+		return errors.Annotatef(err, "Could not encode Window")
 	}
 	return nil
 }
@@ -2945,26 +2945,26 @@ func (c *Client) encodeWindow(b Window) error {
 func (c *Client) decodeTabpage() (retVal Tabpage, retErr error) {
 	b, err := c.dec.R.ReadByte()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode control byte")
+		return retVal, errors.Annotatef(err, "Could not decode control byte")
 	}
 
 	// TODO: use appropriate constant
 	if b != 0xd4 {
-		return retVal, errgo.Newf("Expected code d4; got %v\n", b)
+		return retVal, errors.Errorf("Expected code d4; got %v\n", b)
 	}
 
 	t, err := c.dec.DecodeUint8()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode type")
+		return retVal, errors.Annotatef(err, "Could not decode type")
 	}
 
 	if t != typeTabpage {
-		return retVal, errgo.Notef(err, "Expected typeTabpage; got: %v\n", t)
+		return retVal, errors.Annotatef(err, "Expected typeTabpage; got: %v\n", t)
 	}
 
 	bid, err := c.dec.DecodeUint8()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode Tabpage ID")
+		return retVal, errors.Annotatef(err, "Could not decode Tabpage ID")
 	}
 	return Tabpage{ID: uint32(bid), client: c}, retErr
 }
@@ -2972,15 +2972,15 @@ func (c *Client) decodeTabpage() (retVal Tabpage, retErr error) {
 func (c *Client) encodeTabpage(b Tabpage) error {
 	err := c.enc.W.WriteByte(0xd4)
 	if err != nil {
-		return errgo.Notef(err, "Could not encode Tabpage ext type")
+		return errors.Annotatef(err, "Could not encode Tabpage ext type")
 	}
 	err = c.enc.EncodeUint8(typeTabpage)
 	if err != nil {
-		return errgo.Notef(err, "Could not encode Tabpage type")
+		return errors.Annotatef(err, "Could not encode Tabpage type")
 	}
 	err = c.enc.EncodeUint8(uint8(b.ID))
 	if err != nil {
-		return errgo.Notef(err, "Could not encode Tabpage")
+		return errors.Annotatef(err, "Could not encode Tabpage")
 	}
 	return nil
 }
@@ -2990,7 +2990,7 @@ func (c *Client) encodeTabpage(b Tabpage) error {
 func (c *Client) encodeBufferSlice(s []Buffer) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
+		return errors.Annotate(err, "Could not encode slice length")
 	}
 
 	for i := 0; i < len(s); i++ {
@@ -2998,7 +2998,7 @@ func (c *Client) encodeBufferSlice(s []Buffer) error {
 		err := c.encodeBuffer(s[i])
 
 		if err != nil {
-			return errgo.Notef(err, "Could not encode Buffer at index %v", i)
+			return errors.Annotatef(err, "Could not encode Buffer at index %v", i)
 		}
 	}
 
@@ -3008,7 +3008,7 @@ func (c *Client) encodeBufferSlice(s []Buffer) error {
 func (c *Client) decodeBufferSlice() ([]Buffer, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
+		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]Buffer, l)
@@ -3018,7 +3018,7 @@ func (c *Client) decodeBufferSlice() ([]Buffer, error) {
 		b, err := c.decodeBuffer()
 
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode Buffer at index %v", i)
+			return nil, errors.Annotatef(err, "Could not decode Buffer at index %v", i)
 		}
 		res[i] = b
 	}
@@ -3029,7 +3029,7 @@ func (c *Client) decodeBufferSlice() ([]Buffer, error) {
 func (c *Client) encodeTabpageSlice(s []Tabpage) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
+		return errors.Annotate(err, "Could not encode slice length")
 	}
 
 	for i := 0; i < len(s); i++ {
@@ -3037,7 +3037,7 @@ func (c *Client) encodeTabpageSlice(s []Tabpage) error {
 		err := c.encodeTabpage(s[i])
 
 		if err != nil {
-			return errgo.Notef(err, "Could not encode Tabpage at index %v", i)
+			return errors.Annotatef(err, "Could not encode Tabpage at index %v", i)
 		}
 	}
 
@@ -3047,7 +3047,7 @@ func (c *Client) encodeTabpageSlice(s []Tabpage) error {
 func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
+		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]Tabpage, l)
@@ -3057,7 +3057,7 @@ func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
 		b, err := c.decodeTabpage()
 
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode Tabpage at index %v", i)
+			return nil, errors.Annotatef(err, "Could not decode Tabpage at index %v", i)
 		}
 		res[i] = b
 	}
@@ -3068,7 +3068,7 @@ func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
 func (c *Client) encodeWindowSlice(s []Window) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
+		return errors.Annotate(err, "Could not encode slice length")
 	}
 
 	for i := 0; i < len(s); i++ {
@@ -3076,7 +3076,7 @@ func (c *Client) encodeWindowSlice(s []Window) error {
 		err := c.encodeWindow(s[i])
 
 		if err != nil {
-			return errgo.Notef(err, "Could not encode Window at index %v", i)
+			return errors.Annotatef(err, "Could not encode Window at index %v", i)
 		}
 	}
 
@@ -3086,7 +3086,7 @@ func (c *Client) encodeWindowSlice(s []Window) error {
 func (c *Client) decodeWindowSlice() ([]Window, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
+		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]Window, l)
@@ -3096,7 +3096,7 @@ func (c *Client) decodeWindowSlice() ([]Window, error) {
 		b, err := c.decodeWindow()
 
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode Window at index %v", i)
+			return nil, errors.Annotatef(err, "Could not decode Window at index %v", i)
 		}
 		res[i] = b
 	}
@@ -3107,7 +3107,7 @@ func (c *Client) decodeWindowSlice() ([]Window, error) {
 func (c *Client) encodeIntSlice(s []int) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
+		return errors.Annotate(err, "Could not encode slice length")
 	}
 
 	for i := 0; i < len(s); i++ {
@@ -3115,7 +3115,7 @@ func (c *Client) encodeIntSlice(s []int) error {
 		err := c.enc.EncodeInt(s[i])
 
 		if err != nil {
-			return errgo.Notef(err, "Could not encode int at index %v", i)
+			return errors.Annotatef(err, "Could not encode int at index %v", i)
 		}
 	}
 
@@ -3125,7 +3125,7 @@ func (c *Client) encodeIntSlice(s []int) error {
 func (c *Client) decodeIntSlice() ([]int, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
+		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]int, l)
@@ -3135,7 +3135,7 @@ func (c *Client) decodeIntSlice() ([]int, error) {
 		b, err := c.dec.DecodeInt()
 
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode int at index %v", i)
+			return nil, errors.Annotatef(err, "Could not decode int at index %v", i)
 		}
 		res[i] = b
 	}
@@ -3146,7 +3146,7 @@ func (c *Client) decodeIntSlice() ([]int, error) {
 func (c *Client) encodeStringSlice(s []string) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
+		return errors.Annotate(err, "Could not encode slice length")
 	}
 
 	for i := 0; i < len(s); i++ {
@@ -3154,7 +3154,7 @@ func (c *Client) encodeStringSlice(s []string) error {
 		err := c.encodeString(s[i])
 
 		if err != nil {
-			return errgo.Notef(err, "Could not encode string at index %v", i)
+			return errors.Annotatef(err, "Could not encode string at index %v", i)
 		}
 	}
 
@@ -3164,7 +3164,7 @@ func (c *Client) encodeStringSlice(s []string) error {
 func (c *Client) decodeStringSlice() ([]string, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
+		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]string, l)
@@ -3174,7 +3174,7 @@ func (c *Client) decodeStringSlice() ([]string, error) {
 		b, err := c.decodeString()
 
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode string at index %v", i)
+			return nil, errors.Annotatef(err, "Could not decode string at index %v", i)
 		}
 		res[i] = b
 	}

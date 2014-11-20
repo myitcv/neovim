@@ -18,7 +18,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/juju/errgo"
+	"github.com/juju/errors"
 	"github.com/myitcv/neovim/apidef"
 	"github.com/vmihailenco/msgpack"
 )
@@ -51,7 +51,7 @@ func main() {
 
 	output, err := exec.Command(os.Getenv("NEOVIM_BIN"), "--api-info").CombinedOutput()
 	if err != nil {
-		log.Fatalf("Could not get current API dump: %v", errgo.Details(err))
+		log.Fatalf("Could not get current API dump: %v", errors.Details(err))
 	}
 
 	br := bytes.NewReader(output)
@@ -379,7 +379,7 @@ package neovim
 
 // **** THIS FILE IS GENERATED - DO NOT EDIT BY HAND
 
-import "github.com/juju/errgo"
+import "github.com/juju/errors"
 
 // constants representing method ids
 
@@ -413,7 +413,7 @@ const (
 func (c *Client) encode{{.Name | camelize }}Slice(s []{{.Name}}) error {
 	err := c.enc.EncodeSliceLen(len(s))
 	if err != nil {
-		return errgo.NoteMask(err, "Could not encode slice length")
+		return errors.Annotate(err, "Could not encode slice length")
 	}
 
 	for i := 0; i < len(s); i++ {
@@ -423,7 +423,7 @@ func (c *Client) encode{{.Name | camelize }}Slice(s []{{.Name}}) error {
 		err := c.{{.Enc}}(s[i])
 		{{end}}
 		if err != nil {
-			return errgo.Notef(err, "Could not encode {{.Name}} at index %v", i)
+			return errors.Annotatef(err, "Could not encode {{.Name}} at index %v", i)
 		}
 	}
 
@@ -433,7 +433,7 @@ func (c *Client) encode{{.Name | camelize }}Slice(s []{{.Name}}) error {
 func (c *Client) decode{{.Name | camelize }}Slice() ([]{{.Name}}, error) {
 	l, err := c.dec.DecodeSliceLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
+		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]{{.Name}}, l)
@@ -445,7 +445,7 @@ func (c *Client) decode{{.Name | camelize }}Slice() ([]{{.Name}}, error) {
 		b, err := c.{{.Dec}}()
 		{{end}}
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode {{.Name}} at index %v", i)
+			return nil, errors.Annotatef(err, "Could not decode {{.Name}} at index %v", i)
 		}
 		res[i] = b
 	}
@@ -497,14 +497,14 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 	}
 	respChan, err := {{.Rec.Client}}.makeCall({{.Rec.Type.Name | to_lower}}{{.Name}}, enc, dec)
 	if err != nil {
-		return {{if .Ret}}{{.Ret.Name}}, {{end}}{{.Rec.Client}}.panicOrReturn(errgo.NoteMask(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}"))
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}{{.Rec.Client}}.panicOrReturn(errors.Annotate(err, "Could not make call to {{.Rec.Type.Name}}.{{.Name}}"))
 	}
 	resp := <-respChan
 	if resp == nil {
-		return {{if .Ret}}{{.Ret.Name}}, {{end}}{{.Rec.Client}}.panicOrReturn(errgo.New("We got a nil response on respChan"))
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}{{.Rec.Client}}.panicOrReturn(errors.New("We got a nil response on respChan"))
 	}
 	if resp.err != nil {
-		return {{if .Ret}}{{.Ret.Name}}, {{end}}{{.Rec.Client}}.panicOrReturn(errgo.NoteMask(err, "We got a non-nil error in our response"))
+		return {{if .Ret}}{{.Ret.Name}}, {{end}}{{.Rec.Client}}.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
 	}
 	{{if .Ret}}
 	{{.Ret.Name}} = resp.obj.({{.Ret.Type.Name}})
@@ -525,26 +525,26 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 func (c *Client) decode{{.Name}}() (retVal {{.Name}}, retErr error) {
 	b, err := c.dec.R.ReadByte()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode control byte")
+		return retVal, errors.Annotatef(err, "Could not decode control byte")
 	}
 
 	// TODO: use appropriate constant
 	if b != 0xd4 {
-		return retVal, errgo.Newf("Expected code d4; got %v\n", b)
+		return retVal, errors.Errorf("Expected code d4; got %v\n", b)
 	}
 
 	t, err := c.dec.DecodeUint8()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode type")
+		return retVal, errors.Annotatef(err, "Could not decode type")
 	}
 
 	if t != type{{.Name}} {
-		return retVal, errgo.Notef(err, "Expected type{{.Name}}; got: %v\n", t)
+		return retVal, errors.Annotatef(err, "Expected type{{.Name}}; got: %v\n", t)
 	}
 
 	bid, err := c.dec.DecodeUint8()
 	if err != nil {
-		return retVal, errgo.Notef(err, "Could not decode {{.Name}} ID")
+		return retVal, errors.Annotatef(err, "Could not decode {{.Name}} ID")
 	}
 	return {{.Name}}{ID: uint32(bid), client: c}, retErr
 }
@@ -552,15 +552,15 @@ func (c *Client) decode{{.Name}}() (retVal {{.Name}}, retErr error) {
 func (c *Client) encode{{.Name}}(b {{.Name}}) error {
 	err := c.enc.W.WriteByte(0xd4)
 	if err != nil {
-		return errgo.Notef(err, "Could not encode {{.Name}} ext type")
+		return errors.Annotatef(err, "Could not encode {{.Name}} ext type")
 	}
 	err = c.enc.EncodeUint8(type{{.Name}})
 	if err != nil {
-		return errgo.Notef(err, "Could not encode {{.Name}} type")
+		return errors.Annotatef(err, "Could not encode {{.Name}} type")
 	}
 	err = c.enc.EncodeUint8(uint8(b.ID))
 	if err != nil {
-		return errgo.Notef(err, "Could not encode {{.Name}}")
+		return errors.Annotatef(err, "Could not encode {{.Name}}")
 	}
 	return nil
 }

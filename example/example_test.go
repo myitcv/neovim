@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/juju/errgo"
+	"github.com/juju/errors"
 	"github.com/myitcv/neovim"
 	. "gopkg.in/check.v1"
 )
@@ -26,7 +26,7 @@ func (t *ExampleTest) SetUpTest(c *C) {
 	t.nvim.Dir = "/tmp"
 	client, err := neovim.NewCmdClient(neovim.NullInitMethod, t.nvim, nil)
 	if err != nil {
-		log.Fatalf("Could not setup client: %v", errgo.Details(err))
+		log.Fatalf("Could not setup client: %v", errors.Details(err))
 	}
 	client.PanicOnError = true
 	t.client = client

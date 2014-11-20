@@ -1,7 +1,7 @@
 package apidef
 
 import (
-	"github.com/juju/errgo"
+	"github.com/juju/errors"
 	"github.com/vmihailenco/msgpack"
 )
 
@@ -44,7 +44,7 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 
 	ml, err := ad.DecodeMapLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode map length")
+		return nil, errors.Annotate(err, "Could not decode map length")
 
 	}
 
@@ -53,26 +53,26 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 	for i := 0; i < ml; i++ {
 		k, err := ad.DecodeBytes()
 		if err != nil {
-			return nil, errgo.NoteMask(err, "Could not decode key of top level api map")
+			return nil, errors.Annotate(err, "Could not decode key of top level api map")
 		}
 
 		switch string(k) {
 		case "types":
 			classes, err := decodeAPIClassSlice(ad)
 			if err != nil {
-				return nil, errgo.NoteMask(err, "Could not decode class slice")
+				return nil, errors.Annotate(err, "Could not decode class slice")
 			}
 			resp.Types = classes
 		case "functions":
 			functions, err := decodeAPIFunctionSlice(ad)
 			if err != nil {
-				return nil, errgo.NoteMask(err, "Could not decode function slice")
+				return nil, errors.Annotate(err, "Could not decode function slice")
 			}
 			resp.Functions = functions
 		case "features":
 			ml, err := ad.DecodeMapLen()
 			if err != nil {
-				return nil, errgo.NoteMask(err, "Could not decode map length")
+				return nil, errors.Annotate(err, "Could not decode map length")
 			}
 
 			features := make([]APIFeature, ml)
@@ -80,14 +80,14 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 			for i := range features {
 				fn, err := ad.DecodeBytes()
 				if err != nil {
-					return nil, errgo.NoteMask(err, "Could not decode feature name")
+					return nil, errors.Annotate(err, "Could not decode feature name")
 				}
 
 				features[i].Name = string(fn)
 
 				meths, err := ad.DecodeSliceLen()
 				if err != nil {
-					return nil, errgo.NoteMask(err, "Could not decode length of features methods slice")
+					return nil, errors.Annotate(err, "Could not decode length of features methods slice")
 				}
 
 				features[i].Methods = make([]string, meths)
@@ -95,7 +95,7 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 				for j := range features[i].Methods {
 					mn, err := ad.DecodeBytes()
 					if err != nil {
-						return nil, errgo.Notef(err, "Could not decode feature method name at index %v", j)
+						return nil, errors.Annotatef(err, "Could not decode feature method name at index %v", j)
 					}
 					features[i].Methods[j] = string(mn)
 				}
@@ -103,7 +103,7 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 		case "error_types":
 			ets, err := decodeAPIClassSlice(ad)
 			if err != nil {
-				return nil, errgo.NoteMask(err, "Could not decode error_type slice")
+				return nil, errors.Annotate(err, "Could not decode error_type slice")
 			}
 			resp.ErrorTypes = ets
 		}
@@ -116,30 +116,30 @@ func decodeAPIClass(d *msgpack.Decoder) (APIClass, error) {
 	resp := APIClass{}
 	cn, err := d.DecodeBytes()
 	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode class name")
+		return resp, errors.Annotate(err, "Could not decode class name")
 	}
 
 	ml, err := d.DecodeMapLen()
 	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode map length")
+		return resp, errors.Annotate(err, "Could not decode map length")
 	}
 
 	if ml != 1 {
-		return resp, errgo.Newf("Expected map length of 1; got %v", ml)
+		return resp, errors.Errorf("Expected map length of 1; got %v", ml)
 	}
 
 	mk, err := d.DecodeBytes()
 	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode ID key")
+		return resp, errors.Annotate(err, "Could not decode ID key")
 	}
 
 	if string(mk) != "id" {
-		return resp, errgo.Newf("Expected single key to be 'id'; got %v", mk)
+		return resp, errors.Errorf("Expected single key to be 'id'; got %v", mk)
 	}
 
 	id, err := d.DecodeInt()
 	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode ID value")
+		return resp, errors.Annotate(err, "Could not decode ID value")
 	}
 
 	resp.Name = string(cn)
@@ -150,7 +150,7 @@ func decodeAPIClass(d *msgpack.Decoder) (APIClass, error) {
 func decodeAPIClassSlice(d *msgpack.Decoder) ([]APIClass, error) {
 	sl, err := d.DecodeMapLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
+		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	resp := make([]APIClass, sl)
@@ -158,7 +158,7 @@ func decodeAPIClassSlice(d *msgpack.Decoder) ([]APIClass, error) {
 	for i := 0; i < sl; i++ {
 		nvc, err := decodeAPIClass(d)
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode class at index %v", i)
+			return nil, errors.Annotatef(err, "Could not decode class at index %v", i)
 		}
 		resp[i] = nvc
 	}
@@ -169,60 +169,60 @@ func decodeAPIFunction(d *msgpack.Decoder) (APIFunction, error) {
 	resp := APIFunction{}
 	ml, err := d.DecodeMapLen()
 	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode map length")
+		return resp, errors.Annotate(err, "Could not decode map length")
 	}
 
 	for i := 0; i < ml; i++ {
 		k, err := d.DecodeString()
 		if err != nil {
-			return resp, errgo.NoteMask(err, "Could not decode function property key")
+			return resp, errors.Annotate(err, "Could not decode function property key")
 		}
 
 		switch k {
 		case "name":
 			s, err := d.DecodeString()
 			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function name")
+				return resp, errors.Annotate(err, "Could not decode function name")
 			}
 			resp.Name = s
 		case "receives_channel_id":
 			b, err := d.DecodeBool()
 			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function receives_channel_id")
+				return resp, errors.Annotate(err, "Could not decode function receives_channel_id")
 			}
 			resp.ReceivesChannelID = b
 		case "can_fail":
 			b, err := d.DecodeBool()
 			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function can_fail")
+				return resp, errors.Annotate(err, "Could not decode function can_fail")
 			}
 			resp.CanFail = b
 		case "return_type":
 			s, err := d.DecodeString()
 			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function return type")
+				return resp, errors.Annotate(err, "Could not decode function return type")
 			}
 			resp.ReturnType = s
 		case "id":
 			i, err := d.DecodeUint32()
 			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function id")
+				return resp, errors.Annotate(err, "Could not decode function id")
 			}
 			resp.ID = i
 		case "parameters":
 			ps, err := decodeAPIFunctionParameterSlice(d)
 			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode function parameters")
+				return resp, errors.Annotate(err, "Could not decode function parameters")
 			}
 			resp.Parameters = ps
 		case "deferred":
 			b, err := d.DecodeBool()
 			if err != nil {
-				return resp, errgo.NoteMask(err, "Could not decode deferred property")
+				return resp, errors.Annotate(err, "Could not decode deferred property")
 			}
 			resp.Deferred = b
 		default:
-			return resp, errgo.Newf("Unknown function property %v", k)
+			return resp, errors.Errorf("Unknown function property %v", k)
 		}
 	}
 
@@ -232,7 +232,7 @@ func decodeAPIFunction(d *msgpack.Decoder) (APIFunction, error) {
 func decodeAPIFunctionSlice(d *msgpack.Decoder) ([]APIFunction, error) {
 	sl, err := d.DecodeSliceLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
+		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	resp := make([]APIFunction, sl)
@@ -240,7 +240,7 @@ func decodeAPIFunctionSlice(d *msgpack.Decoder) ([]APIFunction, error) {
 	for i := 0; i < sl; i++ {
 		nvc, err := decodeAPIFunction(d)
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode function at index %v", i)
+			return nil, errors.Annotatef(err, "Could not decode function at index %v", i)
 		}
 		resp[i] = nvc
 	}
@@ -253,21 +253,21 @@ func decodeAPIFunctionParameter(d *msgpack.Decoder) (APIFunctionParameter, error
 	// we should have a slice of length 2
 	sl, err := d.DecodeSliceLen()
 	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode slice length")
+		return resp, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	if sl != 2 {
-		return resp, errgo.Newf("Expected lenght to be 2; got %v", sl)
+		return resp, errors.Errorf("Expected lenght to be 2; got %v", sl)
 	}
 
 	pt, err := d.DecodeString()
 	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode class name")
+		return resp, errors.Annotate(err, "Could not decode class name")
 	}
 	resp.Type = pt
 	pn, err := d.DecodeString()
 	if err != nil {
-		return resp, errgo.NoteMask(err, "Could not decode class name")
+		return resp, errors.Annotate(err, "Could not decode class name")
 	}
 	resp.Name = pn
 	return resp, nil
@@ -276,7 +276,7 @@ func decodeAPIFunctionParameter(d *msgpack.Decoder) (APIFunctionParameter, error
 func decodeAPIFunctionParameterSlice(d *msgpack.Decoder) ([]APIFunctionParameter, error) {
 	sl, err := d.DecodeSliceLen()
 	if err != nil {
-		return nil, errgo.NoteMask(err, "Could not decode slice length")
+		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	resp := make([]APIFunctionParameter, sl)
@@ -284,7 +284,7 @@ func decodeAPIFunctionParameterSlice(d *msgpack.Decoder) ([]APIFunctionParameter
 	for i := 0; i < sl; i++ {
 		nvc, err := decodeAPIFunctionParameter(d)
 		if err != nil {
-			return nil, errgo.Notef(err, "Could not decode function parameter at index %v", i)
+			return nil, errors.Annotatef(err, "Could not decode function parameter at index %v", i)
 		}
 		resp[i] = nvc
 	}
