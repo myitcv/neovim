@@ -22,8 +22,6 @@ func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 		n.log.Fatalf("Could not register sync request handler: %v\n", err)
 	}
 
-	l.Println("**************************")
-
 	ch, d := n.NewBufCreateSub()
 	err = n.client.RegisterAsyncRequestHandler(":autocmd:BufCreate:*", d)
 	if err != nil {

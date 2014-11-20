@@ -197,7 +197,6 @@ func (c *Client) RegisterAsyncRequestHandler(m string, d AsyncDecoder) error {
 	if err != nil {
 		return errgo.Notef(err, "Could not store RequestHanlder in provider map")
 	}
-	c.log.Printf("We not have asyncProvMap: %v\n", c.asyncProvMap)
 
 	return nil
 }
