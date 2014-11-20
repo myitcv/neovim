@@ -1,5 +1,5 @@
 // Copyright 2014 Paul Jolly <paul@myitcv.org.uk>. All rights reserved.
-// Use of s source code is governed by a BSD-style
+// Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 package neovim
