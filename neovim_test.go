@@ -15,6 +15,7 @@ import (
 
 	"github.com/juju/errgo"
 	"github.com/myitcv/neovim"
+	"github.com/vmihailenco/msgpack"
 
 	. "gopkg.in/check.v1"
 )
@@ -44,7 +45,12 @@ func (t *NeovimTest) SetUpTest(c *C) {
 	t.nvim = exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
 	t.nvim.Dir = "/tmp"
 
-	underlying := log.New(os.Stdout, "", 0)
+	dev_null, err := os.OpenFile("/dev/null", os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("Could not open /dev/null: %v\n", err)
+	}
+	underlying := log.New(dev_null, "", 0)
+	// underlying := log.New(os.Stdout, "", 0)
 	logger := newStackLogger(underlying)
 
 	// now we can create a new client
@@ -166,6 +172,77 @@ func (t *NeovimTest) TestEval(c *C) {
 // 	// forever and fail the tests
 // 	sub, _ = t.client.Subscribe(topic)
 // }
+
+func newGetANumberDecoder() neovim.SyncDecoder {
+	res := &getANumberDecoder{}
+	return res
+}
+
+type getANumberDecoder struct{}
+
+type getANumberRunner struct{}
+
+type getANumberEncoder struct {
+	i int
+}
+
+func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.Runner, error) {
+	l, err := dec.DecodeSliceLen()
+	if err != nil {
+		return nil, err
+	}
+
+	if l != 1 {
+		return nil, errgo.Newf("Expected 1 argument, not %v", l)
+	}
+
+	l, err = dec.DecodeSliceLen()
+	if err != nil {
+		return nil, err
+	}
+
+	if l != 0 {
+		return nil, errgo.Newf("Expected 0 argument, not %v", l)
+	}
+
+	return &getANumberRunner{}, nil
+}
+
+func (g *getANumberRunner) Run() (neovim.Encoder, error, error) {
+	res := &getANumberEncoder{}
+
+	i, mErr, err := getANumber()
+
+	if err != nil || mErr != nil {
+		return nil, mErr, err
+	}
+
+	res.i = i
+
+	return res, nil, nil
+}
+
+func (g *getANumberEncoder) Encode(enc *msgpack.Encoder) error {
+	err := enc.EncodeInt(g.i)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getANumber() (int, error, error) {
+	return 42, nil, nil
+}
+
+func (t *NeovimTest) TestFunctionOnChannel(c *C) {
+	t.client.RegisterSyncRequestHandler("GetANumber", newGetANumberDecoder())
+	topic := "GetANumber"
+	commandDef := fmt.Sprintf(`call rpc#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
+	_ = t.client.Command(commandDef)
+	res, _ := t.client.Eval(`GetANumber()`)
+	c.Assert(res, Equals, int64(42))
+}
 
 // func (t *NeovimTest) TestAutocmdOnChannel(c *C) {
 // 	cb, _ := t.client.GetCurrentBuffer()

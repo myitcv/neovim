@@ -252,7 +252,6 @@ func (c *Client) doListen() error {
 			} else if err != nil {
 				c.log.Fatalf("Could not decode request method name: %v", err)
 			}
-			c.log.Printf("Got a request for %v\n", reqMeth)
 
 			decoder, err := c.syncProvMap.Get(reqMeth)
 			if err != nil {
