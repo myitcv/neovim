@@ -173,56 +173,61 @@ func (t *NeovimTest) TestEval(c *C) {
 // 	sub, _ = t.client.Subscribe(topic)
 // }
 
-func newGetANumberDecoder() neovim.SyncDecoder {
-	res := &getANumberDecoder{}
+func newGetANumberResponder() neovim.SyncDecoder {
+	res := &getANumberWrapper{}
 	return res
 }
 
-type getANumberDecoder struct{}
+type getANumberWrapper struct {
+	*getANumberArgs
+	*getANumberRetVals
+}
 
-type getANumberRunner struct{}
+type getANumberArgs struct{}
 
-type getANumberEncoder struct {
+type getANumberRetVals struct {
 	i int
 }
 
-func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.SyncRunner, error) {
+func (g *getANumberArgs) DecodeMsg(dec *msgpack.Decoder) error {
 	l, err := dec.DecodeSliceLen()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if l != 1 {
-		return nil, errors.Errorf("Expected 1 argument, not %v", l)
+		return errors.Errorf("Expected 1 argument, not %v", l)
 	}
 
 	l, err = dec.DecodeSliceLen()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if l != 0 {
-		return nil, errors.Errorf("Expected 0 argument, not %v", l)
+		return errors.Errorf("Expected 0 argument, not %v", l)
 	}
 
-	return &getANumberRunner{}, nil
+	return nil
 }
 
-func (g *getANumberRunner) Run() (neovim.SyncEncoder, error, error) {
-	res := &getANumberEncoder{}
+func (g *getANumberWrapper) Run() (error, error) {
+	res := &getANumberRetVals{}
 
 	i, mErr, err := getANumber()
 
 	if err != nil || mErr != nil {
-		return nil, mErr, err
+		return mErr, err
 	}
 
 	res.i = i
 
-	return res, nil, nil
+	g.getANumberRetVals = res
+
+	return nil, nil
 }
 
-func (g *getANumberEncoder) Encode(enc *msgpack.Encoder) error {
+func (g *getANumberRetVals) EncodeMsg(enc *msgpack.Encoder) error {
 	err := enc.EncodeInt(g.i)
 	if err != nil {
 		return err
@@ -236,9 +241,9 @@ func getANumber() (int, error, error) {
 }
 
 func (t *NeovimTest) TestFunctionOnChannel(c *C) {
-	t.client.RegisterSyncRequestHandler("GetANumber", newGetANumberDecoder())
+	t.client.RegisterSyncRequestHandler("GetANumber", newGetANumberResponder)
 	topic := "GetANumber"
-	commandDef := fmt.Sprintf(`call rpc#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
+	commandDef := fmt.Sprintf(`call remote#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
 	_ = t.client.Command(commandDef)
 	res, _ := t.client.Eval(`GetANumber()`)
 	c.Assert(res, Equals, int64(42))

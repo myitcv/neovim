@@ -135,7 +135,10 @@ func NewClient(im InitMethod, c io.ReadWriteCloser, log Logger) (*Client, error)
 	res.log = log
 	res.KillChannel = make(chan struct{})
 
-	err := res.syncProvMap.Put(_MethodInit, &initMethodDecoder{InitMethod: im})
+	err := res.syncProvMap.Put(_MethodInit, func() SyncDecoder {
+		res := &InitMethodWrapper{InitMethod: im}
+		return res
+	})
 	if err != nil {
 		return nil, errors.Annotatef(err, "Could not add init method handler")
 	}
@@ -147,7 +150,7 @@ func (c *Client) Run() {
 	go c.doListen()
 }
 
-func (c *Client) RegisterSyncRequestHandler(m string, d SyncDecoder) error {
+func (c *Client) RegisterSyncRequestHandler(m string, d NewSyncDecoder) error {
 	if m == _MethodInit {
 		return errors.Errorf("Cannot register a provider with the protected method %v", _MethodInit)
 	}
@@ -159,7 +162,7 @@ func (c *Client) RegisterSyncRequestHandler(m string, d SyncDecoder) error {
 	return nil
 }
 
-func (c *Client) RegisterAsyncRequestHandler(m string, d AsyncDecoder) error {
+func (c *Client) RegisterAsyncRequestHandler(m string, d NewAsyncDecoder) error {
 	err := c.asyncProvMap.Put(m, d)
 	if err != nil {
 		return errors.Annotatef(err, "Could not store RequestHanlder in provider map")
@@ -216,28 +219,30 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode request method name: %v", err)
 			}
 
-			decoder, err := c.syncProvMap.Get(reqMeth)
+			newdecoder, err := c.syncProvMap.Get(reqMeth)
 			if err != nil {
 				c.log.Fatalf("Could not find RequestHandler for method [%v]: %v\n", reqMeth, err)
 			}
 
-			runner, err := decoder.Decode(dec)
+			dre := newdecoder()
+
+			err = dre.DecodeMsg(c.dec)
 			if err == io.EOF {
 				break
 			} else if err != nil {
 				c.log.Fatalf("Could not decode request method args: %v", err)
 			}
 
-			go func(rr SyncRunner) {
-				encoder, mErr, err := rr.Run()
+			go func() {
+				mErr, err := dre.Run()
 				if err != nil {
 					c.log.Fatalf("Could not run method: %v\n", err)
 				}
-				err = c.sendResponse(reqID, mErr, encoder)
+				err = c.sendResponse(reqID, mErr, dre)
 				if err != nil {
 					c.log.Fatalf("Could not send response: %v\n", err)
 				}
-			}(runner)
+			}()
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
@@ -290,12 +295,13 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode topic: %v", err)
 			}
 
-			decoder, err := c.asyncProvMap.Get(topic)
+			newDecoder, err := c.asyncProvMap.Get(topic)
 			if err != nil {
 				c.log.Fatalf("Could not find async handler for topic [%v]: %v\n", topic, err)
 			}
 
-			runner, err := decoder.Decode(dec)
+			dr := newDecoder()
+			err = dr.DecodeMsg(c.dec)
 			if err == io.EOF {
 				break
 			} else if err != nil {
@@ -303,7 +309,7 @@ func (c *Client) doListen() error {
 			}
 
 			// TODO make async?
-			err = runner.Run()
+			err = dr.Run()
 			if err != nil {
 				c.log.Fatalf("Could not run async notification")
 			}
@@ -318,7 +324,7 @@ func (c *Client) doListen() error {
 	return nil
 }
 
-func (c *Client) sendResponse(reqID uint32, respErr error, e SyncEncoder) error {
+func (c *Client) sendResponse(reqID uint32, respErr error, e SyncDecoder) error {
 	if e == nil {
 		c.log.Fatalf("Need to send an encoder...")
 	}
@@ -350,7 +356,7 @@ func (c *Client) sendResponse(reqID uint32, respErr error, e SyncEncoder) error 
 		return errors.Annotate(err, "Could not encode response error")
 	}
 
-	err = e.Encode(enc)
+	err = e.EncodeMsg(c.enc)
 	if err != nil {
 		return errors.Annotate(err, "Could not encode response vals")
 	}
@@ -391,7 +397,8 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 		return nil, errors.Annotate(err, "Could not encode request ID")
 	}
 
-	err = enc.EncodeBytes([]byte(reqMethID))
+	// err = enc.EncodeBytes([]byte(reqMethID))
+	err = enc.EncodeString(string(reqMethID))
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not encode request method ID")
 	}
