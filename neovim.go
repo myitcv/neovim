@@ -233,7 +233,7 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode request method args: %v", err)
 			}
 
-			go func() {
+			go func(reqID uint32, dre SyncDecoder) {
 				mErr, err := dre.Run()
 				if err != nil {
 					c.log.Fatalf("Could not run method: %v\n", err)
@@ -242,7 +242,7 @@ func (c *Client) doListen() error {
 				if err != nil {
 					c.log.Fatalf("Could not send response: %v\n", err)
 				}
-			}()
+			}(reqID, dre)
 		case 1:
 			// handle response
 			reqID, err := dec.DecodeUint32()
@@ -308,11 +308,12 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode request method args: %v", err)
 			}
 
-			// TODO make async?
-			err = dr.Run()
-			if err != nil {
-				c.log.Fatalf("Could not run async notification")
-			}
+			go func(dr AsyncDecoder) {
+				err = dr.Run()
+				if err != nil {
+					c.log.Fatalf("Could not run async notification")
+				}
+			}(dr)
 
 		default:
 			c.log.Fatalf("Unexpected type of message: %v\n", t)
