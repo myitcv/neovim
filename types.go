@@ -12,8 +12,8 @@ import (
 )
 
 //go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "respSyncMap(uint32, *responseHolder)"
-//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "syncProvSyncMap(string, SyncDecoder)"
-//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "asyncProvSyncMap(string, AsyncDecoder)"
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "syncProvSyncMap(string, NewSyncDecoder)"
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "asyncProvSyncMap(string, NewAsyncDecoder)"
 
 type neovimMethodID string
 
@@ -61,31 +61,37 @@ const (
 	_MethodInit string = "plugin_load"
 )
 
+type SyncRunner interface {
+	Run() (error, error)
+}
+
 type AsyncRunner interface {
 	Run() error
 }
 
-type SyncRunner interface {
-	Run() (SyncEncoder, error, error)
+type Encoder interface {
+	EncodeMsg(*msgpack.Encoder) error
 }
 
-type SyncEncoder interface {
-	Encode(*msgpack.Encoder) error
-}
-
-// *** IMPORTANT *** the Decoder passed will be reused
-// and will be used on a different goroutine to the Runner
-// it returns
+type NewSyncDecoder func() SyncDecoder
+type NewAsyncDecoder func() AsyncDecoder
 
 // Use for async notifications
 // Here the error would simply be reported to the log
 // (because there is nothing to return)
-type AsyncDecoder interface {
-	Decode(*msgpack.Decoder) (AsyncRunner, error)
+type Decoder interface {
+	DecodeMsg(*msgpack.Decoder) error
 }
 
 type SyncDecoder interface {
-	Decode(*msgpack.Decoder) (SyncRunner, error)
+	Decoder
+	SyncRunner
+	Encoder
+}
+
+type AsyncDecoder interface {
+	Decoder
+	AsyncRunner
 }
 
 // Buffer represents a Neovim Buffer

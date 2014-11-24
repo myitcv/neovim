@@ -1,11 +1,9 @@
 package example
 
-import (
-	"log"
+import
 
-	// import the neovim package
-	"github.com/myitcv/neovim"
-)
+// import the neovim package
+"github.com/myitcv/neovim"
 
 type Example struct {
 	client *neovim.Client
@@ -16,13 +14,12 @@ func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 	n.client = c
 	n.log = l
 
-	g := n.newGetANumberDecoder()
-	err := n.client.RegisterSyncRequestHandler(":function:GetANumber", g)
+	err := n.client.RegisterSyncRequestHandler(":function:GetANumber", n.newGetANumberResponder)
 	if err != nil {
 		n.log.Fatalf("Could not register sync request handler: %v\n", err)
 	}
 
-	ch, d := n.newBufCreateSub()
+	ch, d := n.newBufCreateChanHandler()
 	err = n.client.RegisterAsyncRequestHandler(":autocmd:BufCreate:*", d)
 	if err != nil {
 		n.log.Fatalf("Could not register async request handler: %v\n", err)
@@ -36,12 +33,13 @@ func (n *Example) Shutdown() error {
 	return nil
 }
 
+type Blah int
+
 type BufCreate struct {
 	BufNumber int
 }
 
 func (n *Example) GetANumber() (int, error, error) {
-	log.Printf("Got a request to getANumber\n")
 	return 42, nil, nil
 }
 

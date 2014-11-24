@@ -10,17 +10,17 @@ import (
 
 type syncProvSyncMap struct {
 	lock   *sync.Mutex
-	theMap map[string]SyncDecoder
+	theMap map[string]NewSyncDecoder
 }
 
 func newsyncProvSyncMap() *syncProvSyncMap {
 	return &syncProvSyncMap{
 		lock:   new(sync.Mutex),
-		theMap: make(map[string]SyncDecoder),
+		theMap: make(map[string]NewSyncDecoder),
 	}
 }
 
-func (s *syncProvSyncMap) Put(k string, v SyncDecoder) error {
+func (s *syncProvSyncMap) Put(k string, v NewSyncDecoder) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -32,7 +32,7 @@ func (s *syncProvSyncMap) Put(k string, v SyncDecoder) error {
 	return nil
 }
 
-func (s *syncProvSyncMap) Get(k string) (res SyncDecoder, retErr error) {
+func (s *syncProvSyncMap) Get(k string) (res NewSyncDecoder, retErr error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 

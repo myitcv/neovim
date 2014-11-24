@@ -1,6 +1,7 @@
 package example
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -14,7 +15,7 @@ import (
 type ExampleTest struct {
 	client *neovim.Client
 	nvim   *exec.Cmd
-	plug   neovim.Plugin
+	plug   *Example
 }
 
 func Test(t *testing.T) { TestingT(t) }
@@ -61,5 +62,10 @@ func (t *ExampleTest) TearDownTest(c *C) {
 }
 
 func (t *ExampleTest) TestGetANumber(c *C) {
-	// _ = t.client.Command("call GetANumber()")
+	t.client.RegisterSyncRequestHandler("GetANumber", t.plug.newGetANumberResponder)
+	topic := "GetANumber"
+	commandDef := fmt.Sprintf(`call rpc#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
+	_ = t.client.Command(commandDef)
+	res, _ := t.client.Eval(`GetANumber()`)
+	c.Assert(res, Equals, int64(42))
 }

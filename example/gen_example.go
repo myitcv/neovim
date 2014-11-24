@@ -6,100 +6,94 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-func (e *Example) newBufCreateSub() (chan *BufCreate, neovim.AsyncDecoder) {
+func (e *Example) newBufCreateChanHandler() (chan *BufCreate, neovim.NewAsyncDecoder) {
 	ch := make(chan *BufCreate)
-	res := &bufCreateDecoder{ch: ch}
+	res := func() neovim.AsyncDecoder {
+		return &bufCreateSubWrapper{ch: ch}
+	}
 	return ch, res
 }
 
-func (e *Example) newGetANumberDecoder() neovim.SyncDecoder {
-	res := &getANumberDecoder{Example: e}
-	return res
-}
-
-type bufCreateDecoder struct {
+type bufCreateSubWrapper struct {
 	ch chan *BufCreate
+	*BufCreate
 }
 
-type bufCreateRunner struct {
-	ch chan *BufCreate
-	v  *BufCreate
-}
-
-func (b *bufCreateDecoder) Decode(dec *msgpack.Decoder) (neovim.AsyncRunner, error) {
-	val := &BufCreate{}
-
+func (b *BufCreate) DecodeMsg(dec *msgpack.Decoder) error {
 	l, err := dec.DecodeSliceLen()
 	if err != nil {
-		return nil, errors.Annotatef(err, "Could not decode slice len")
+		return errors.Annotatef(err, "Could not decode slice len")
 	}
 
 	if l != 0 {
-		return nil, errors.Errorf("Expected 0 arguments, not %v", l)
+		return errors.Errorf("Expected 0 arguments, not %v", l)
 	}
-
-	res := &bufCreateRunner{}
-	res.v = val
-	res.ch = b.ch
-
-	return res, nil
-}
-
-func (b *bufCreateRunner) Run() error {
-	b.ch <- b.v
 
 	return nil
 }
 
-type getANumberDecoder struct {
-	*Example
+func (b *bufCreateSubWrapper) Run() error {
+	b.ch <- b.BufCreate
+
+	return nil
 }
 
-type getANumberRunner struct {
-	*Example
+func (e *Example) newGetANumberResponder() neovim.SyncDecoder {
+	res := &getANumberWrapper{Example: e}
+	return res
 }
 
-type getANumberEncoder struct {
+type getANumberWrapper struct {
+	*Example
+	*getANumberArgs
+	*getANumberRetVals
+}
+
+type getANumberArgs struct{}
+
+type getANumberRetVals struct {
 	i int
 }
 
-func (g *getANumberDecoder) Decode(dec *msgpack.Decoder) (neovim.SyncRunner, error) {
+func (g *getANumberArgs) DecodeMsg(dec *msgpack.Decoder) error {
 	l, err := dec.DecodeSliceLen()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if l != 1 {
-		return nil, errors.Errorf("Expected 1 argument, not %v", l)
+		return errors.Errorf("Expected 1 argument, not %v", l)
 	}
 
 	l, err = dec.DecodeSliceLen()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if l != 0 {
-		return nil, errors.Errorf("Expected 0 argument, not %v", l)
+		return errors.Errorf("Expected 0 argument, not %v", l)
 	}
 
-	return &getANumberRunner{Example: g.Example}, nil
+	return nil
 }
 
-func (g *getANumberRunner) Run() (neovim.SyncEncoder, error, error) {
-	res := &getANumberEncoder{}
+func (g *getANumberWrapper) Run() (error, error) {
+	res := &getANumberRetVals{}
 
 	i, mErr, err := g.Example.GetANumber()
 
 	if err != nil || mErr != nil {
-		return nil, mErr, err
+		return mErr, err
 	}
 
 	res.i = i
 
-	return res, nil, nil
+	g.getANumberRetVals = res
+
+	return nil, nil
 }
 
-func (g *getANumberEncoder) Encode(enc *msgpack.Encoder) error {
+func (g *getANumberRetVals) EncodeMsg(enc *msgpack.Encoder) error {
 	err := enc.EncodeInt(g.i)
 	if err != nil {
 		return err

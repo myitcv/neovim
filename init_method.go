@@ -5,32 +5,33 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-type initMethodDecoder struct {
+type InitMethodWrapper struct {
+	InitMethod
+	*InitMethodArgs
+	*InitMethodRetVals
+}
+
+type InitMethodArgs struct {
+}
+
+type InitMethodRetVals struct {
 	InitMethod
 }
 
-type initMethodRunner struct {
-	InitMethod
-}
-
-type initMethodEncoder struct{}
-
-func (i *initMethodDecoder) Decode(dec *msgpack.Decoder) (SyncRunner, error) {
+func (i *InitMethodArgs) DecodeMsg(dec *msgpack.Decoder) error {
 	l, err := dec.DecodeSliceLen()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if l != 0 {
-		return nil, errors.Errorf("Expected 0 arguments, not %v", l)
+		return errors.Errorf("Expected 0 arguments, not %v", l)
 	}
 
-	res := &initMethodRunner{InitMethod: i.InitMethod}
-
-	return res, nil
+	return nil
 }
 
-func (i *initMethodEncoder) Encode(enc *msgpack.Encoder) error {
+func (i *InitMethodRetVals) EncodeMsg(enc *msgpack.Encoder) error {
 	err := enc.EncodeNil()
 	if err != nil {
 		return err
@@ -39,6 +40,6 @@ func (i *initMethodEncoder) Encode(enc *msgpack.Encoder) error {
 	return nil
 }
 
-func (i *initMethodRunner) Run() (SyncEncoder, error, error) {
-	return &initMethodEncoder{}, nil, i.InitMethod()
+func (i *InitMethodWrapper) Run() (error, error) {
+	return nil, i.InitMethod()
 }
