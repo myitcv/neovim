@@ -23,7 +23,6 @@ type Plugins struct {
 }
 
 var fInit = flag.Bool("init", false, "create the plugin host directory and corresponding config file")
-var fPackage = flag.String("package", "", "the package in which the plugins are defined")
 
 var homeDir = os.Getenv("HOME")
 var pluginDir = fmt.Sprintf("%v/.nvim/plugins/go", homeDir)
@@ -37,18 +36,21 @@ func main() {
 		doInit()
 		return
 	}
-	if *fPackage == "" {
-		log.Fatalf("Need to specify a package")
+	if len(flag.Args()) != 1 {
+		log.Fatalf("Need to supply exactly one package (for now)")
 	}
-	newPluginHostTmpDir := install(*fPackage)
+	newPluginHostTmpDir := install(flag.Arg(0))
+	log.Printf("Putting plugin host source into place: %v\n", pluginDir+"/plugin_host.go")
 	err := os.Rename(newPluginHostTmpDir+"/plugin_host.go", pluginDir+"/plugin_host.go")
 	if err != nil {
 		log.Fatalf("Could not move new plugin host source into place: %v\n", err)
 	}
+	log.Printf("Putting plugin host into place: %v\n", pluginDir+"/plugin_host")
 	err = os.Rename(newPluginHostTmpDir+"/plugin_host", pluginDir+"/plugin_host")
 	if err != nil {
 		log.Fatalf("Could not move new plugin host into place: %v\n", err)
 	}
+	log.Printf("Done!")
 }
 
 func doInit() {
@@ -126,14 +128,12 @@ func install(pkg string) string {
 	// c := newCommand(envo, "go", "version")
 	// err = c.Run()
 	output, err := c.CombinedOutput()
-	fmt.Printf("We have output: %v\n", string(output))
 	if err != nil {
 		log.Fatalf("Could not go get plugin package: %v\n", string(output))
 	}
 	log.Printf("Now running go test %v\n", pkg)
 	c = newCommand(envo, "go", "test", pkg)
 	output, err = c.CombinedOutput()
-	fmt.Printf("We have output: %v\n", string(output))
 	if err != nil {
 		log.Fatalf("Could not go test plugin: %v\n", err)
 	}
@@ -141,7 +141,6 @@ func install(pkg string) string {
 	// Now we need to get the exported types that implement the neovim.Plugin
 	// interface
 
-	fmt.Printf("Now getting the types: %v\n", pkg)
 	pluginTypes := getPluginImplementingTypes(pkg)
 
 	realPluginTypes := make([]pluginType, 0)
@@ -153,6 +152,7 @@ func install(pkg string) string {
 		realPluginTypes = append(realPluginTypes, elem)
 	}
 
+	log.Printf("Generating plugin host\n")
 	temp := template.New("plugin_host")
 	template.Must(temp.Parse(pluginHostTemplate))
 	pluginHostOutFile, err := os.OpenFile(tmpDir+"/plugin_host.go", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
@@ -160,13 +160,13 @@ func install(pkg string) string {
 		log.Fatalf("Could not create API out file: %v\n", err)
 	}
 
+	log.Printf("Building plugin host\n")
 	err = temp.Execute(pluginHostOutFile, realPluginTypes)
 	if err != nil {
 		log.Fatalf("Could not write plugin host: %v\n", err)
 	}
 	c = newCommand(envo, "go", "build", "-o", "plugin_host")
 	output, err = c.CombinedOutput()
-	fmt.Printf("We have output: %v\n", string(output))
 	if err != nil {
 		log.Fatalf("Could not go build plugin host: %v\n", err)
 	}
