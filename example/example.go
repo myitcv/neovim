@@ -33,8 +33,6 @@ func (n *Example) Shutdown() error {
 	return nil
 }
 
-type Blah int
-
 type BufCreate struct {
 	BufNumber int
 }
