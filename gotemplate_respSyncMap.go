@@ -39,8 +39,6 @@ func (s *respSyncMap) Get(k uint32) (res *responseHolder, retErr error) {
 	res, present := s.theMap[k]
 	if !present {
 		retErr = errors.Errorf("Key does not exist for %v", k)
-	} else {
-		delete(s.theMap, k)
 	}
 
 	return

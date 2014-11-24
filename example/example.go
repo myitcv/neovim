@@ -24,6 +24,8 @@ func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 	if err != nil {
 		n.log.Fatalf("Could not register async request handler: %v\n", err)
 	}
+
+	n.log.Println("*****************")
 	go n.subLoop(ch)
 
 	return nil
