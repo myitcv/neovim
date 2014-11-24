@@ -9,7 +9,7 @@ eval "$(curl -Ss https://raw.githubusercontent.com/neovim/bot-ci/master/scripts/
 # (this ensures that the Neovim API hasn't moved on without us
 # knowing)
 
-pushd $TRAVIS_BUILD_DIR/_cmd/gen_neovim_api/
+pushd $TRAVIS_BUILD_DIR/cmd/gen_neovim_api/
 go get -d -t -v ./... && go build -v ./...
 x=`mktemp`
 NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/bin/nvim ./gen_neovim_api -g -o api.go.gen -t api_test.go.gen
