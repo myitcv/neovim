@@ -23,7 +23,7 @@ func Test(t *testing.T) { TestingT(t) }
 var _ = Suite(&ExampleTest{})
 
 func (t *ExampleTest) SetUpTest(c *C) {
-	t.nvim = exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
+	t.nvim = exec.Command("nvim", "-u", "/dev/null")
 	t.nvim.Dir = "/tmp"
 	client, err := neovim.NewCmdClient(neovim.NullInitMethod, t.nvim, nil)
 	if err != nil {
