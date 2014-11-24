@@ -243,7 +243,7 @@ func getANumber() (int, error, error) {
 func (t *NeovimTest) TestFunctionOnChannel(c *C) {
 	t.client.RegisterSyncRequestHandler("GetANumber", newGetANumberResponder)
 	topic := "GetANumber"
-	commandDef := fmt.Sprintf(`call rpc#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
+	commandDef := fmt.Sprintf(`call remote#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
 	_ = t.client.Command(commandDef)
 	res, _ := t.client.Eval(`GetANumber()`)
 	c.Assert(res, Equals, int64(42))
