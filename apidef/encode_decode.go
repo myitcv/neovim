@@ -2,7 +2,7 @@ package apidef
 
 import (
 	"github.com/juju/errors"
-	"github.com/vmihailenco/msgpack"
+	"github.com/tinylib/msgp/msgp"
 )
 
 // An API represents the API as advertised by Neovim
@@ -28,6 +28,7 @@ type APIFunction struct {
 	Deferred          bool
 	ReceivesChannelID bool
 	Parameters        []APIFunctionParameter
+	Async             bool
 }
 
 type APIFeature struct {
@@ -40,9 +41,9 @@ type APIFunctionParameter struct {
 	Type, Name string
 }
 
-func GetAPI(ad *msgpack.Decoder) (*API, error) {
+func GetAPI(ad *msgp.Reader) (*API, error) {
 
-	ml, err := ad.DecodeMapLen()
+	ml, err := ad.ReadMapHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode map length")
 
@@ -50,8 +51,8 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 
 	resp := &API{}
 
-	for i := 0; i < ml; i++ {
-		k, err := ad.DecodeBytes()
+	for i := uint32(0); i < ml; i++ {
+		k, err := ad.ReadBytes(nil)
 		if err != nil {
 			return nil, errors.Annotate(err, "Could not decode key of top level api map")
 		}
@@ -70,7 +71,7 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 			}
 			resp.Functions = functions
 		case "features":
-			ml, err := ad.DecodeMapLen()
+			ml, err := ad.ReadMapHeader()
 			if err != nil {
 				return nil, errors.Annotate(err, "Could not decode map length")
 			}
@@ -78,14 +79,14 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 			features := make([]APIFeature, ml)
 
 			for i := range features {
-				fn, err := ad.DecodeBytes()
+				fn, err := ad.ReadBytes(nil)
 				if err != nil {
 					return nil, errors.Annotate(err, "Could not decode feature name")
 				}
 
 				features[i].Name = string(fn)
 
-				meths, err := ad.DecodeSliceLen()
+				meths, err := ad.ReadArrayHeader()
 				if err != nil {
 					return nil, errors.Annotate(err, "Could not decode length of features methods slice")
 				}
@@ -93,7 +94,7 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 				features[i].Methods = make([]string, meths)
 
 				for j := range features[i].Methods {
-					mn, err := ad.DecodeBytes()
+					mn, err := ad.ReadBytes(nil)
 					if err != nil {
 						return nil, errors.Annotatef(err, "Could not decode feature method name at index %v", j)
 					}
@@ -112,14 +113,14 @@ func GetAPI(ad *msgpack.Decoder) (*API, error) {
 	return resp, nil
 }
 
-func decodeAPIClass(d *msgpack.Decoder) (APIClass, error) {
+func decodeAPIClass(d *msgp.Reader) (APIClass, error) {
 	resp := APIClass{}
-	cn, err := d.DecodeBytes()
+	cn, err := d.ReadBytes(nil)
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode class name")
 	}
 
-	ml, err := d.DecodeMapLen()
+	ml, err := d.ReadMapHeader()
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode map length")
 	}
@@ -128,7 +129,7 @@ func decodeAPIClass(d *msgpack.Decoder) (APIClass, error) {
 		return resp, errors.Errorf("Expected map length of 1; got %v", ml)
 	}
 
-	mk, err := d.DecodeBytes()
+	mk, err := d.ReadBytes(nil)
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode ID key")
 	}
@@ -137,7 +138,7 @@ func decodeAPIClass(d *msgpack.Decoder) (APIClass, error) {
 		return resp, errors.Errorf("Expected single key to be 'id'; got %v", mk)
 	}
 
-	id, err := d.DecodeInt()
+	id, err := d.ReadInt()
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode ID value")
 	}
@@ -147,15 +148,15 @@ func decodeAPIClass(d *msgpack.Decoder) (APIClass, error) {
 	return resp, nil
 }
 
-func decodeAPIClassSlice(d *msgpack.Decoder) ([]APIClass, error) {
-	sl, err := d.DecodeMapLen()
+func decodeAPIClassSlice(d *msgp.Reader) ([]APIClass, error) {
+	sl, err := d.ReadMapHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	resp := make([]APIClass, sl)
 
-	for i := 0; i < sl; i++ {
+	for i := uint32(0); i < sl; i++ {
 		nvc, err := decodeAPIClass(d)
 		if err != nil {
 			return nil, errors.Annotatef(err, "Could not decode class at index %v", i)
@@ -165,46 +166,52 @@ func decodeAPIClassSlice(d *msgpack.Decoder) ([]APIClass, error) {
 	return resp, nil
 }
 
-func decodeAPIFunction(d *msgpack.Decoder) (APIFunction, error) {
+func decodeAPIFunction(d *msgp.Reader) (APIFunction, error) {
 	resp := APIFunction{}
-	ml, err := d.DecodeMapLen()
+	ml, err := d.ReadMapHeader()
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode map length")
 	}
 
-	for i := 0; i < ml; i++ {
-		k, err := d.DecodeString()
+	for i := uint32(0); i < ml; i++ {
+		k, err := d.ReadBytes(nil)
 		if err != nil {
 			return resp, errors.Annotate(err, "Could not decode function property key")
 		}
 
-		switch k {
+		switch string(k) {
 		case "name":
-			s, err := d.DecodeString()
+			s, err := d.ReadBytes(nil)
 			if err != nil {
 				return resp, errors.Annotate(err, "Could not decode function name")
 			}
-			resp.Name = s
+			resp.Name = string(s)
 		case "receives_channel_id":
-			b, err := d.DecodeBool()
+			b, err := d.ReadBool()
 			if err != nil {
 				return resp, errors.Annotate(err, "Could not decode function receives_channel_id")
 			}
 			resp.ReceivesChannelID = b
 		case "can_fail":
-			b, err := d.DecodeBool()
+			b, err := d.ReadBool()
 			if err != nil {
 				return resp, errors.Annotate(err, "Could not decode function can_fail")
 			}
 			resp.CanFail = b
+		case "async":
+			b, err := d.ReadBool()
+			if err != nil {
+				return resp, errors.Annotate(err, "Could not decode function can_fail")
+			}
+			resp.Async = b
 		case "return_type":
-			s, err := d.DecodeString()
+			s, err := d.ReadBytes(nil)
 			if err != nil {
 				return resp, errors.Annotate(err, "Could not decode function return type")
 			}
-			resp.ReturnType = s
+			resp.ReturnType = string(s)
 		case "id":
-			i, err := d.DecodeUint32()
+			i, err := d.ReadUint32()
 			if err != nil {
 				return resp, errors.Annotate(err, "Could not decode function id")
 			}
@@ -216,28 +223,28 @@ func decodeAPIFunction(d *msgpack.Decoder) (APIFunction, error) {
 			}
 			resp.Parameters = ps
 		case "deferred":
-			b, err := d.DecodeBool()
+			b, err := d.ReadBool()
 			if err != nil {
 				return resp, errors.Annotate(err, "Could not decode deferred property")
 			}
 			resp.Deferred = b
 		default:
-			return resp, errors.Errorf("Unknown function property %v", k)
+			return resp, errors.Errorf("Unknown function property %v", string(k))
 		}
 	}
 
 	return resp, nil
 }
 
-func decodeAPIFunctionSlice(d *msgpack.Decoder) ([]APIFunction, error) {
-	sl, err := d.DecodeSliceLen()
+func decodeAPIFunctionSlice(d *msgp.Reader) ([]APIFunction, error) {
+	sl, err := d.ReadArrayHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	resp := make([]APIFunction, sl)
 
-	for i := 0; i < sl; i++ {
+	for i := uint32(0); i < sl; i++ {
 		nvc, err := decodeAPIFunction(d)
 		if err != nil {
 			return nil, errors.Annotatef(err, "Could not decode function at index %v", i)
@@ -247,11 +254,11 @@ func decodeAPIFunctionSlice(d *msgpack.Decoder) ([]APIFunction, error) {
 	return resp, nil
 }
 
-func decodeAPIFunctionParameter(d *msgpack.Decoder) (APIFunctionParameter, error) {
+func decodeAPIFunctionParameter(d *msgp.Reader) (APIFunctionParameter, error) {
 	resp := APIFunctionParameter{}
 
 	// we should have a slice of length 2
-	sl, err := d.DecodeSliceLen()
+	sl, err := d.ReadArrayHeader()
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode slice length")
 	}
@@ -260,28 +267,28 @@ func decodeAPIFunctionParameter(d *msgpack.Decoder) (APIFunctionParameter, error
 		return resp, errors.Errorf("Expected lenght to be 2; got %v", sl)
 	}
 
-	pt, err := d.DecodeString()
+	pt, err := d.ReadBytes(nil)
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode class name")
 	}
-	resp.Type = pt
-	pn, err := d.DecodeString()
+	resp.Type = string(pt)
+	pn, err := d.ReadBytes(nil)
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode class name")
 	}
-	resp.Name = pn
+	resp.Name = string(pn)
 	return resp, nil
 }
 
-func decodeAPIFunctionParameterSlice(d *msgpack.Decoder) ([]APIFunctionParameter, error) {
-	sl, err := d.DecodeSliceLen()
+func decodeAPIFunctionParameterSlice(d *msgp.Reader) ([]APIFunctionParameter, error) {
+	sl, err := d.ReadArrayHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	resp := make([]APIFunctionParameter, sl)
 
-	for i := 0; i < sl; i++ {
+	for i := uint32(0); i < sl; i++ {
 		nvc, err := decodeAPIFunctionParameter(d)
 		if err != nil {
 			return nil, errors.Annotatef(err, "Could not decode function parameter at index %v", i)

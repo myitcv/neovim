@@ -1,103 +1,97 @@
+//go:generate msgp
 package example
 
 import (
-	"github.com/juju/errors"
 	"github.com/myitcv/neovim"
-	"github.com/vmihailenco/msgpack"
+	"github.com/tinylib/msgp/msgp"
 )
 
-func (e *Example) newBufCreateChanHandler() (chan *BufCreate, neovim.NewAsyncDecoder) {
-	ch := make(chan *BufCreate)
-	res := func() neovim.AsyncDecoder {
-		return &bufCreateSubWrapper{ch: ch}
+// **************************
+// DoSomethingAsync
+func (n *Example) newDoSomethingAsyncResponder() neovim.AsyncDecoder {
+	return &doSomethingAsyncWrapper{
+		Example: n,
+		args:    &DoSomethingAsyncArgs{},
 	}
-	return ch, res
 }
 
-type bufCreateSubWrapper struct {
-	ch chan *BufCreate
-	*BufCreate
+func (n *doSomethingAsyncWrapper) Args() msgp.Decodable {
+	return n.args
 }
 
-func (b *BufCreate) DecodeMsg(dec *msgpack.Decoder) error {
-	l, err := dec.DecodeSliceLen()
-	if err != nil {
-		return errors.Annotatef(err, "Could not decode slice len")
-	}
-
-	if l != 0 {
-		return errors.Errorf("Expected 0 arguments, not %v", l)
-	}
-
-	return nil
-}
-
-func (b *bufCreateSubWrapper) Run() error {
-	b.ch <- b.BufCreate
-
-	return nil
-}
-
-func (e *Example) newGetANumberResponder() neovim.SyncDecoder {
-	res := &getANumberWrapper{Example: e}
-	return res
-}
-
-type getANumberWrapper struct {
+type doSomethingAsyncWrapper struct {
 	*Example
-	*getANumberArgs
-	*getANumberRetVals
+	args *DoSomethingAsyncArgs
 }
 
-type getANumberArgs struct{}
-
-type getANumberRetVals struct {
-	i int
+//msgp:tuple DoSomethingAsyncArgs
+type DoSomethingAsyncArgs struct {
+	FunctionArgs DoSomethingAsyncFunctionArgs
 }
 
-func (g *getANumberArgs) DecodeMsg(dec *msgpack.Decoder) error {
-	l, err := dec.DecodeSliceLen()
-	if err != nil {
-		return err
-	}
-
-	if l != 1 {
-		return errors.Errorf("Expected 1 argument, not %v", l)
-	}
-
-	l, err = dec.DecodeSliceLen()
-	if err != nil {
-		return err
-	}
-
-	if l != 0 {
-		return errors.Errorf("Expected 0 argument, not %v", l)
-	}
-
-	return nil
+//msgp:tuple DoSomethingAsyncFunctionArgs
+type DoSomethingAsyncFunctionArgs struct {
+	Arg0 []byte
 }
 
-func (g *getANumberWrapper) Run() (error, error) {
-	res := &getANumberRetVals{}
+func (g *doSomethingAsyncWrapper) Run() error {
+	err := g.Example.DoSomethingAsync(string(g.args.FunctionArgs.Arg0))
+	return err
+}
 
-	i, mErr, err := g.Example.GetANumber()
+// **************************
+// GetTwoNumbers
+func (n *Example) newGetTwoNumbersResponder() neovim.SyncDecoder {
+	return &getTwoNumbersWrapper{
+		Example: n,
+		args:    &GetTwoNumbersArgs{},
+		results: &GetTwoNumbersResults{},
+	}
+}
+
+func (n *getTwoNumbersWrapper) Args() msgp.Decodable {
+	return n.args
+}
+
+func (n *getTwoNumbersWrapper) Results() msgp.Encodable {
+	return n.results
+}
+
+type getTwoNumbersWrapper struct {
+	*Example
+	args    *GetTwoNumbersArgs
+	results *GetTwoNumbersResults
+}
+
+//msgp:tuple GetTwoNumbersArgs
+type GetTwoNumbersArgs struct {
+	FunctionArgs GetTwoNumbersFunctionArgs
+}
+
+//msgp:tuple GetTwoNumbersFunctionArgs
+type GetTwoNumbersFunctionArgs struct {
+	Arg0 int64
+}
+
+//msgp:tuple GetTwoNumbersResults
+type GetTwoNumbersResults struct {
+	Ret0 int64
+	Ret1 []byte
+}
+
+func (g *getTwoNumbersWrapper) Run() (error, error) {
+	res := &GetTwoNumbersResults{}
+
+	retVal0, retVal1, mErr, err := g.Example.GetTwoNumbers(int(g.args.FunctionArgs.Arg0))
 
 	if err != nil || mErr != nil {
 		return mErr, err
 	}
 
-	res.i = i
+	res.Ret0 = int64(retVal0)
+	res.Ret1 = []byte(retVal1)
 
-	g.getANumberRetVals = res
+	g.results = res
 
 	return nil, nil
-}
-
-func (g *getANumberRetVals) EncodeMsg(enc *msgpack.Encoder) error {
-	err := enc.EncodeInt(g.i)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

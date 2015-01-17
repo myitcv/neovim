@@ -135,7 +135,7 @@ func install(pkg string) string {
 	c = newCommand(envo, "go", "test", pkg)
 	output, err = c.CombinedOutput()
 	if err != nil {
-		log.Fatalf("Could not go test plugin: %v\n", err)
+		log.Fatalf("Could not go test plugin: %v\n", string(output))
 	}
 
 	// Now we need to get the exported types that implement the neovim.Plugin

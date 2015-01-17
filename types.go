@@ -8,7 +8,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/vmihailenco/msgpack"
+	"github.com/tinylib/msgp/msgp"
 )
 
 //go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "respSyncMap(uint32, *responseHolder)"
@@ -20,8 +20,8 @@ type neovimMethodID string
 // A Client represents a connection to a single Neovim instance
 type Client struct {
 	rw           io.ReadWriteCloser
-	dec          *msgpack.Decoder
-	enc          *msgpack.Encoder
+	dec          *msgp.Reader
+	enc          *msgp.Writer
 	nextReq      uint32
 	respMap      *respSyncMap
 	syncProvMap  *syncProvSyncMap
@@ -37,7 +37,10 @@ type Client struct {
 	// This is useful for debugging.
 	PanicOnError bool
 	KillChannel  chan struct{}
-	log          Logger
+
+	// TODO remove this
+	HostName string
+	log      Logger
 }
 
 type InitMethod func() error
@@ -70,7 +73,7 @@ type AsyncRunner interface {
 }
 
 type Encoder interface {
-	EncodeMsg(*msgpack.Encoder) error
+	EncodeMsg(*msgp.Writer) error
 }
 
 type NewSyncDecoder func() SyncDecoder
@@ -80,17 +83,17 @@ type NewAsyncDecoder func() AsyncDecoder
 // Here the error would simply be reported to the log
 // (because there is nothing to return)
 type Decoder interface {
-	DecodeMsg(*msgpack.Decoder) error
+	DecodeMsg(*msgp.Reader) error
 }
 
 type SyncDecoder interface {
-	Decoder
+	Args() msgp.Decodable
 	SyncRunner
-	Encoder
+	Results() msgp.Encodable
 }
 
 type AsyncDecoder interface {
-	Decoder
+	Args() msgp.Decodable
 	AsyncRunner
 }
 
@@ -98,24 +101,78 @@ type AsyncDecoder interface {
 //
 // Multiple goroutines may invoke methods on a Buffer simultaneously
 type Buffer struct {
-	ID     uint32
+	ID     uint8
 	client *Client
+}
+
+func (b *Buffer) ExtensionType() int8 {
+	return typeBuffer
+}
+
+func (b *Buffer) Len() int {
+	return 1
+}
+
+func (b *Buffer) MarshalBinaryTo(buf []byte) error {
+	buf[0] = b.ID
+	return nil
+}
+
+func (b *Buffer) UnmarshalBinary(buf []byte) error {
+	b.ID = buf[0]
+	return nil
 }
 
 // Window represents a Neovim Window
 //
 // Multiple goroutines may invoke methods on a Window simultaneously
 type Window struct {
-	ID     uint32
+	ID     uint8
 	client *Client
+}
+
+func (b *Window) ExtensionType() int8 {
+	return typeWindow
+}
+
+func (b *Window) Len() int {
+	return 1
+}
+
+func (b *Window) MarshalBinaryTo(buf []byte) error {
+	buf[0] = b.ID
+	return nil
+}
+
+func (b *Window) UnmarshalBinary(buf []byte) error {
+	b.ID = buf[0]
+	return nil
 }
 
 // Tabpage represents a Neovim Tabpage
 //
 // Multiple goroutines may invoke methods on a Tabpage simultaneously
 type Tabpage struct {
-	ID     uint32
+	ID     uint8
 	client *Client
+}
+
+func (b *Tabpage) ExtensionType() int8 {
+	return typeTabpage
+}
+
+func (b *Tabpage) Len() int {
+	return 1
+}
+
+func (b *Tabpage) MarshalBinaryTo(buf []byte) error {
+	buf[0] = b.ID
+	return nil
+}
+
+func (b *Tabpage) UnmarshalBinary(buf []byte) error {
+	b.ID = buf[0]
+	return nil
 }
 
 // Logger is a local definition of the inteface effectively exposed by

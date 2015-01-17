@@ -71,7 +71,7 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/myitcv/neovim/apidef"
-	"github.com/vmihailenco/msgpack"
+	"github.com/tinylib/msgp/msgp"
 )
 
 // NewUnixClient is a convenience method for creating a new *Client. Method signature matches
@@ -130,13 +130,13 @@ func NewClient(im InitMethod, c io.ReadWriteCloser, log Logger) (*Client, error)
 	res.respMap = newrespSyncMap()
 	res.syncProvMap = newsyncProvSyncMap()
 	res.asyncProvMap = newasyncProvSyncMap()
-	res.dec = msgpack.NewDecoder(c)
-	res.enc = msgpack.NewEncoder(c)
+	res.dec = msgp.NewReader(c)
+	res.enc = msgp.NewWriter(c)
 	res.log = log
 	res.KillChannel = make(chan struct{})
 
 	err := res.syncProvMap.Put(_MethodInit, func() SyncDecoder {
-		res := &InitMethodWrapper{InitMethod: im}
+		res := &InitMethodWrapper{InitMethod: im, Client: res, args: &InitMethodArgs{}, results: &InitMethodRetVals{}}
 		return res
 	})
 	if err != nil {
@@ -186,14 +186,14 @@ func (c *Client) Close() error {
 func (c *Client) doListen() error {
 	dec := c.dec
 	for {
-		_, err := dec.DecodeSliceLen()
+		_, err := dec.ReadArrayHeader()
 		if err == io.EOF {
 			break
 		} else if err != nil {
 			c.log.Fatalf("Could not decode message slice length: %v", err)
 		}
 
-		t, err := dec.DecodeInt()
+		t, err := dec.ReadInt()
 		if err == io.EOF {
 			break
 		} else if err != nil {
@@ -205,28 +205,28 @@ func (c *Client) doListen() error {
 		// Neovim making a request to the Go client, and the Go client sending
 		// a response
 		case 0:
-			reqID, err := dec.DecodeUint32()
+			reqID, err := dec.ReadUint32()
 			if err == io.EOF {
 				break
 			} else if err != nil {
 				c.log.Fatalf("Could not decode request id: %v", err)
 			}
 
-			reqMeth, err := dec.DecodeString()
+			reqMeth, err := dec.ReadBytes(nil)
 			if err == io.EOF {
 				break
 			} else if err != nil {
 				c.log.Fatalf("Could not decode request method name: %v", err)
 			}
 
-			newdecoder, err := c.syncProvMap.Get(reqMeth)
+			newdecoder, err := c.syncProvMap.Get(string(reqMeth))
 			if err != nil {
 				c.log.Fatalf("Could not find RequestHandler for method [%v]: %v\n", reqMeth, err)
 			}
 
 			dre := newdecoder()
 
-			err = dre.DecodeMsg(c.dec)
+			err = dre.Args().DecodeMsg(c.dec)
 			if err == io.EOF {
 				break
 			} else if err != nil {
@@ -245,14 +245,14 @@ func (c *Client) doListen() error {
 			}(reqID, dre)
 		case 1:
 			// handle response
-			reqID, err := dec.DecodeUint32()
+			reqID, err := dec.ReadUint32()
 			if err == io.EOF {
 				break
 			} else if err != nil {
 				c.log.Fatalf("Could not decode request id: %v", err)
 			}
 
-			re, err := dec.DecodeInterface()
+			re, err := dec.ReadIntf()
 			if err == io.EOF {
 				break
 			} else if err != nil {
@@ -288,20 +288,20 @@ func (c *Client) doListen() error {
 			rh.ch <- resp
 		case 2:
 			// handle notification
-			topic, err := dec.DecodeString()
+			topic, err := dec.ReadBytes(nil)
 			if err == io.EOF {
 				break
 			} else if err != nil {
 				c.log.Fatalf("Could not decode topic: %v", err)
 			}
 
-			newDecoder, err := c.asyncProvMap.Get(topic)
+			newDecoder, err := c.asyncProvMap.Get(string(topic))
 			if err != nil {
 				c.log.Fatalf("Could not find async handler for topic [%v]: %v\n", topic, err)
 			}
 
 			dr := newDecoder()
-			err = dr.DecodeMsg(c.dec)
+			err = dr.Args().DecodeMsg(c.dec)
 			if err == io.EOF {
 				break
 			} else if err != nil {
@@ -336,30 +336,35 @@ func (c *Client) sendResponse(reqID uint32, respErr error, e SyncDecoder) error 
 	reqType := 1
 	enc := c.enc
 
-	err := enc.EncodeSliceLen(4)
+	err := enc.WriteArrayHeader(4)
 	if err != nil {
 		return errors.Annotate(err, "Could not encode request length")
 	}
 
-	err = enc.EncodeInt(reqType)
+	err = enc.WriteInt(reqType)
 	if err != nil {
 		return errors.Annotate(err, "Could not encode response type")
 	}
 
-	err = enc.EncodeUint32(reqID)
+	err = enc.WriteUint32(reqID)
 	if err != nil {
 		return errors.Annotate(err, "Could not encode reqID")
 	}
 
 	// TODO support for response errors with the respErr passed in
-	err = enc.EncodeNil()
+	err = enc.WriteNil()
 	if err != nil {
 		return errors.Annotate(err, "Could not encode response error")
 	}
 
-	err = e.EncodeMsg(c.enc)
+	err = e.Results().EncodeMsg(c.enc)
 	if err != nil {
 		return errors.Annotate(err, "Could not encode response vals")
+	}
+
+	err = enc.Flush()
+	if err != nil {
+		return errors.Annotate(err, "Could not flush response")
 	}
 
 	return nil
@@ -383,23 +388,23 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 		return nil, errors.Annotate(err, "Could not store response holder")
 	}
 
-	err = enc.EncodeSliceLen(4)
+	err = enc.WriteArrayHeader(4)
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not encode request length")
 	}
 
-	err = enc.EncodeInt(reqType)
+	err = enc.WriteInt(reqType)
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not encode request type")
 	}
 
-	err = enc.EncodeUint32(reqID)
+	err = enc.WriteUint32(reqID)
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not encode request ID")
 	}
 
 	// err = enc.EncodeBytes([]byte(reqMethID))
-	err = enc.EncodeString(string(reqMethID))
+	err = enc.WriteString(string(reqMethID))
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not encode request method ID")
 	}
@@ -407,6 +412,10 @@ func (c *Client) makeCall(reqMethID neovimMethodID, e encoder, d decoder) (chan 
 	err = e()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not encode method args ")
+	}
+	err = enc.Flush()
+	if err != nil {
+		return nil, errors.Annotate(err, "Could not flush encoder")
 	}
 
 	return res, nil
@@ -428,7 +437,7 @@ func (c *Client) GetAPIInfo() (ChannelID, *apidef.API, error) {
 	var retChanID ChannelID
 	var retAPI *apidef.API
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -437,7 +446,7 @@ func (c *Client) GetAPIInfo() (ChannelID, *apidef.API, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		l, _err := c.dec.DecodeSliceLen()
+		l, _err := c.dec.ReadArrayHeader()
 		if _err != nil {
 			return
 		}
@@ -446,7 +455,7 @@ func (c *Client) GetAPIInfo() (ChannelID, *apidef.API, error) {
 			return nil, errors.Errorf("Expected slice len to be 2; got %v", l)
 		}
 
-		chanID, _err := c.dec.DecodeUint8()
+		chanID, _err := c.dec.ReadUint8()
 		if _err != nil {
 			return
 		}

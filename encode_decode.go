@@ -7,7 +7,7 @@ package neovim
 import "github.com/juju/errors"
 
 func (c *Client) decodeString() (retVal string, retErr error) {
-	b, err := c.dec.DecodeBytes()
+	b, err := c.dec.ReadBytes(nil)
 	if err != nil {
 		return retVal, errors.Annotatef(err, "Could not decode string raw bytes")
 	}
@@ -15,7 +15,7 @@ func (c *Client) decodeString() (retVal string, retErr error) {
 }
 
 func (c *Client) encodeString(s string) error {
-	err := c.enc.EncodeBytes([]byte(s))
+	err := c.enc.WriteBytes([]byte(s))
 	if err != nil {
 		return errors.Annotatef(err, "Could not encode string raw bytes")
 	}

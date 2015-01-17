@@ -20,7 +20,7 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/myitcv/neovim/apidef"
-	"github.com/vmihailenco/msgpack"
+	"github.com/tinylib/msgp/msgp"
 )
 
 var generatedFunctions map[string]bool
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	br := bytes.NewReader(output)
-	ad := msgpack.NewDecoder(br)
+	ad := msgp.NewReader(br)
 
 	api, err := apidef.GetAPI(ad)
 	if err != nil {
@@ -183,12 +183,10 @@ func getType(s string) _type {
 
 func genMethodTemplates(fs []apidef.APIFunction) []methodTemplate {
 	// TODO make this cleaner - remove vim_get_api_info
-	fs_copy := make([]apidef.APIFunction, len(fs)-1)
-	i := 0
+	var fs_copy []apidef.APIFunction
 	for _, f := range fs {
-		if f.Name != "vim_get_api_info" {
-			fs_copy[i] = f
-			i++
+		if f.Name != "vim_get_api_info" && f.Name != "vim_call_function" && f.Name != "vim_get_color_map" {
+			fs_copy = append(fs_copy, f)
 		}
 	}
 	fs = fs_copy
@@ -378,7 +376,7 @@ import "github.com/juju/errors"
 // constants representing method ids
 
 const (
-	{{range .APITypes }}type{{.Name}} uint8 = {{.Id}}
+	{{range .APITypes }}type{{.Name}} int8 = {{.Id}}
 	{{end}}
 )
 
@@ -405,7 +403,7 @@ const (
 
 {{define "type"}}
 func (c *Client) encode{{.Name | camelize }}Slice(s []{{.Name}}) error {
-	err := c.enc.EncodeSliceLen(len(s))
+	err := c.enc.WriteArrayHeader(uint32(len(s)))
 	if err != nil {
 		return errors.Annotate(err, "Could not encode slice length")
 	}
@@ -425,14 +423,15 @@ func (c *Client) encode{{.Name | camelize }}Slice(s []{{.Name}}) error {
 }
 
 func (c *Client) decode{{.Name | camelize }}Slice() ([]{{.Name}}, error) {
-	l, err := c.dec.DecodeSliceLen()
+	l, err := c.dec.ReadArrayHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]{{.Name}}, l)
 
-	for i := 0; i < l; i++ {
+	var i uint32
+	for i = 0; i < l; i++ {
 		{{if .Primitive}}
 		b, err := c.dec.{{.Dec}}()
 		{{else}}
@@ -453,7 +452,7 @@ func (c *Client) decode{{.Name | camelize }}Slice() ([]{{.Name}}, error) {
 func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {{template "meth_ret" .Ret}} {
 	{{if .Ret}}var {{.Ret.Name}} {{.Ret.Type.Name}}{{end}}
 	enc := func() (_err error) {
-		_err = {{.Rec.Client}}.enc.EncodeSliceLen({{.NumParams}})
+		_err = {{.Rec.Client}}.enc.WriteArrayHeader({{.NumParams}})
 		if _err != nil {
 			return
 		}
@@ -485,7 +484,7 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 		{{else}} _i, _err = {{.Rec.Client}}.{{.Ret.Type.Dec}}(){{end}}
 		{{end}}
 		{{else}}
-		_, _err = {{.Rec.Client}}.dec.DecodeBytes()
+		_err = {{.Rec.Client}}.dec.ReadNil()
 		{{end}}
 		return
 	}
@@ -517,42 +516,17 @@ func {{template "meth_rec" .}} {{ .Name }}({{template "meth_params" .Params}}) {
 {{define "meth_ret"}}({{if .}}{{.Type.Name}}, {{end}} error){{end}}
 {{define "type_enc_dec_meth"}}
 func (c *Client) decode{{.Name}}() (retVal {{.Name}}, retErr error) {
-	b, err := c.dec.R.ReadByte()
+	retVal.client = c
+	err := c.dec.ReadExtension(&retVal)
 	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode control byte")
+		return retVal, errors.Annotatef(err, "Could not decode extension {{.Name}}")
 	}
 
-	// TODO: use appropriate constant
-	if b != 0xd4 {
-		return retVal, errors.Errorf("Expected code d4; got %v\n", b)
-	}
-
-	t, err := c.dec.DecodeUint8()
-	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode type")
-	}
-
-	if t != type{{.Name}} {
-		return retVal, errors.Annotatef(err, "Expected type{{.Name}}; got: %v\n", t)
-	}
-
-	bid, err := c.dec.DecodeUint8()
-	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode {{.Name}} ID")
-	}
-	return {{.Name}}{ID: uint32(bid), client: c}, retErr
+	return
 }
 
 func (c *Client) encode{{.Name}}(b {{.Name}}) error {
-	err := c.enc.W.WriteByte(0xd4)
-	if err != nil {
-		return errors.Annotatef(err, "Could not encode {{.Name}} ext type")
-	}
-	err = c.enc.EncodeUint8(type{{.Name}})
-	if err != nil {
-		return errors.Annotatef(err, "Could not encode {{.Name}} type")
-	}
-	err = c.enc.EncodeUint8(uint8(b.ID))
+	err := c.enc.WriteExtension(&b)
 	if err != nil {
 		return errors.Annotatef(err, "Could not encode {{.Name}}")
 	}
@@ -576,7 +550,7 @@ var typeMap = map[string]_type{
 	"Position": {
 		name:      "uint32",
 		enc:       "EncodeUint32",
-		dec:       "DecodeUint32",
+		dec:       "ReadUint32",
 		primitive: true,
 	},
 	"ArrayOf(Integer, 2)": {
@@ -586,21 +560,21 @@ var typeMap = map[string]_type{
 	},
 	"Integer": {
 		name:      "int",
-		enc:       "EncodeInt",
-		dec:       "DecodeInt",
+		enc:       "WriteInt",
+		dec:       "ReadInt",
 		primitive: true,
 		genHelper: true,
 	},
 	"Boolean": {
 		name:      "bool",
-		enc:       "EncodeBool",
-		dec:       "DecodeBool",
+		enc:       "WriteBool",
+		dec:       "ReadBool",
 		primitive: true,
 	},
 	"Object": {
 		name:      "interface{}",
-		enc:       "Encode",
-		dec:       "DecodeInterface",
+		enc:       "WriteIntf",
+		dec:       "ReadIntf",
 		primitive: true,
 	},
 	"Buffer": {
