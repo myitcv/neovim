@@ -31,7 +31,7 @@ go test
 ## Credit
 
 * [@tarruda](https://github.com/tarruda) for leading the way with his [python-client](https://github.com/neovim/python-client)
-* [@vmihailenco](https://github.com/vmihailenco) for [msgpack](https://github.com/vmihailenco/msgpack)
+* [@vmihailenco](https://github.com/vmihailenco) for [msgpack](https://gopkg.in/vmihailenco/msgpack.v2)
 
 ## Todo list
 

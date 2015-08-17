@@ -15,7 +15,7 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/myitcv/neovim"
-	"github.com/vmihailenco/msgpack"
+	"gopkg.in/vmihailenco/msgpack.v2"
 
 	. "gopkg.in/check.v1"
 )

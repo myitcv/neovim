@@ -2,7 +2,7 @@ package apidef
 
 import (
 	"github.com/juju/errors"
-	"github.com/vmihailenco/msgpack"
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 // An API represents the API as advertised by Neovim

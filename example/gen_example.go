@@ -3,7 +3,7 @@ package example
 import (
 	"github.com/juju/errors"
 	"github.com/myitcv/neovim"
-	"github.com/vmihailenco/msgpack"
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 func (e *Example) newBufCreateChanHandler() (chan *BufCreate, neovim.NewAsyncDecoder) {
