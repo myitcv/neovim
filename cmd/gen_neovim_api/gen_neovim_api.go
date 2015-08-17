@@ -20,7 +20,7 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/myitcv/neovim/apidef"
-	"github.com/vmihailenco/msgpack"
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 var generatedFunctions map[string]bool

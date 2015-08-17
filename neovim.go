@@ -71,7 +71,7 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/myitcv/neovim/apidef"
-	"github.com/vmihailenco/msgpack"
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 // NewUnixClient is a convenience method for creating a new *Client. Method signature matches

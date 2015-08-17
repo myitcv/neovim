@@ -2,7 +2,7 @@ package neovim
 
 import (
 	"github.com/juju/errors"
-	"github.com/vmihailenco/msgpack"
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 type InitMethodWrapper struct {
