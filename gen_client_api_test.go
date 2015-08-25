@@ -83,6 +83,8 @@ type neovimTester interface {
 	BenchmarkClientInput(*check.C)
 	TestClientListRuntimePaths(*check.C)
 	BenchmarkClientListRuntimePaths(*check.C)
+	TestClientNameToColor(*check.C)
+	BenchmarkClientNameToColor(*check.C)
 	TestClientOutWrite(*check.C)
 	BenchmarkClientOutWrite(*check.C)
 	TestClientReplaceTermcodes(*check.C)

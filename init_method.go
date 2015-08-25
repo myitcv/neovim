@@ -1,45 +1,60 @@
 package neovim
 
-import (
-	"github.com/juju/errors"
-	"github.com/vmihailenco/msgpack"
-)
+import "github.com/tinylib/msgp/msgp"
 
 type InitMethodWrapper struct {
+	*Client
 	InitMethod
-	*InitMethodArgs
-	*InitMethodRetVals
+	args    *InitMethodArgs
+	results *InitMethodRetVals
+}
+
+func (i *InitMethodWrapper) Args() msgp.Decodable {
+	return i.args
+}
+
+func (i *InitMethodWrapper) Results() msgp.Encodable {
+	return i.results
 }
 
 type InitMethodArgs struct {
+	hostName string
 }
 
 type InitMethodRetVals struct {
 	InitMethod
 }
 
-func (i *InitMethodArgs) DecodeMsg(dec *msgpack.Decoder) error {
-	l, err := dec.DecodeSliceLen()
+func (z *InitMethodArgs) DecodeMsg(dc *msgp.Reader) (err error) {
+	var ssz uint32
+	ssz, err = dc.ReadArrayHeader()
 	if err != nil {
-		return err
+		return
 	}
-
-	if l != 0 {
-		return errors.Errorf("Expected 0 arguments, not %v", l)
+	if ssz != 1 {
+		err = msgp.ArrayError{Wanted: 1, Got: ssz}
+		return
 	}
+	i, err := dc.ReadBytes(nil)
+	if err != nil {
+		return
+	}
+	z.hostName = string(i)
 
-	return nil
+	return
 }
 
-func (i *InitMethodRetVals) EncodeMsg(enc *msgpack.Encoder) error {
-	err := enc.EncodeNil()
+func (z *InitMethodRetVals) EncodeMsg(en *msgp.Writer) (err error) {
+
+	err = en.WriteArrayHeader(0)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (i *InitMethodWrapper) Run() (error, error) {
+	// TODO gross remove this
+	i.Client.HostName = i.args.hostName
 	return nil, i.InitMethod()
 }

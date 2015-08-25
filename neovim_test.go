@@ -15,7 +15,7 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/myitcv/neovim"
-	"github.com/vmihailenco/msgpack"
+	"github.com/tinylib/msgp/msgp"
 
 	. "gopkg.in/check.v1"
 )
@@ -80,9 +80,9 @@ func (t *NeovimTest) TestClientGetBuffers(c *C) {
 }
 
 func (t *NeovimTest) TestClientGetAPIInfo(c *C) {
-	chanID, api, _ := t.client.GetAPIInfo()
-	c.Assert(chanID > 0, Equals, true)
-	c.Assert(api, NotNil)
+	// chanID, api, _ := t.client.GetAPIInfo()
+	// c.Assert(chanID > 0, Equals, true)
+	// c.Assert(api, NotNil)
 }
 
 func (t *NeovimTest) TestConcurrentClientGetBuffers(c *C) {
@@ -111,7 +111,7 @@ func (t *NeovimTest) TestBufferGetLength(c *C) {
 }
 
 func (t *NeovimTest) TestBufferGetLine(c *C) {
-	// See TestBufferSetLine
+	// see TestBufferSetLine
 }
 
 func (t *NeovimTest) BenchmarkBufferGetLine(c *C) {
@@ -173,24 +173,29 @@ func (t *NeovimTest) TestEval(c *C) {
 // 	sub, _ = t.client.Subscribe(topic)
 // }
 
-func newGetANumberResponder() neovim.SyncDecoder {
-	res := &getANumberWrapper{}
-	return res
-}
-
 type getANumberWrapper struct {
-	*getANumberArgs
-	*getANumberRetVals
+	args    *getANumberArgs
+	results *getANumberRetVals
 }
 
-type getANumberArgs struct{}
+func (g *getANumberWrapper) Args() msgp.Decodable {
+	return g.args
+}
+
+func (g *getANumberWrapper) Results() msgp.Encodable {
+	return g.results
+}
+
+type getANumberArgs struct {
+	a []interface{}
+}
 
 type getANumberRetVals struct {
 	i int
 }
 
-func (g *getANumberArgs) DecodeMsg(dec *msgpack.Decoder) error {
-	l, err := dec.DecodeSliceLen()
+func (g *getANumberArgs) DecodeMsg(dec *msgp.Reader) error {
+	l, err := dec.ReadArrayHeader()
 	if err != nil {
 		return err
 	}
@@ -199,14 +204,12 @@ func (g *getANumberArgs) DecodeMsg(dec *msgpack.Decoder) error {
 		return errors.Errorf("Expected 1 argument, not %v", l)
 	}
 
-	l, err = dec.DecodeSliceLen()
+	i, err := dec.ReadIntf()
 	if err != nil {
 		return err
 	}
 
-	if l != 0 {
-		return errors.Errorf("Expected 0 argument, not %v", l)
-	}
+	g.a = i.([]interface{})
 
 	return nil
 }
@@ -222,13 +225,13 @@ func (g *getANumberWrapper) Run() (error, error) {
 
 	res.i = i
 
-	g.getANumberRetVals = res
+	g.results = res
 
 	return nil, nil
 }
 
-func (g *getANumberRetVals) EncodeMsg(enc *msgpack.Encoder) error {
-	err := enc.EncodeInt(g.i)
+func (g *getANumberRetVals) EncodeMsg(enc *msgp.Writer) error {
+	err := enc.WriteInt(g.i)
 	if err != nil {
 		return err
 	}
@@ -241,11 +244,20 @@ func getANumber() (int, error, error) {
 }
 
 func (t *NeovimTest) TestFunctionOnChannel(c *C) {
+	wrap := &getANumberWrapper{
+		&getANumberArgs{},
+		&getANumberRetVals{},
+	}
+	newGetANumberResponder := func() neovim.SyncDecoder {
+		return wrap
+	}
 	t.client.RegisterSyncRequestHandler("GetANumber", newGetANumberResponder)
 	topic := "GetANumber"
 	commandDef := fmt.Sprintf(`call remote#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
 	_ = t.client.Command(commandDef)
-	res, _ := t.client.Eval(`GetANumber()`)
+	res, _ := t.client.Eval(`GetANumber(5)`)
+	c.Assert(len(wrap.args.a), Equals, 1)
+	c.Assert(wrap.args.a[0], Equals, int64(5))
 	c.Assert(res, Equals, int64(42))
 }
 
@@ -287,12 +299,12 @@ func (t *NeovimTest) TestGetLineSlice(c *C) {
 }
 
 func (t *NeovimTest) TestBufferInsert(c *C) {
-	// append the lines to the end of the buffer
-	// cb.SetLineSlice(3, -1, true, true, new_lines)
-	// lc, _ = cb.LineCount()
-	// lines, _ = cb.GetLineSlice(0, -1, true, true)
-	// fmt.Println(lines)
-	// c.Assert(lc, Equals, 4)
+	// 	append the lines to the end of the buffer
+	// 	cb.SetLineSlice(3, -1, true, true, new_lines)
+	// 	lc, _ = cb.LineCount()
+	// 	lines, _ = cb.GetLineSlice(0, -1, true, true)
+	// 	fmt.Println(lines)
+	// 	c.Assert(lc, Equals, 4)
 }
 
 func (t *NeovimTest) TestNumberEval(c *C) {
@@ -407,395 +419,142 @@ func (t *NeovimTest) BenchmarkGetBufferContents(c *C) {
 
 // 	c.Assert(atomic.LoadInt64(&check), Equals, int64(number+number/2))
 // }
+func (t *NeovimTest) TestBufferDelLine(c *C)      {}
+func (t *NeovimTest) BenchmarkBufferDelLine(c *C) {}
 
-func (t *NeovimTest) TestBufferDelLine(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferDelLine(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferGetLineSlice(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferGetLineSlice(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferGetMark(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferGetMark(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferGetName(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferGetName(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferGetNumber(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferGetNumber(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferGetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferGetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferGetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferGetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferInsert(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferIsValid(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferIsValid(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferLineCount(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferLineCount(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferSetLine(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferSetLineSlice(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferSetLineSlice(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferSetName(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferSetName(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferSetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferSetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestBufferSetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkBufferSetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestTabpageGetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkTabpageGetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestTabpageGetWindow(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkTabpageGetWindow(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestTabpageGetWindows(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkTabpageGetWindows(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestTabpageIsValid(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkTabpageIsValid(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestTabpageSetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkTabpageSetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientChangeDirectory(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientChangeDirectory(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientCommand(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientCommand(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientCommandOutput(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientCommandOutput(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientDelCurrentLine(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientDelCurrentLine(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientErrWrite(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientErrWrite(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientEval(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientEval(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientFeedkeys(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientFeedkeys(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetBuffers(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetCurrentBuffer(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientGetCurrentLine(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetCurrentLine(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientGetCurrentTabpage(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetCurrentTabpage(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientGetCurrentWindow(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetCurrentWindow(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientGetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientGetTabpages(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetTabpages(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientGetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientGetVvar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetVvar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientGetWindows(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientGetWindows(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientInput(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientInput(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientListRuntimePaths(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientListRuntimePaths(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientOutWrite(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientOutWrite(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientReplaceTermcodes(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientReplaceTermcodes(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientReportError(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientReportError(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientSetCurrentBuffer(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientSetCurrentBuffer(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientSetCurrentLine(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientSetCurrentLine(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientSetCurrentTabpage(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientSetCurrentTabpage(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientSetCurrentWindow(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientSetCurrentWindow(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientSetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientSetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientSetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientSetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientStrwidth(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientStrwidth(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientsubscribe(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientsubscribe(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientunsubscribe(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientunsubscribe(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowGetBuffer(c *C) {
-	cw, _ := t.client.GetCurrentWindow()
-	cw.GetBuffer()
-}
-func (t *NeovimTest) BenchmarkWindowGetBuffer(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowGetCursor(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowGetCursor(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowGetHeight(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowGetHeight(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowGetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowGetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowGetPosition(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowGetPosition(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowGetTabpage(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowGetTabpage(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowGetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowGetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowGetWidth(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowGetWidth(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowIsValid(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowIsValid(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowSetCursor(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowSetCursor(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowSetHeight(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowSetHeight(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowSetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowSetOption(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowSetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowSetVar(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestWindowSetWidth(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkWindowSetWidth(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientUnsubscribe(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientUnsubscribe(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) TestClientSubscribe(c *C) {
-	// implementation pending
-}
-func (t *NeovimTest) BenchmarkClientSubscribe(c *C) {
-	// implementation pending
-}
+// func (t *NeovimTest) TestBufferGetLine(c *C)                {}
+// func (t *NeovimTest) BenchmarkBufferGetLine(c *C)           {}
+func (t *NeovimTest) TestBufferGetLineSlice(c *C)      {}
+func (t *NeovimTest) BenchmarkBufferGetLineSlice(c *C) {}
+func (t *NeovimTest) TestBufferGetMark(c *C)           {}
+func (t *NeovimTest) BenchmarkBufferGetMark(c *C)      {}
+func (t *NeovimTest) TestBufferGetName(c *C)           {}
+func (t *NeovimTest) BenchmarkBufferGetName(c *C)      {}
+func (t *NeovimTest) TestBufferGetNumber(c *C)         {}
+func (t *NeovimTest) BenchmarkBufferGetNumber(c *C)    {}
+func (t *NeovimTest) TestBufferGetOption(c *C)         {}
+func (t *NeovimTest) BenchmarkBufferGetOption(c *C)    {}
+func (t *NeovimTest) TestBufferGetVar(c *C)            {}
+func (t *NeovimTest) BenchmarkBufferGetVar(c *C)       {}
+
+// func (t *NeovimTest) TestBufferInsert(c *C)                 {}
+func (t *NeovimTest) BenchmarkBufferInsert(c *C)    {}
+func (t *NeovimTest) TestBufferIsValid(c *C)        {}
+func (t *NeovimTest) BenchmarkBufferIsValid(c *C)   {}
+func (t *NeovimTest) TestBufferLineCount(c *C)      {}
+func (t *NeovimTest) BenchmarkBufferLineCount(c *C) {}
+
+// func (t *NeovimTest) TestBufferSetLine(c *C)                {}
+func (t *NeovimTest) BenchmarkBufferSetLine(c *C)         {}
+func (t *NeovimTest) TestBufferSetLineSlice(c *C)         {}
+func (t *NeovimTest) BenchmarkBufferSetLineSlice(c *C)    {}
+func (t *NeovimTest) TestBufferSetName(c *C)              {}
+func (t *NeovimTest) BenchmarkBufferSetName(c *C)         {}
+func (t *NeovimTest) TestBufferSetOption(c *C)            {}
+func (t *NeovimTest) BenchmarkBufferSetOption(c *C)       {}
+func (t *NeovimTest) TestBufferSetVar(c *C)               {}
+func (t *NeovimTest) BenchmarkBufferSetVar(c *C)          {}
+func (t *NeovimTest) TestTabpageGetVar(c *C)              {}
+func (t *NeovimTest) BenchmarkTabpageGetVar(c *C)         {}
+func (t *NeovimTest) TestTabpageGetWindow(c *C)           {}
+func (t *NeovimTest) BenchmarkTabpageGetWindow(c *C)      {}
+func (t *NeovimTest) TestTabpageGetWindows(c *C)          {}
+func (t *NeovimTest) BenchmarkTabpageGetWindows(c *C)     {}
+func (t *NeovimTest) TestTabpageIsValid(c *C)             {}
+func (t *NeovimTest) BenchmarkTabpageIsValid(c *C)        {}
+func (t *NeovimTest) TestTabpageSetVar(c *C)              {}
+func (t *NeovimTest) BenchmarkTabpageSetVar(c *C)         {}
+func (t *NeovimTest) TestClientChangeDirectory(c *C)      {}
+func (t *NeovimTest) BenchmarkClientChangeDirectory(c *C) {}
+func (t *NeovimTest) TestClientCommand(c *C)              {}
+func (t *NeovimTest) BenchmarkClientCommand(c *C)         {}
+func (t *NeovimTest) TestClientCommandOutput(c *C)        {}
+func (t *NeovimTest) BenchmarkClientCommandOutput(c *C)   {}
+func (t *NeovimTest) TestClientDelCurrentLine(c *C)       {}
+func (t *NeovimTest) BenchmarkClientDelCurrentLine(c *C)  {}
+func (t *NeovimTest) TestClientErrWrite(c *C)             {}
+func (t *NeovimTest) BenchmarkClientErrWrite(c *C)        {}
+func (t *NeovimTest) TestClientEval(c *C)                 {}
+func (t *NeovimTest) BenchmarkClientEval(c *C)            {}
+func (t *NeovimTest) TestClientFeedkeys(c *C)             {}
+func (t *NeovimTest) BenchmarkClientFeedkeys(c *C)        {}
+
+// func (t *NeovimTest) TestClientGetBuffers(c *C)             {}
+func (t *NeovimTest) BenchmarkClientGetBuffers(c *C) {}
+
+// func (t *NeovimTest) TestClientGetCurrentBuffer(c *C)       {}
+func (t *NeovimTest) BenchmarkClientGetCurrentBuffer(c *C)  {}
+func (t *NeovimTest) TestClientGetCurrentLine(c *C)         {}
+func (t *NeovimTest) BenchmarkClientGetCurrentLine(c *C)    {}
+func (t *NeovimTest) TestClientGetCurrentTabpage(c *C)      {}
+func (t *NeovimTest) BenchmarkClientGetCurrentTabpage(c *C) {}
+func (t *NeovimTest) TestClientGetCurrentWindow(c *C)       {}
+func (t *NeovimTest) BenchmarkClientGetCurrentWindow(c *C)  {}
+func (t *NeovimTest) TestClientGetOption(c *C)              {}
+func (t *NeovimTest) BenchmarkClientGetOption(c *C)         {}
+func (t *NeovimTest) TestClientGetTabpages(c *C)            {}
+func (t *NeovimTest) BenchmarkClientGetTabpages(c *C)       {}
+func (t *NeovimTest) TestClientGetVar(c *C)                 {}
+func (t *NeovimTest) BenchmarkClientGetVar(c *C)            {}
+func (t *NeovimTest) TestClientGetVvar(c *C)                {}
+func (t *NeovimTest) BenchmarkClientGetVvar(c *C)           {}
+func (t *NeovimTest) TestClientGetWindows(c *C)             {}
+func (t *NeovimTest) BenchmarkClientGetWindows(c *C)        {}
+func (t *NeovimTest) TestClientInput(c *C)                  {}
+func (t *NeovimTest) BenchmarkClientInput(c *C)             {}
+func (t *NeovimTest) TestClientListRuntimePaths(c *C)       {}
+func (t *NeovimTest) BenchmarkClientListRuntimePaths(c *C)  {}
+func (t *NeovimTest) TestClientNameToColor(c *C)            {}
+func (t *NeovimTest) BenchmarkClientNameToColor(c *C)       {}
+func (t *NeovimTest) TestClientOutWrite(c *C)               {}
+func (t *NeovimTest) BenchmarkClientOutWrite(c *C)          {}
+func (t *NeovimTest) TestClientReplaceTermcodes(c *C)       {}
+func (t *NeovimTest) BenchmarkClientReplaceTermcodes(c *C)  {}
+func (t *NeovimTest) TestClientReportError(c *C)            {}
+func (t *NeovimTest) BenchmarkClientReportError(c *C)       {}
+func (t *NeovimTest) TestClientSetCurrentBuffer(c *C)       {}
+func (t *NeovimTest) BenchmarkClientSetCurrentBuffer(c *C)  {}
+func (t *NeovimTest) TestClientSetCurrentLine(c *C)         {}
+func (t *NeovimTest) BenchmarkClientSetCurrentLine(c *C)    {}
+func (t *NeovimTest) TestClientSetCurrentTabpage(c *C)      {}
+func (t *NeovimTest) BenchmarkClientSetCurrentTabpage(c *C) {}
+func (t *NeovimTest) TestClientSetCurrentWindow(c *C)       {}
+func (t *NeovimTest) BenchmarkClientSetCurrentWindow(c *C)  {}
+func (t *NeovimTest) TestClientSetOption(c *C)              {}
+func (t *NeovimTest) BenchmarkClientSetOption(c *C)         {}
+func (t *NeovimTest) TestClientSetVar(c *C)                 {}
+func (t *NeovimTest) BenchmarkClientSetVar(c *C)            {}
+func (t *NeovimTest) TestClientStrwidth(c *C)               {}
+func (t *NeovimTest) BenchmarkClientStrwidth(c *C)          {}
+func (t *NeovimTest) TestClientSubscribe(c *C)              {}
+func (t *NeovimTest) BenchmarkClientSubscribe(c *C)         {}
+func (t *NeovimTest) TestClientUnsubscribe(c *C)            {}
+func (t *NeovimTest) BenchmarkClientUnsubscribe(c *C)       {}
+func (t *NeovimTest) TestWindowGetBuffer(c *C)              {}
+func (t *NeovimTest) BenchmarkWindowGetBuffer(c *C)         {}
+func (t *NeovimTest) TestWindowGetCursor(c *C)              {}
+func (t *NeovimTest) BenchmarkWindowGetCursor(c *C)         {}
+func (t *NeovimTest) TestWindowGetHeight(c *C)              {}
+func (t *NeovimTest) BenchmarkWindowGetHeight(c *C)         {}
+func (t *NeovimTest) TestWindowGetOption(c *C)              {}
+func (t *NeovimTest) BenchmarkWindowGetOption(c *C)         {}
+func (t *NeovimTest) TestWindowGetPosition(c *C)            {}
+func (t *NeovimTest) BenchmarkWindowGetPosition(c *C)       {}
+func (t *NeovimTest) TestWindowGetTabpage(c *C)             {}
+func (t *NeovimTest) BenchmarkWindowGetTabpage(c *C)        {}
+func (t *NeovimTest) TestWindowGetVar(c *C)                 {}
+func (t *NeovimTest) BenchmarkWindowGetVar(c *C)            {}
+func (t *NeovimTest) TestWindowGetWidth(c *C)               {}
+func (t *NeovimTest) BenchmarkWindowGetWidth(c *C)          {}
+func (t *NeovimTest) TestWindowIsValid(c *C)                {}
+func (t *NeovimTest) BenchmarkWindowIsValid(c *C)           {}
+func (t *NeovimTest) TestWindowSetCursor(c *C)              {}
+func (t *NeovimTest) BenchmarkWindowSetCursor(c *C)         {}
+func (t *NeovimTest) TestWindowSetHeight(c *C)              {}
+func (t *NeovimTest) BenchmarkWindowSetHeight(c *C)         {}
+func (t *NeovimTest) TestWindowSetOption(c *C)              {}
+func (t *NeovimTest) BenchmarkWindowSetOption(c *C)         {}
+func (t *NeovimTest) TestWindowSetVar(c *C)                 {}
+func (t *NeovimTest) BenchmarkWindowSetVar(c *C)            {}
+func (t *NeovimTest) TestWindowSetWidth(c *C)               {}
+func (t *NeovimTest) BenchmarkWindowSetWidth(c *C)          {}

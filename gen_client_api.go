@@ -7,9 +7,9 @@ import "github.com/juju/errors"
 // constants representing method ids
 
 const (
-	typeBuffer  uint8 = 0
-	typeWindow  uint8 = 1
-	typeTabpage uint8 = 2
+	typeBuffer  int8 = 0
+	typeWindow  int8 = 1
+	typeTabpage int8 = 2
 )
 
 const (
@@ -53,6 +53,7 @@ const (
 	clientGetWindows        = "vim_get_windows"
 	clientInput             = "vim_input"
 	clientListRuntimePaths  = "vim_list_runtime_paths"
+	clientNameToColor       = "vim_name_to_color"
 	clientOutWrite          = "vim_out_write"
 	clientReplaceTermcodes  = "vim_replace_termcodes"
 	clientReportError       = "vim_report_error"
@@ -87,7 +88,7 @@ const (
 func (b *Buffer) DelLine(index int) error {
 
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
+		_err = b.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -97,7 +98,7 @@ func (b *Buffer) DelLine(index int) error {
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(index)
+		_err = b.client.enc.WriteInt(index)
 
 		if _err != nil {
 			return
@@ -107,7 +108,7 @@ func (b *Buffer) DelLine(index int) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = b.client.dec.DecodeBytes()
+		_err = b.client.dec.ReadNil()
 
 		return
 	}
@@ -131,7 +132,7 @@ func (b *Buffer) DelLine(index int) error {
 func (b *Buffer) GetLine(index int) (string, error) {
 	var retVal string
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
+		_err = b.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -141,7 +142,7 @@ func (b *Buffer) GetLine(index int) (string, error) {
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(index)
+		_err = b.client.enc.WriteInt(index)
 
 		if _err != nil {
 			return
@@ -176,7 +177,7 @@ func (b *Buffer) GetLine(index int) (string, error) {
 func (b *Buffer) GetLineSlice(start int, end int, includeStart bool, includeEnd bool) ([]string, error) {
 	var retVal []string
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(5)
+		_err = b.client.enc.WriteArrayHeader(5)
 		if _err != nil {
 			return
 		}
@@ -186,25 +187,25 @@ func (b *Buffer) GetLineSlice(start int, end int, includeStart bool, includeEnd 
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(start)
+		_err = b.client.enc.WriteInt(start)
 
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(end)
+		_err = b.client.enc.WriteInt(end)
 
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.enc.EncodeBool(includeStart)
+		_err = b.client.enc.WriteBool(includeStart)
 
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.enc.EncodeBool(includeEnd)
+		_err = b.client.enc.WriteBool(includeEnd)
 
 		if _err != nil {
 			return
@@ -239,7 +240,7 @@ func (b *Buffer) GetLineSlice(start int, end int, includeStart bool, includeEnd 
 func (b *Buffer) GetMark(name string) ([]int, error) {
 	var retVal []int
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
+		_err = b.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -284,7 +285,7 @@ func (b *Buffer) GetMark(name string) ([]int, error) {
 func (b *Buffer) GetName() (string, error) {
 	var retVal string
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
+		_err = b.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -323,7 +324,7 @@ func (b *Buffer) GetName() (string, error) {
 func (b *Buffer) GetNumber() (int, error) {
 	var retVal int
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
+		_err = b.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -337,7 +338,7 @@ func (b *Buffer) GetNumber() (int, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeInt()
+		_i, _err = b.client.dec.ReadInt()
 
 		return
 	}
@@ -362,7 +363,7 @@ func (b *Buffer) GetNumber() (int, error) {
 func (b *Buffer) GetOption(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
+		_err = b.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -382,7 +383,7 @@ func (b *Buffer) GetOption(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeInterface()
+		_i, _err = b.client.dec.ReadIntf()
 
 		return
 	}
@@ -407,7 +408,7 @@ func (b *Buffer) GetOption(name string) (interface{}, error) {
 func (b *Buffer) GetVar(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
+		_err = b.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -427,7 +428,7 @@ func (b *Buffer) GetVar(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeInterface()
+		_i, _err = b.client.dec.ReadIntf()
 
 		return
 	}
@@ -452,7 +453,7 @@ func (b *Buffer) GetVar(name string) (interface{}, error) {
 func (b *Buffer) Insert(lnum int, lines []string) error {
 
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(3)
+		_err = b.client.enc.WriteArrayHeader(3)
 		if _err != nil {
 			return
 		}
@@ -462,7 +463,7 @@ func (b *Buffer) Insert(lnum int, lines []string) error {
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(lnum)
+		_err = b.client.enc.WriteInt(lnum)
 
 		if _err != nil {
 			return
@@ -478,7 +479,7 @@ func (b *Buffer) Insert(lnum int, lines []string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = b.client.dec.DecodeBytes()
+		_err = b.client.dec.ReadNil()
 
 		return
 	}
@@ -502,7 +503,7 @@ func (b *Buffer) Insert(lnum int, lines []string) error {
 func (b *Buffer) IsValid() (bool, error) {
 	var retVal bool
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
+		_err = b.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -516,7 +517,7 @@ func (b *Buffer) IsValid() (bool, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeBool()
+		_i, _err = b.client.dec.ReadBool()
 
 		return
 	}
@@ -541,7 +542,7 @@ func (b *Buffer) IsValid() (bool, error) {
 func (b *Buffer) LineCount() (int, error) {
 	var retVal int
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(1)
+		_err = b.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -555,7 +556,7 @@ func (b *Buffer) LineCount() (int, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeInt()
+		_i, _err = b.client.dec.ReadInt()
 
 		return
 	}
@@ -580,7 +581,7 @@ func (b *Buffer) LineCount() (int, error) {
 func (b *Buffer) SetLine(index int, line string) error {
 
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(3)
+		_err = b.client.enc.WriteArrayHeader(3)
 		if _err != nil {
 			return
 		}
@@ -590,7 +591,7 @@ func (b *Buffer) SetLine(index int, line string) error {
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(index)
+		_err = b.client.enc.WriteInt(index)
 
 		if _err != nil {
 			return
@@ -606,7 +607,7 @@ func (b *Buffer) SetLine(index int, line string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = b.client.dec.DecodeBytes()
+		_err = b.client.dec.ReadNil()
 
 		return
 	}
@@ -630,7 +631,7 @@ func (b *Buffer) SetLine(index int, line string) error {
 func (b *Buffer) SetLineSlice(start int, end int, includeStart bool, includeEnd bool, replacement []string) error {
 
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(6)
+		_err = b.client.enc.WriteArrayHeader(6)
 		if _err != nil {
 			return
 		}
@@ -640,25 +641,25 @@ func (b *Buffer) SetLineSlice(start int, end int, includeStart bool, includeEnd 
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(start)
+		_err = b.client.enc.WriteInt(start)
 
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.enc.EncodeInt(end)
+		_err = b.client.enc.WriteInt(end)
 
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.enc.EncodeBool(includeStart)
+		_err = b.client.enc.WriteBool(includeStart)
 
 		if _err != nil {
 			return
 		}
 
-		_err = b.client.enc.EncodeBool(includeEnd)
+		_err = b.client.enc.WriteBool(includeEnd)
 
 		if _err != nil {
 			return
@@ -674,7 +675,7 @@ func (b *Buffer) SetLineSlice(start int, end int, includeStart bool, includeEnd 
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = b.client.dec.DecodeBytes()
+		_err = b.client.dec.ReadNil()
 
 		return
 	}
@@ -698,7 +699,7 @@ func (b *Buffer) SetLineSlice(start int, end int, includeStart bool, includeEnd 
 func (b *Buffer) SetName(name string) error {
 
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(2)
+		_err = b.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -718,7 +719,7 @@ func (b *Buffer) SetName(name string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = b.client.dec.DecodeBytes()
+		_err = b.client.dec.ReadNil()
 
 		return
 	}
@@ -742,7 +743,7 @@ func (b *Buffer) SetName(name string) error {
 func (b *Buffer) SetOption(name string, value interface{}) error {
 
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(3)
+		_err = b.client.enc.WriteArrayHeader(3)
 		if _err != nil {
 			return
 		}
@@ -758,7 +759,7 @@ func (b *Buffer) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = b.client.enc.Encode(value)
+		_err = b.client.enc.WriteIntf(value)
 
 		if _err != nil {
 			return
@@ -768,7 +769,7 @@ func (b *Buffer) SetOption(name string, value interface{}) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = b.client.dec.DecodeBytes()
+		_err = b.client.dec.ReadNil()
 
 		return
 	}
@@ -792,7 +793,7 @@ func (b *Buffer) SetOption(name string, value interface{}) error {
 func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = b.client.enc.EncodeSliceLen(3)
+		_err = b.client.enc.WriteArrayHeader(3)
 		if _err != nil {
 			return
 		}
@@ -808,7 +809,7 @@ func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = b.client.enc.Encode(value)
+		_err = b.client.enc.WriteIntf(value)
 
 		if _err != nil {
 			return
@@ -818,7 +819,7 @@ func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.dec.DecodeInterface()
+		_i, _err = b.client.dec.ReadIntf()
 
 		return
 	}
@@ -843,7 +844,7 @@ func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 func (t *Tabpage) GetVar(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(2)
+		_err = t.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -863,7 +864,7 @@ func (t *Tabpage) GetVar(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = t.client.dec.DecodeInterface()
+		_i, _err = t.client.dec.ReadIntf()
 
 		return
 	}
@@ -888,7 +889,7 @@ func (t *Tabpage) GetVar(name string) (interface{}, error) {
 func (t *Tabpage) GetWindow() (Window, error) {
 	var retVal Window
 	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(1)
+		_err = t.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -927,7 +928,7 @@ func (t *Tabpage) GetWindow() (Window, error) {
 func (t *Tabpage) GetWindows() ([]Window, error) {
 	var retVal []Window
 	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(1)
+		_err = t.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -966,7 +967,7 @@ func (t *Tabpage) GetWindows() ([]Window, error) {
 func (t *Tabpage) IsValid() (bool, error) {
 	var retVal bool
 	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(1)
+		_err = t.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -980,7 +981,7 @@ func (t *Tabpage) IsValid() (bool, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = t.client.dec.DecodeBool()
+		_i, _err = t.client.dec.ReadBool()
 
 		return
 	}
@@ -1005,7 +1006,7 @@ func (t *Tabpage) IsValid() (bool, error) {
 func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = t.client.enc.EncodeSliceLen(3)
+		_err = t.client.enc.WriteArrayHeader(3)
 		if _err != nil {
 			return
 		}
@@ -1021,7 +1022,7 @@ func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = t.client.enc.Encode(value)
+		_err = t.client.enc.WriteIntf(value)
 
 		if _err != nil {
 			return
@@ -1031,7 +1032,7 @@ func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = t.client.dec.DecodeInterface()
+		_i, _err = t.client.dec.ReadIntf()
 
 		return
 	}
@@ -1056,7 +1057,7 @@ func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
 func (c *Client) ChangeDirectory(dir string) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1071,7 +1072,7 @@ func (c *Client) ChangeDirectory(dir string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -1095,7 +1096,7 @@ func (c *Client) ChangeDirectory(dir string) error {
 func (c *Client) Command(str string) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1110,7 +1111,7 @@ func (c *Client) Command(str string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -1134,7 +1135,7 @@ func (c *Client) Command(str string) error {
 func (c *Client) CommandOutput(str string) (string, error) {
 	var retVal string
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1174,7 +1175,7 @@ func (c *Client) CommandOutput(str string) (string, error) {
 func (c *Client) DelCurrentLine() error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -1183,7 +1184,7 @@ func (c *Client) DelCurrentLine() error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -1207,7 +1208,7 @@ func (c *Client) DelCurrentLine() error {
 func (c *Client) ErrWrite(str string) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1222,7 +1223,7 @@ func (c *Client) ErrWrite(str string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -1246,7 +1247,7 @@ func (c *Client) ErrWrite(str string) error {
 func (c *Client) Eval(str string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1261,7 +1262,7 @@ func (c *Client) Eval(str string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeInterface()
+		_i, _err = c.dec.ReadIntf()
 
 		return
 	}
@@ -1283,10 +1284,10 @@ func (c *Client) Eval(str string) (interface{}, error) {
 }
 
 // Feedkeys waiting for documentation from Neovim
-func (c *Client) Feedkeys(keys string, mode string) error {
+func (c *Client) Feedkeys(keys string, mode string, escapeCsi bool) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(2)
+		_err = c.enc.WriteArrayHeader(3)
 		if _err != nil {
 			return
 		}
@@ -1303,11 +1304,17 @@ func (c *Client) Feedkeys(keys string, mode string) error {
 			return
 		}
 
+		_err = c.enc.WriteBool(escapeCsi)
+
+		if _err != nil {
+			return
+		}
+
 		return
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -1331,7 +1338,7 @@ func (c *Client) Feedkeys(keys string, mode string) error {
 func (c *Client) GetBuffers() ([]Buffer, error) {
 	var retVal []Buffer
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -1365,7 +1372,7 @@ func (c *Client) GetBuffers() ([]Buffer, error) {
 func (c *Client) GetCurrentBuffer() (Buffer, error) {
 	var retVal Buffer
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -1399,7 +1406,7 @@ func (c *Client) GetCurrentBuffer() (Buffer, error) {
 func (c *Client) GetCurrentLine() (string, error) {
 	var retVal string
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -1433,7 +1440,7 @@ func (c *Client) GetCurrentLine() (string, error) {
 func (c *Client) GetCurrentTabpage() (Tabpage, error) {
 	var retVal Tabpage
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -1467,7 +1474,7 @@ func (c *Client) GetCurrentTabpage() (Tabpage, error) {
 func (c *Client) GetCurrentWindow() (Window, error) {
 	var retVal Window
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -1501,7 +1508,7 @@ func (c *Client) GetCurrentWindow() (Window, error) {
 func (c *Client) GetOption(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1516,7 +1523,7 @@ func (c *Client) GetOption(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeInterface()
+		_i, _err = c.dec.ReadIntf()
 
 		return
 	}
@@ -1541,7 +1548,7 @@ func (c *Client) GetOption(name string) (interface{}, error) {
 func (c *Client) GetTabpages() ([]Tabpage, error) {
 	var retVal []Tabpage
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -1575,7 +1582,7 @@ func (c *Client) GetTabpages() ([]Tabpage, error) {
 func (c *Client) GetVar(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1590,7 +1597,7 @@ func (c *Client) GetVar(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeInterface()
+		_i, _err = c.dec.ReadIntf()
 
 		return
 	}
@@ -1615,7 +1622,7 @@ func (c *Client) GetVar(name string) (interface{}, error) {
 func (c *Client) GetVvar(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1630,7 +1637,7 @@ func (c *Client) GetVvar(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeInterface()
+		_i, _err = c.dec.ReadIntf()
 
 		return
 	}
@@ -1655,7 +1662,7 @@ func (c *Client) GetVvar(name string) (interface{}, error) {
 func (c *Client) GetWindows() ([]Window, error) {
 	var retVal []Window
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -1689,7 +1696,7 @@ func (c *Client) GetWindows() ([]Window, error) {
 func (c *Client) Input(keys string) (int, error) {
 	var retVal int
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1704,7 +1711,7 @@ func (c *Client) Input(keys string) (int, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeInt()
+		_i, _err = c.dec.ReadInt()
 
 		return
 	}
@@ -1729,7 +1736,7 @@ func (c *Client) Input(keys string) (int, error) {
 func (c *Client) ListRuntimePaths() ([]string, error) {
 	var retVal []string
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(0)
+		_err = c.enc.WriteArrayHeader(0)
 		if _err != nil {
 			return
 		}
@@ -1759,11 +1766,51 @@ func (c *Client) ListRuntimePaths() ([]string, error) {
 
 }
 
+// NameToColor waiting for documentation from Neovim
+func (c *Client) NameToColor(name string) (int, error) {
+	var retVal int
+	enc := func() (_err error) {
+		_err = c.enc.WriteArrayHeader(1)
+		if _err != nil {
+			return
+		}
+
+		_err = c.encodeString(name)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.ReadInt()
+
+		return
+	}
+	respChan, err := c.makeCall(clientNameToColor, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.NameToColor"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(int)
+	return retVal, nil
+
+}
+
 // OutWrite waiting for documentation from Neovim
 func (c *Client) OutWrite(str string) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1778,7 +1825,7 @@ func (c *Client) OutWrite(str string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -1802,7 +1849,7 @@ func (c *Client) OutWrite(str string) error {
 func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special bool) (string, error) {
 	var retVal string
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(4)
+		_err = c.enc.WriteArrayHeader(4)
 		if _err != nil {
 			return
 		}
@@ -1813,19 +1860,19 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 			return
 		}
 
-		_err = c.enc.EncodeBool(fromPart)
+		_err = c.enc.WriteBool(fromPart)
 
 		if _err != nil {
 			return
 		}
 
-		_err = c.enc.EncodeBool(doLt)
+		_err = c.enc.WriteBool(doLt)
 
 		if _err != nil {
 			return
 		}
 
-		_err = c.enc.EncodeBool(special)
+		_err = c.enc.WriteBool(special)
 
 		if _err != nil {
 			return
@@ -1860,7 +1907,7 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 func (c *Client) ReportError(str string) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1875,7 +1922,7 @@ func (c *Client) ReportError(str string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -1899,7 +1946,7 @@ func (c *Client) ReportError(str string) error {
 func (c *Client) SetCurrentBuffer(buffer Buffer) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1914,7 +1961,7 @@ func (c *Client) SetCurrentBuffer(buffer Buffer) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -1938,7 +1985,7 @@ func (c *Client) SetCurrentBuffer(buffer Buffer) error {
 func (c *Client) SetCurrentLine(line string) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1953,7 +2000,7 @@ func (c *Client) SetCurrentLine(line string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -1977,7 +2024,7 @@ func (c *Client) SetCurrentLine(line string) error {
 func (c *Client) SetCurrentTabpage(tabpage Tabpage) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -1992,7 +2039,7 @@ func (c *Client) SetCurrentTabpage(tabpage Tabpage) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -2016,7 +2063,7 @@ func (c *Client) SetCurrentTabpage(tabpage Tabpage) error {
 func (c *Client) SetCurrentWindow(window Window) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2031,7 +2078,7 @@ func (c *Client) SetCurrentWindow(window Window) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -2055,7 +2102,7 @@ func (c *Client) SetCurrentWindow(window Window) error {
 func (c *Client) SetOption(name string, value interface{}) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(2)
+		_err = c.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -2066,7 +2113,7 @@ func (c *Client) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = c.enc.Encode(value)
+		_err = c.enc.WriteIntf(value)
 
 		if _err != nil {
 			return
@@ -2076,7 +2123,7 @@ func (c *Client) SetOption(name string, value interface{}) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -2100,7 +2147,7 @@ func (c *Client) SetOption(name string, value interface{}) error {
 func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(2)
+		_err = c.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -2111,7 +2158,7 @@ func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = c.enc.Encode(value)
+		_err = c.enc.WriteIntf(value)
 
 		if _err != nil {
 			return
@@ -2121,7 +2168,7 @@ func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeInterface()
+		_i, _err = c.dec.ReadIntf()
 
 		return
 	}
@@ -2146,7 +2193,7 @@ func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
 func (c *Client) Strwidth(str string) (int, error) {
 	var retVal int
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2161,7 +2208,7 @@ func (c *Client) Strwidth(str string) (int, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.dec.DecodeInt()
+		_i, _err = c.dec.ReadInt()
 
 		return
 	}
@@ -2186,7 +2233,7 @@ func (c *Client) Strwidth(str string) (int, error) {
 func (c *Client) Subscribe(event string) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2201,7 +2248,7 @@ func (c *Client) Subscribe(event string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -2225,7 +2272,7 @@ func (c *Client) Subscribe(event string) error {
 func (c *Client) Unsubscribe(event string) error {
 
 	enc := func() (_err error) {
-		_err = c.enc.EncodeSliceLen(1)
+		_err = c.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2240,7 +2287,7 @@ func (c *Client) Unsubscribe(event string) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = c.dec.DecodeBytes()
+		_err = c.dec.ReadNil()
 
 		return
 	}
@@ -2264,7 +2311,7 @@ func (c *Client) Unsubscribe(event string) error {
 func (w *Window) GetBuffer() (Buffer, error) {
 	var retVal Buffer
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(1)
+		_err = w.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2303,7 +2350,7 @@ func (w *Window) GetBuffer() (Buffer, error) {
 func (w *Window) GetCursor() ([]int, error) {
 	var retVal []int
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(1)
+		_err = w.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2342,7 +2389,7 @@ func (w *Window) GetCursor() ([]int, error) {
 func (w *Window) GetHeight() (int, error) {
 	var retVal int
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(1)
+		_err = w.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2356,7 +2403,7 @@ func (w *Window) GetHeight() (int, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = w.client.dec.DecodeInt()
+		_i, _err = w.client.dec.ReadInt()
 
 		return
 	}
@@ -2381,7 +2428,7 @@ func (w *Window) GetHeight() (int, error) {
 func (w *Window) GetOption(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(2)
+		_err = w.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -2401,7 +2448,7 @@ func (w *Window) GetOption(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = w.client.dec.DecodeInterface()
+		_i, _err = w.client.dec.ReadIntf()
 
 		return
 	}
@@ -2426,7 +2473,7 @@ func (w *Window) GetOption(name string) (interface{}, error) {
 func (w *Window) GetPosition() ([]int, error) {
 	var retVal []int
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(1)
+		_err = w.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2465,7 +2512,7 @@ func (w *Window) GetPosition() ([]int, error) {
 func (w *Window) GetTabpage() (Tabpage, error) {
 	var retVal Tabpage
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(1)
+		_err = w.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2504,7 +2551,7 @@ func (w *Window) GetTabpage() (Tabpage, error) {
 func (w *Window) GetVar(name string) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(2)
+		_err = w.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -2524,7 +2571,7 @@ func (w *Window) GetVar(name string) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = w.client.dec.DecodeInterface()
+		_i, _err = w.client.dec.ReadIntf()
 
 		return
 	}
@@ -2549,7 +2596,7 @@ func (w *Window) GetVar(name string) (interface{}, error) {
 func (w *Window) GetWidth() (int, error) {
 	var retVal int
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(1)
+		_err = w.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2563,7 +2610,7 @@ func (w *Window) GetWidth() (int, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = w.client.dec.DecodeInt()
+		_i, _err = w.client.dec.ReadInt()
 
 		return
 	}
@@ -2588,7 +2635,7 @@ func (w *Window) GetWidth() (int, error) {
 func (w *Window) IsValid() (bool, error) {
 	var retVal bool
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(1)
+		_err = w.client.enc.WriteArrayHeader(1)
 		if _err != nil {
 			return
 		}
@@ -2602,7 +2649,7 @@ func (w *Window) IsValid() (bool, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = w.client.dec.DecodeBool()
+		_i, _err = w.client.dec.ReadBool()
 
 		return
 	}
@@ -2627,7 +2674,7 @@ func (w *Window) IsValid() (bool, error) {
 func (w *Window) SetCursor(pos []int) error {
 
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(2)
+		_err = w.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -2647,7 +2694,7 @@ func (w *Window) SetCursor(pos []int) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = w.client.dec.DecodeBytes()
+		_err = w.client.dec.ReadNil()
 
 		return
 	}
@@ -2671,7 +2718,7 @@ func (w *Window) SetCursor(pos []int) error {
 func (w *Window) SetHeight(height int) error {
 
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(2)
+		_err = w.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -2681,7 +2728,7 @@ func (w *Window) SetHeight(height int) error {
 			return
 		}
 
-		_err = w.client.enc.EncodeInt(height)
+		_err = w.client.enc.WriteInt(height)
 
 		if _err != nil {
 			return
@@ -2691,7 +2738,7 @@ func (w *Window) SetHeight(height int) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = w.client.dec.DecodeBytes()
+		_err = w.client.dec.ReadNil()
 
 		return
 	}
@@ -2715,7 +2762,7 @@ func (w *Window) SetHeight(height int) error {
 func (w *Window) SetOption(name string, value interface{}) error {
 
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(3)
+		_err = w.client.enc.WriteArrayHeader(3)
 		if _err != nil {
 			return
 		}
@@ -2731,7 +2778,7 @@ func (w *Window) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = w.client.enc.Encode(value)
+		_err = w.client.enc.WriteIntf(value)
 
 		if _err != nil {
 			return
@@ -2741,7 +2788,7 @@ func (w *Window) SetOption(name string, value interface{}) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = w.client.dec.DecodeBytes()
+		_err = w.client.dec.ReadNil()
 
 		return
 	}
@@ -2765,7 +2812,7 @@ func (w *Window) SetOption(name string, value interface{}) error {
 func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
 	var retVal interface{}
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(3)
+		_err = w.client.enc.WriteArrayHeader(3)
 		if _err != nil {
 			return
 		}
@@ -2781,7 +2828,7 @@ func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = w.client.enc.Encode(value)
+		_err = w.client.enc.WriteIntf(value)
 
 		if _err != nil {
 			return
@@ -2791,7 +2838,7 @@ func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = w.client.dec.DecodeInterface()
+		_i, _err = w.client.dec.ReadIntf()
 
 		return
 	}
@@ -2816,7 +2863,7 @@ func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
 func (w *Window) SetWidth(width int) error {
 
 	enc := func() (_err error) {
-		_err = w.client.enc.EncodeSliceLen(2)
+		_err = w.client.enc.WriteArrayHeader(2)
 		if _err != nil {
 			return
 		}
@@ -2826,7 +2873,7 @@ func (w *Window) SetWidth(width int) error {
 			return
 		}
 
-		_err = w.client.enc.EncodeInt(width)
+		_err = w.client.enc.WriteInt(width)
 
 		if _err != nil {
 			return
@@ -2836,7 +2883,7 @@ func (w *Window) SetWidth(width int) error {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_, _err = w.client.dec.DecodeBytes()
+		_err = w.client.dec.ReadNil()
 
 		return
 	}
@@ -2857,42 +2904,17 @@ func (w *Window) SetWidth(width int) error {
 }
 
 func (c *Client) decodeBuffer() (retVal Buffer, retErr error) {
-	b, err := c.dec.R.ReadByte()
+	retVal.client = c
+	err := c.dec.ReadExtension(&retVal)
 	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode control byte")
+		return retVal, errors.Annotatef(err, "Could not decode extension Buffer")
 	}
 
-	// TODO: use appropriate constant
-	if b != 0xd4 {
-		return retVal, errors.Errorf("Expected code d4; got %v\n", b)
-	}
-
-	t, err := c.dec.DecodeUint8()
-	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode type")
-	}
-
-	if t != typeBuffer {
-		return retVal, errors.Annotatef(err, "Expected typeBuffer; got: %v\n", t)
-	}
-
-	bid, err := c.dec.DecodeUint8()
-	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode Buffer ID")
-	}
-	return Buffer{ID: uint32(bid), client: c}, retErr
+	return
 }
 
 func (c *Client) encodeBuffer(b Buffer) error {
-	err := c.enc.W.WriteByte(0xd4)
-	if err != nil {
-		return errors.Annotatef(err, "Could not encode Buffer ext type")
-	}
-	err = c.enc.EncodeUint8(typeBuffer)
-	if err != nil {
-		return errors.Annotatef(err, "Could not encode Buffer type")
-	}
-	err = c.enc.EncodeUint8(uint8(b.ID))
+	err := c.enc.WriteExtension(&b)
 	if err != nil {
 		return errors.Annotatef(err, "Could not encode Buffer")
 	}
@@ -2900,42 +2922,17 @@ func (c *Client) encodeBuffer(b Buffer) error {
 }
 
 func (c *Client) decodeWindow() (retVal Window, retErr error) {
-	b, err := c.dec.R.ReadByte()
+	retVal.client = c
+	err := c.dec.ReadExtension(&retVal)
 	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode control byte")
+		return retVal, errors.Annotatef(err, "Could not decode extension Window")
 	}
 
-	// TODO: use appropriate constant
-	if b != 0xd4 {
-		return retVal, errors.Errorf("Expected code d4; got %v\n", b)
-	}
-
-	t, err := c.dec.DecodeUint8()
-	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode type")
-	}
-
-	if t != typeWindow {
-		return retVal, errors.Annotatef(err, "Expected typeWindow; got: %v\n", t)
-	}
-
-	bid, err := c.dec.DecodeUint8()
-	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode Window ID")
-	}
-	return Window{ID: uint32(bid), client: c}, retErr
+	return
 }
 
 func (c *Client) encodeWindow(b Window) error {
-	err := c.enc.W.WriteByte(0xd4)
-	if err != nil {
-		return errors.Annotatef(err, "Could not encode Window ext type")
-	}
-	err = c.enc.EncodeUint8(typeWindow)
-	if err != nil {
-		return errors.Annotatef(err, "Could not encode Window type")
-	}
-	err = c.enc.EncodeUint8(uint8(b.ID))
+	err := c.enc.WriteExtension(&b)
 	if err != nil {
 		return errors.Annotatef(err, "Could not encode Window")
 	}
@@ -2943,42 +2940,17 @@ func (c *Client) encodeWindow(b Window) error {
 }
 
 func (c *Client) decodeTabpage() (retVal Tabpage, retErr error) {
-	b, err := c.dec.R.ReadByte()
+	retVal.client = c
+	err := c.dec.ReadExtension(&retVal)
 	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode control byte")
+		return retVal, errors.Annotatef(err, "Could not decode extension Tabpage")
 	}
 
-	// TODO: use appropriate constant
-	if b != 0xd4 {
-		return retVal, errors.Errorf("Expected code d4; got %v\n", b)
-	}
-
-	t, err := c.dec.DecodeUint8()
-	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode type")
-	}
-
-	if t != typeTabpage {
-		return retVal, errors.Annotatef(err, "Expected typeTabpage; got: %v\n", t)
-	}
-
-	bid, err := c.dec.DecodeUint8()
-	if err != nil {
-		return retVal, errors.Annotatef(err, "Could not decode Tabpage ID")
-	}
-	return Tabpage{ID: uint32(bid), client: c}, retErr
+	return
 }
 
 func (c *Client) encodeTabpage(b Tabpage) error {
-	err := c.enc.W.WriteByte(0xd4)
-	if err != nil {
-		return errors.Annotatef(err, "Could not encode Tabpage ext type")
-	}
-	err = c.enc.EncodeUint8(typeTabpage)
-	if err != nil {
-		return errors.Annotatef(err, "Could not encode Tabpage type")
-	}
-	err = c.enc.EncodeUint8(uint8(b.ID))
+	err := c.enc.WriteExtension(&b)
 	if err != nil {
 		return errors.Annotatef(err, "Could not encode Tabpage")
 	}
@@ -2988,7 +2960,7 @@ func (c *Client) encodeTabpage(b Tabpage) error {
 // helper functions for types
 
 func (c *Client) encodeBufferSlice(s []Buffer) error {
-	err := c.enc.EncodeSliceLen(len(s))
+	err := c.enc.WriteArrayHeader(uint32(len(s)))
 	if err != nil {
 		return errors.Annotate(err, "Could not encode slice length")
 	}
@@ -3006,14 +2978,15 @@ func (c *Client) encodeBufferSlice(s []Buffer) error {
 }
 
 func (c *Client) decodeBufferSlice() ([]Buffer, error) {
-	l, err := c.dec.DecodeSliceLen()
+	l, err := c.dec.ReadArrayHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]Buffer, l)
 
-	for i := 0; i < l; i++ {
+	var i uint32
+	for i = 0; i < l; i++ {
 
 		b, err := c.decodeBuffer()
 
@@ -3027,7 +3000,7 @@ func (c *Client) decodeBufferSlice() ([]Buffer, error) {
 }
 
 func (c *Client) encodeTabpageSlice(s []Tabpage) error {
-	err := c.enc.EncodeSliceLen(len(s))
+	err := c.enc.WriteArrayHeader(uint32(len(s)))
 	if err != nil {
 		return errors.Annotate(err, "Could not encode slice length")
 	}
@@ -3045,14 +3018,15 @@ func (c *Client) encodeTabpageSlice(s []Tabpage) error {
 }
 
 func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
-	l, err := c.dec.DecodeSliceLen()
+	l, err := c.dec.ReadArrayHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]Tabpage, l)
 
-	for i := 0; i < l; i++ {
+	var i uint32
+	for i = 0; i < l; i++ {
 
 		b, err := c.decodeTabpage()
 
@@ -3066,7 +3040,7 @@ func (c *Client) decodeTabpageSlice() ([]Tabpage, error) {
 }
 
 func (c *Client) encodeWindowSlice(s []Window) error {
-	err := c.enc.EncodeSliceLen(len(s))
+	err := c.enc.WriteArrayHeader(uint32(len(s)))
 	if err != nil {
 		return errors.Annotate(err, "Could not encode slice length")
 	}
@@ -3084,14 +3058,15 @@ func (c *Client) encodeWindowSlice(s []Window) error {
 }
 
 func (c *Client) decodeWindowSlice() ([]Window, error) {
-	l, err := c.dec.DecodeSliceLen()
+	l, err := c.dec.ReadArrayHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]Window, l)
 
-	for i := 0; i < l; i++ {
+	var i uint32
+	for i = 0; i < l; i++ {
 
 		b, err := c.decodeWindow()
 
@@ -3105,14 +3080,14 @@ func (c *Client) decodeWindowSlice() ([]Window, error) {
 }
 
 func (c *Client) encodeIntSlice(s []int) error {
-	err := c.enc.EncodeSliceLen(len(s))
+	err := c.enc.WriteArrayHeader(uint32(len(s)))
 	if err != nil {
 		return errors.Annotate(err, "Could not encode slice length")
 	}
 
 	for i := 0; i < len(s); i++ {
 
-		err := c.enc.EncodeInt(s[i])
+		err := c.enc.WriteInt(s[i])
 
 		if err != nil {
 			return errors.Annotatef(err, "Could not encode int at index %v", i)
@@ -3123,16 +3098,17 @@ func (c *Client) encodeIntSlice(s []int) error {
 }
 
 func (c *Client) decodeIntSlice() ([]int, error) {
-	l, err := c.dec.DecodeSliceLen()
+	l, err := c.dec.ReadArrayHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]int, l)
 
-	for i := 0; i < l; i++ {
+	var i uint32
+	for i = 0; i < l; i++ {
 
-		b, err := c.dec.DecodeInt()
+		b, err := c.dec.ReadInt()
 
 		if err != nil {
 			return nil, errors.Annotatef(err, "Could not decode int at index %v", i)
@@ -3144,7 +3120,7 @@ func (c *Client) decodeIntSlice() ([]int, error) {
 }
 
 func (c *Client) encodeStringSlice(s []string) error {
-	err := c.enc.EncodeSliceLen(len(s))
+	err := c.enc.WriteArrayHeader(uint32(len(s)))
 	if err != nil {
 		return errors.Annotate(err, "Could not encode slice length")
 	}
@@ -3162,14 +3138,15 @@ func (c *Client) encodeStringSlice(s []string) error {
 }
 
 func (c *Client) decodeStringSlice() ([]string, error) {
-	l, err := c.dec.DecodeSliceLen()
+	l, err := c.dec.ReadArrayHeader()
 	if err != nil {
 		return nil, errors.Annotate(err, "Could not decode slice length")
 	}
 
 	res := make([]string, l)
 
-	for i := 0; i < l; i++ {
+	var i uint32
+	for i = 0; i < l; i++ {
 
 		b, err := c.decodeString()
 

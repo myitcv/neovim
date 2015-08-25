@@ -14,62 +14,6 @@ import (
 	"github.com/myitcv/neovim"
 )
 
-// func ExampleSubscription() {
-// 	cmd := exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
-// 	cmd.Dir = "/tmp"
-
-// 	client, err := neovim.NewCmdClient(neovim.NullInitMethod, cmd, nil)
-// 	if err != nil {
-// 		log.Fatalf("Could not create new client: %v", errors.Details(err))
-// 	}
-// 	client.PanicOnError = true
-
-// 	topic := "topic1"
-// 	sub, err := client.Subscribe(topic)
-// 	if err != nil {
-// 		log.Fatalf("Could not subscribe to topic %v: %v", topic, errors.Details(err))
-// 	}
-
-// 	unsubbed := make(chan struct{})
-// 	done := make(chan struct{})
-// 	received := make(chan struct{})
-
-// 	go func() {
-// 	ForLoop:
-// 		for {
-// 			select {
-// 			case e := <-sub.Events:
-// 				if e == nil {
-// 					break ForLoop
-// 				}
-// 				fmt.Printf("We got %v\n", e.Value)
-// 				received <- struct{}{}
-// 			}
-// 		}
-// 		done <- struct{}{}
-// 	}()
-
-// 	command := fmt.Sprintf(`call rpcnotify(0, "%v", 1)`, topic)
-// 	_ = client.Command(command)
-
-// 	<-received
-
-// 	go func() {
-
-// 		_ = client.Unsubscribe(sub)
-// 		unsubbed <- struct{}{}
-// 	}()
-
-// 	<-done
-
-// 	<-unsubbed
-
-// 	_ = client.Close()
-
-// 	// Output:
-// 	// We got [1]
-// }
-
 func ExampleClient_GetCurrentBuffer() {
 	cmd := exec.Command(os.Getenv("NEOVIM_BIN"), "-u", "/dev/null")
 	cmd.Dir = "/tmp"

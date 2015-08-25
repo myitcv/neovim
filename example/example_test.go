@@ -61,11 +61,29 @@ func (t *ExampleTest) TearDownTest(c *C) {
 	<-done
 }
 
-func (t *ExampleTest) TestGetANumber(c *C) {
-	t.client.RegisterSyncRequestHandler("GetANumber", t.plug.newGetANumberResponder)
-	topic := "GetANumber"
+func (t *ExampleTest) TestGetTwoNumbers(c *C) {
+	t.client.RegisterSyncRequestHandler("GetTwoNumbers", t.plug.newGetTwoNumbersResponder)
+	topic := "GetTwoNumbers"
 	commandDef := fmt.Sprintf(`call remote#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
 	_ = t.client.Command(commandDef)
-	res, _ := t.client.Eval(`GetANumber()`)
-	c.Assert(res, Equals, int64(42))
+	res_i, _ := t.client.Eval(`GetTwoNumbers(5)`)
+	exp := []interface{}{47, "42"}
+
+	res, ok := res_i.([]interface{})
+	c.Assert(ok, Equals, true)
+	c.Assert(len(res), Equals, len(exp))
+	c.Assert(int(res[0].(int64)), Equals, exp[0])
+	c.Assert(string(res[1].([]byte)), Equals, exp[1])
+}
+
+func (t *ExampleTest) TestDoSomethingAsync(c *C) {
+	t.client.RegisterSyncRequestHandler("DoSomethingAsync", t.plug.newGetTwoNumbersResponder)
+	topic := "DoSomethingAsync"
+	commandDef := fmt.Sprintf(`call remote#define#FunctionOnChannel(1, "%v", 0, "%v", {})`, topic, topic)
+	_ = t.client.Command(commandDef)
+	ch := make(chan string)
+	t.plug.AddDoSomethingAsyncChan(ch)
+	t.client.Command(`call DoSomethingAsync("test")`)
+	s := <-ch
+	c.Assert(s, Equals, "test")
 }

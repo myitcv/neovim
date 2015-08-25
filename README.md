@@ -8,13 +8,12 @@ Go package for writing [Neovim](http://neovim.org/) plugins
 go get github.com/myitcv/neovim
 ```
 
-This package is very much in alpha as [the Neovim API itsef](https://github.com/neovim/neovim/issues/973)
-is still in flux. Therefore, expect changes to this API.
+This package is very much in alpha. Therefore, expect changes to this API. Stuff will break.
 
 ## Overview and Writing plugins
 
-See [the wiki](https://github.com/myitcv/neovim/wiki/Overview-of-writing-and-using-Go-packages-with-Neovim) for more
-details.
+See the [`Example`](https://github.com/myitcv/neovim/tree/master/example) plugin for a brief `README` on how to
+implement your own Go plugin.
 
 ## Supported platforms
 
@@ -25,13 +24,14 @@ Support welcomed on other platforms
 ## Tests
 
 ```bash
-go test
+go test ./...
 ```
 
 ## Credit
 
+* The entire [Neovim](https://github.com/neovim/neovim) team for their work
 * [@tarruda](https://github.com/tarruda) for leading the way with his [python-client](https://github.com/neovim/python-client)
-* [@vmihailenco](https://github.com/vmihailenco) for [msgpack](https://github.com/vmihailenco/msgpack)
+* [@philhofer](https://github.com/philhofer) et al for the excellent [`msgp`](https://github.com/tinylib/msgp)
 
 ## Todo list
 
