@@ -81,6 +81,11 @@ const (
 	_PluginName string = "neovim-go-plugin-manager"
 )
 
+type templateArgs struct {
+	Plugin      string
+	PluginTypes []pluginType
+}
+
 type pluginType struct {
 	Package, Type string
 }
@@ -161,7 +166,7 @@ func install(pkg string) string {
 	}
 
 	log.Printf("Building plugin host\n")
-	err = temp.Execute(pluginHostOutFile, realPluginTypes)
+	err = temp.Execute(pluginHostOutFile, templateArgs{pkg, realPluginTypes})
 	if err != nil {
 		log.Fatalf("Could not write plugin host: %v\n", err)
 	}
@@ -206,7 +211,9 @@ func getPluginImplementingTypes(pkg string) []types.Object {
 		log.Fatalf("Could not parse dir: %v\n", err)
 	}
 
-	exPkg := astPkgs["example"]
+	pkgSplit := strings.Split(pkg, "/")
+
+	exPkg := astPkgs[pkgSplit[len(pkgSplit)-1]]
 	files := make([]*ast.File, 0)
 	for _, v := range exPkg.Files {
 		files = append(files, v)
@@ -277,7 +284,7 @@ import (
 	"syscall"
 
 	"github.com/myitcv/neovim"
-	"github.com/myitcv/neovim/example"
+	"{{.Plugin}}"
 
 	// list continues...
 )
@@ -340,7 +347,7 @@ func (p *pluginHost) DoInit() error {
 	client := p.client
 	var err error
 
-	{{range $index, $element := .}}
+	{{range $index, $element := .PluginTypes}}
 	var p{{$index}} neovim.Plugin
 	p{{$index}} = &{{$element.Package}}.{{$element.Type}}{} // see below
 	tp{{$index}} := reflect.TypeOf(p{{$index}})
