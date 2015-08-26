@@ -10,10 +10,15 @@ go get github.com/myitcv/neovim
 
 This package is very much in alpha. Therefore, expect changes to this API. Stuff will break.
 
-## Overview and Writing plugins
+## Writing plugins
 
-See the [`Example`](https://github.com/myitcv/neovim/tree/master/example) plugin for a brief `README` on how to
-implement your own Go plugin.
+See:
+
+* the [`Example`](https://github.com/myitcv/neovim/tree/master/example) plugin for a brief `README` on how to
+implement your own Go plugin
+* [`neogo`](), a proof of concept Neovim plugin written against the `neovim` Go package to support Go development in Neovim. This uses a `go/parser` AST generated from the current buffer to highlight code using `matchaddpos` (as opposed to Neovim's default [regex-based syntax definitions](https://github.com/neovim/neovim/blob/master/runtime/syntax/go.vim))
+
+As explained in the [TODO](https://github.com/myitcv/neovim/wiki/TODO), many of the steps required to create a plugin are not currently automated, but very much on the roadmap.
 
 ## Supported platforms
 
@@ -35,4 +40,4 @@ go test ./...
 
 ## Todo list
 
-See [the wiki](https://github.com/myitcv/neovim/wiki/Overview-of-writing-and-using-Go-packages-with-Neovim)
+See [the wiki](https://github.com/myitcv/neovim/wiki/TODO)
