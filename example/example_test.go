@@ -62,9 +62,9 @@ func (t *ExampleTest) TearDownTest(c *C) {
 }
 
 func (t *ExampleTest) TestGetTwoNumbers(c *C) {
-	t.client.RegisterSyncRequestHandler("GetTwoNumbers", t.plug.newGetTwoNumbersResponder)
+	t.client.RegisterSyncFunction("GetTwoNumbers", t.plug.newGetTwoNumbersResponder, true, true)
 	topic := "GetTwoNumbers"
-	commandDef := fmt.Sprintf(`call remote#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
+	commandDef := fmt.Sprintf(`call remote#define#FunctionOnChannel(1, "%v", 1, "%v", {'range': '', 'eval': '["42", 42]'})`, topic, topic)
 	_ = t.client.Command(commandDef)
 	res_i, _ := t.client.Eval(`GetTwoNumbers(5)`)
 	exp := []interface{}{47, "42"}
@@ -77,7 +77,7 @@ func (t *ExampleTest) TestGetTwoNumbers(c *C) {
 }
 
 func (t *ExampleTest) TestDoSomethingAsync(c *C) {
-	t.client.RegisterSyncRequestHandler("DoSomethingAsync", t.plug.newGetTwoNumbersResponder)
+	t.client.RegisterSyncRequestHandler("DoSomethingAsync", t.plug.newGetTwoNumbersResponder, nil)
 	topic := "DoSomethingAsync"
 	commandDef := fmt.Sprintf(`call remote#define#FunctionOnChannel(1, "%v", 0, "%v", {})`, topic, topic)
 	_ = t.client.Command(commandDef)

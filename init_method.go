@@ -17,6 +17,14 @@ func (i *InitMethodWrapper) Results() msgp.Encodable {
 	return i.results
 }
 
+func (i *InitMethodWrapper) Params() *MethodOptionParams {
+	return nil
+}
+
+func (i *InitMethodWrapper) Eval() msgp.Decodable {
+	return nil
+}
+
 type InitMethodArgs struct {
 	hostName string
 }
@@ -26,15 +34,6 @@ type InitMethodRetVals struct {
 }
 
 func (z *InitMethodArgs) DecodeMsg(dc *msgp.Reader) (err error) {
-	var ssz uint32
-	ssz, err = dc.ReadArrayHeader()
-	if err != nil {
-		return
-	}
-	if ssz != 1 {
-		err = msgp.ArrayError{Wanted: 1, Got: ssz}
-		return
-	}
 	i, err := dc.ReadBytes(nil)
 	if err != nil {
 		return

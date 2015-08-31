@@ -127,18 +127,18 @@ func NewClient(im InitMethod, c io.ReadWriteCloser, log Logger) (*Client, error)
 	}
 
 	res := &Client{rw: c}
-	res.respMap = newrespSyncMap()
-	res.syncProvMap = newsyncProvSyncMap()
-	res.asyncProvMap = newasyncProvSyncMap()
+	res.respMap = newRespSyncMap()
+	res.syncProvMap = newSyncProvSyncMap()
+	res.asyncProvMap = newAsyncProvSyncMap()
 	res.dec = msgp.NewReader(c)
 	res.enc = msgp.NewWriter(c)
 	res.log = log
 	res.KillChannel = make(chan struct{})
 
-	err := res.syncProvMap.Put(_MethodInit, func() SyncDecoder {
+	err := res.syncProvMap.Put(_MethodInit, NewSyncDecoderOptions{NewSyncDecoder: func() SyncDecoder {
 		res := &InitMethodWrapper{InitMethod: im, Client: res, args: &InitMethodArgs{}, results: &InitMethodRetVals{}}
 		return res
-	})
+	}, MethodOptions: &MethodOptions{Type: FUNCTION}})
 	if err != nil {
 		return nil, errors.Annotatef(err, "Could not add init method handler")
 	}
@@ -150,11 +150,27 @@ func (c *Client) Run() {
 	go c.doListen()
 }
 
-func (c *Client) RegisterSyncRequestHandler(m string, d NewSyncDecoder) error {
+func (c *Client) RegisterSyncFunction(m string, d NewSyncDecoder, rangeBased bool, eval bool) error {
+	return c.RegisterSyncRequestHandler(m, d, &MethodOptions{
+		Type:  FUNCTION,
+		Range: rangeBased,
+		Eval:  eval,
+	})
+}
+
+func (c *Client) RegisterAsyncFunction(m string, d NewAsyncDecoder, rangeBased bool, eval bool) error {
+	return c.RegisterAsyncRequestHandler(m, d, &MethodOptions{
+		Type:  FUNCTION,
+		Range: rangeBased,
+		Eval:  eval,
+	})
+}
+
+func (c *Client) RegisterSyncRequestHandler(m string, d NewSyncDecoder, o *MethodOptions) error {
 	if m == _MethodInit {
 		return errors.Errorf("Cannot register a provider with the protected method %v", _MethodInit)
 	}
-	err := c.syncProvMap.Put(m, d)
+	err := c.syncProvMap.Put(m, NewSyncDecoderOptions{d, o})
 	if err != nil {
 		return errors.Annotatef(err, "Could not store RequestHanlder in provider map")
 	}
@@ -162,8 +178,8 @@ func (c *Client) RegisterSyncRequestHandler(m string, d NewSyncDecoder) error {
 	return nil
 }
 
-func (c *Client) RegisterAsyncRequestHandler(m string, d NewAsyncDecoder) error {
-	err := c.asyncProvMap.Put(m, d)
+func (c *Client) RegisterAsyncRequestHandler(m string, d NewAsyncDecoder, o *MethodOptions) error {
+	err := c.asyncProvMap.Put(m, NewAsyncDecoderOptions{d, o})
 	if err != nil {
 		return errors.Annotatef(err, "Could not store RequestHanlder in provider map")
 	}
@@ -219,18 +235,47 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode request method name: %v", err)
 			}
 
-			newdecoder, err := c.syncProvMap.Get(string(reqMeth))
+			newdecoderoptions, err := c.syncProvMap.Get(string(reqMeth))
 			if err != nil {
-				c.log.Fatalf("Could not find RequestHandler for method [%v]: %v\n", reqMeth, err)
+				c.log.Fatalf("Could not find RequestHandler for method [%v]: %v\n", string(reqMeth), err)
 			}
 
-			dre := newdecoder()
+			opts := newdecoderoptions.MethodOptions
 
-			err = dre.Args().DecodeMsg(c.dec)
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				c.log.Fatalf("Could not decode request method args: %v", err)
+			// now we have an array of values
+			// the length of the array is determined by the method options
+			expArgs := opts.ArgsLength()
+			actArgs, err := dec.ReadArrayHeader()
+			if err != nil {
+				c.log.Fatalf("Could not decode request method args length: %v", err)
+			}
+
+			if expArgs != actArgs {
+				c.log.Fatalf("Expected args length %v, but got %v", expArgs, actArgs)
+			}
+
+			dre := newdecoderoptions.NewSyncDecoder()
+
+			// TODO need to add support for command and autocommand here
+			if opts.Type == FUNCTION {
+				err = dre.Args().DecodeMsg(c.dec)
+				if err == io.EOF {
+					break
+				} else if err != nil {
+					c.log.Fatalf("Could not decode request method args: %v", err)
+				}
+			} else {
+				c.log.Fatalf("We can't support anything other than functions right now")
+			}
+
+			// now we read the options
+			if dre.Params() != nil {
+				dre.Params().DecodeParams(opts, dec)
+			}
+
+			// now we read the eval result if there is one
+			if opts.Eval {
+				dre.Eval().DecodeMsg(dec)
 			}
 
 			go func(reqID uint32, dre SyncDecoder) {
@@ -295,17 +340,49 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode topic: %v", err)
 			}
 
-			newDecoder, err := c.asyncProvMap.Get(string(topic))
+			// TODO lots of code repetition here with case 1
+
+			newdecoderoptions, err := c.asyncProvMap.Get(string(topic))
 			if err != nil {
-				c.log.Fatalf("Could not find async handler for topic [%v]: %v\n", topic, err)
+				c.log.Fatalf("Could not find RequestHandler for method [%v]: %v\n", string(topic), err)
 			}
 
-			dr := newDecoder()
-			err = dr.Args().DecodeMsg(c.dec)
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				c.log.Fatalf("Could not decode request method args: %v", err)
+			opts := newdecoderoptions.MethodOptions
+
+			// now we have an array of values
+			// the length of the array is determined by the method options
+			expArgs := opts.ArgsLength()
+			actArgs, err := dec.ReadArrayHeader()
+			if err != nil {
+				c.log.Fatalf("Could not decode request method args length: %v", err)
+			}
+
+			if expArgs != actArgs {
+				c.log.Fatalf("Expected args length %v, but got %v", expArgs, actArgs)
+			}
+
+			dr := newdecoderoptions.NewAsyncDecoder()
+
+			// TODO need to add support for command and autocommand here
+			if opts.Type == FUNCTION {
+				err = dr.Args().DecodeMsg(c.dec)
+				if err == io.EOF {
+					break
+				} else if err != nil {
+					c.log.Fatalf("Could not decode request method args: %v", err)
+				}
+			} else {
+				c.log.Fatalf("We can't support anything other than functions right now")
+			}
+
+			// now we read the options
+			if dr.Params() != nil {
+				dr.Params().DecodeParams(opts, dec)
+			}
+
+			// now we read the eval result if there is one
+			if opts.Eval {
+				dr.Eval().DecodeMsg(dec)
 			}
 
 			go func(dr AsyncDecoder) {

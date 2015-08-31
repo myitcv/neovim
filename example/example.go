@@ -1,6 +1,10 @@
 package example
 
-import "github.com/myitcv/neovim"
+import (
+	"fmt"
+
+	"github.com/myitcv/neovim"
+)
 
 type Example struct {
 	client                *neovim.Client
@@ -12,8 +16,8 @@ func (n *Example) Init(c *neovim.Client, l neovim.Logger) error {
 	n.client = c
 	n.log = l
 
-	n.client.RegisterSyncRequestHandler("GetTwoNumbers", n.newGetTwoNumbersResponder)
-	n.client.RegisterAsyncRequestHandler("DoSomethingAsync", n.newDoSomethingAsyncResponder)
+	n.client.RegisterSyncFunction("GetTwoNumbers", n.newGetTwoNumbersResponder, true, true)
+	n.client.RegisterAsyncFunction("DoSomethingAsync", n.newDoSomethingAsyncResponder, false, false)
 
 	ch := make(chan string)
 	n.AddDoSomethingAsyncChan(ch)
@@ -31,7 +35,11 @@ type theThing struct {
 }
 
 // a synchronous method that returns two numbers
-func (n *Example) GetTwoNumbers(i int) (int, string, error, error) {
+//neovim:evalopt
+func (n *Example) GetTwoNumbers(o *neovim.MethodOptionParams, i int, e *MyEvalResult) (int, string, error, error) {
+	if o != nil {
+		fmt.Printf("We have %v\n", o.Range)
+	}
 	return i + 42, "42", nil, nil
 }
 
@@ -41,7 +49,7 @@ func (n *Example) AddDoSomethingAsyncChan(c chan string) {
 }
 
 // an async method defines no return values
-func (n *Example) DoSomethingAsync(s string) error {
+func (n *Example) DoSomethingAsync(o *neovim.MethodOptionParams, s string) error {
 	// TODO clearly this is not thread safe
 	for _, c := range n.doSomethingAsyncChans {
 		c <- s

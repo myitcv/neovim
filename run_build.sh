@@ -9,24 +9,28 @@ eval "$(curl -Ss https://raw.githubusercontent.com/neovim/bot-ci/master/scripts/
 # (this ensures that the Neovim API hasn't moved on without us
 # knowing)
 
+# TODO this should be vendored...
+go get -u github.com/ncw/gotemplate/...
+go get -u github.com/tinylib/msgp
+go generate
+
 pushd $TRAVIS_BUILD_DIR/cmd/gen_neovim_api/
 go get -d -t -v ./... && go build -v ./...
-x=`mktemp`
-NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/bin/nvim ./gen_neovim_api -g -o api.go.gen -t api_test.go.gen
-cat api.go.gen | gofmt | diff -- - ../../gen_client_api.go
-if [ $? -ne 0 ]
-then
-  echo "Neovim exposed API differs from committed generated API"
-  exit 1
-fi
-cat api_test.go.gen | gofmt | diff -- - ../../gen_client_api_test.go
-if [ $? -ne 0 ]
-then
-  echo "Neovim exposed API differs that resulted in different test interfaces"
-  exit 1
-fi
-rm $x
+NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/bin/nvim ./gen_neovim_api -g -o ../../gen_client_api.go -t ../../gen_client_api_test.go
 popd
+
+gofmt -w gen_client_api*
+
+output=$(git status --porcelain)
+
+if [ -z "$output"  ]
+then
+  echo "Git is clean"
+else
+  git diff
+  >&2 echo -e "Git is not clean. The following files should have been committed:\n\n$output"
+  exit 1
+fi
 
 NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/bin/nvim go test
 NEOVIM_BIN=$TRAVIS_BUILD_DIR/_neovim/bin/nvim go test -race

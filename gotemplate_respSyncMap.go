@@ -13,7 +13,7 @@ type respSyncMap struct {
 	theMap map[uint32]*responseHolder
 }
 
-func newrespSyncMap() *respSyncMap {
+func newRespSyncMap() *respSyncMap {
 	return &respSyncMap{
 		lock:   new(sync.Mutex),
 		theMap: make(map[uint32]*responseHolder),

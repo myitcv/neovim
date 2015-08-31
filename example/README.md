@@ -17,36 +17,16 @@ Clearly all the steps after step 2 should be automated in some fashion. See the
 ## Installing and using the `Example` plugin
 
 0. `mkdir -p $HOME/.nvim/plugins/go/`
-1. `cd cmd/neovim-go-plugin-manager`
-2. `go build`
-3. `./neovim-go-plugin-manager github.com/myitcv/neovim/example`
+1. `go get -u github.com/myitcv/neovim/cmd/neovim-go-plugin-manager`
+3. `$GOPATH/bin/neovim-go-plugin-manager github.com/myitcv/neovim/example`
 
-Append the following to your `$HOME/.nvimrc` file:
+Now launch `nvim`
 
-```vimscript
-function! s:RequireGoHost(host)
-  try
-    let channel_id = rpcstart($HOME.'/.nvim/plugins/go/plugin_host')
-    call rpcrequest(channel_id, 'plugin_load', 'go')
-    return channel_id
-  catch
-    echomsg v:exception
-  endtry
-  throw 'Failed to load Go host'.
-endfunction
-
-if has('nvim')
-  call remote#host#Register('go', '*', function('s:RequireGoHost'))
-  try
-    call remote#define#FunctionOnHost('go', 'GetTwoNumbers', 1, 'GetTwoNumbers', {})
-    call remote#define#FunctionOnHost('go', 'DoSomethingAsync', 0, 'DoSomethingAsync', {})
-  catch
-    echomsg v:exception
-  endtry
-endif
+```
+nvim -u $GOPATH/src/github.com/myitcv/neovim/example/special.vimrc
 ```
 
-Now launch `nvim` and try:
+and try:
 
 ```
 :echo GetTwoNumbers(5)
