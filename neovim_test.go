@@ -182,12 +182,20 @@ func (g *getANumberWrapper) Args() msgp.Decodable {
 	return g.args
 }
 
+func (g *getANumberWrapper) Params() *neovim.MethodOptionParams {
+	return nil
+}
+
+func (g *getANumberWrapper) Eval() msgp.Decodable {
+	return nil
+}
+
 func (g *getANumberWrapper) Results() msgp.Encodable {
 	return g.results
 }
 
 type getANumberArgs struct {
-	a []interface{}
+	a int
 }
 
 type getANumberRetVals struct {
@@ -204,12 +212,12 @@ func (g *getANumberArgs) DecodeMsg(dec *msgp.Reader) error {
 		return errors.Errorf("Expected 1 argument, not %v", l)
 	}
 
-	i, err := dec.ReadIntf()
+	i, err := dec.ReadInt()
 	if err != nil {
 		return err
 	}
 
-	g.a = i.([]interface{})
+	g.a = i
 
 	return nil
 }
@@ -251,13 +259,12 @@ func (t *NeovimTest) TestFunctionOnChannel(c *C) {
 	newGetANumberResponder := func() neovim.SyncDecoder {
 		return wrap
 	}
-	t.client.RegisterSyncRequestHandler("GetANumber", newGetANumberResponder)
+	t.client.RegisterSyncFunction("GetANumber", newGetANumberResponder, false, false)
 	topic := "GetANumber"
 	commandDef := fmt.Sprintf(`call remote#define#FunctionOnChannel(1, "%v", 1, "%v", {})`, topic, topic)
 	_ = t.client.Command(commandDef)
 	res, _ := t.client.Eval(`GetANumber(5)`)
-	c.Assert(len(wrap.args.a), Equals, 1)
-	c.Assert(wrap.args.a[0], Equals, int64(5))
+	c.Assert(wrap.args.a, Equals, 5)
 	c.Assert(res, Equals, int64(42))
 }
 

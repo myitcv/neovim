@@ -8,12 +8,13 @@ import (
 	"io"
 	"sync"
 
+	"github.com/juju/errors"
 	"github.com/tinylib/msgp/msgp"
 )
 
 //go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "respSyncMap(uint32, *responseHolder)"
-//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "syncProvSyncMap(string, NewSyncDecoder)"
-//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "asyncProvSyncMap(string, NewAsyncDecoder)"
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "syncProvSyncMap(string, NewSyncDecoderOptions)"
+//go:generate gotemplate "github.com/myitcv/neovim/template/syncmap" "asyncProvSyncMap(string, NewAsyncDecoderOptions)"
 
 type neovimMethodID string
 
@@ -43,11 +44,80 @@ type Client struct {
 	log      Logger
 }
 
+type NilDeocdable struct{}
+
+func (n *NilDeocdable) DecodeMsg(r *msgp.Reader) error {
+	i, err := r.ReadArrayHeader()
+	if err != nil {
+		return err
+	}
+
+	if i != 0 {
+		return errors.Errorf("Expected zero arguments, got %v", i)
+	}
+
+	return nil
+}
+
 type InitMethod func() error
 
 type ChannelID uint8
 
 func NullInitMethod() error { return nil }
+
+type MethodOptionParams struct {
+	Range *Range
+}
+
+func (m *MethodOptionParams) DecodeParams(o *MethodOptions, reader *msgp.Reader) error {
+	if o.Range {
+		r := new(Range)
+		err := r.DecodeMsg(reader)
+		if err != nil {
+			return errors.Annotatef(err, "could not read a range")
+		}
+		m.Range = r
+	}
+	return nil
+}
+
+type MethodType uint
+
+const (
+	FUNCTION MethodType = iota
+	COMMAND
+	AUTOCOMMAND
+)
+
+type MethodOptions struct {
+	Type  MethodType
+	Range bool
+	Eval  bool
+
+	// TODO
+	// Bang bool
+	// Pattern string
+	// Complete bool
+	// NArgs int
+	// Count int
+	// Register
+}
+
+func (m *MethodOptions) ArgsLength() (res uint32) {
+	switch m.Type {
+	case FUNCTION:
+		// args are always sent for a function, even if there are none
+		// in which case they will be sent as []
+		res = 1
+		if m.Range {
+			res += 1
+		}
+		if m.Eval {
+			res += 1
+		}
+	}
+	return res
+}
 
 // Plugin is the interface implemented by writers of Neovim plugins using the
 // neovim package
@@ -79,6 +149,16 @@ type Encoder interface {
 type NewSyncDecoder func() SyncDecoder
 type NewAsyncDecoder func() AsyncDecoder
 
+type NewSyncDecoderOptions struct {
+	NewSyncDecoder
+	*MethodOptions
+}
+
+type NewAsyncDecoderOptions struct {
+	NewAsyncDecoder
+	*MethodOptions
+}
+
 // Use for async notifications
 // Here the error would simply be reported to the log
 // (because there is nothing to return)
@@ -86,14 +166,20 @@ type Decoder interface {
 	DecodeMsg(*msgp.Reader) error
 }
 
-type SyncDecoder interface {
+type CallArgs interface {
+	Eval() msgp.Decodable
+	Params() *MethodOptionParams
 	Args() msgp.Decodable
+}
+
+type SyncDecoder interface {
+	CallArgs
 	SyncRunner
 	Results() msgp.Encodable
 }
 
 type AsyncDecoder interface {
-	Args() msgp.Decodable
+	CallArgs
 	AsyncRunner
 }
 
