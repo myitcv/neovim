@@ -1,10 +1,6 @@
 package example
 
-import (
-	"fmt"
-
-	"github.com/myitcv/neovim"
-)
+import "github.com/myitcv/neovim"
 
 type Example struct {
 	client                *neovim.Client
@@ -37,9 +33,6 @@ type theThing struct {
 // a synchronous method that returns two numbers
 //neovim:evalopt
 func (n *Example) GetTwoNumbers(o *neovim.MethodOptionParams, i int, e *MyEvalResult) (int, string, error, error) {
-	if o != nil {
-		fmt.Printf("We have %v\n", o.Range)
-	}
 	return i + 42, "42", nil, nil
 }
 
