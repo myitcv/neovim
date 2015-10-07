@@ -73,7 +73,7 @@ func (t *ExampleTest) TestGetTwoNumbers(c *C) {
 	c.Assert(ok, Equals, true)
 	c.Assert(len(res), Equals, len(exp))
 	c.Assert(int(res[0].(int64)), Equals, exp[0])
-	c.Assert(string(res[1].([]byte)), Equals, exp[1])
+	c.Assert(string(res[1].(string)), Equals, exp[1])
 }
 
 func (t *ExampleTest) TestDoSomethingAsync(c *C) {

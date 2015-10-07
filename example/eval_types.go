@@ -3,6 +3,6 @@ package example
 
 //msgp:tuple MyEvalResult
 type MyEvalResult struct {
-	S []byte
+	S string
 	I int
 }

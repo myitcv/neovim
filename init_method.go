@@ -34,7 +34,7 @@ type InitMethodRetVals struct {
 }
 
 func (z *InitMethodArgs) DecodeMsg(dc *msgp.Reader) (err error) {
-	i, err := dc.ReadBytes(nil)
+	i, err := dc.ReadString()
 	if err != nil {
 		return
 	}

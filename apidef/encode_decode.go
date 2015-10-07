@@ -52,7 +52,7 @@ func GetAPI(ad *msgp.Reader) (*API, error) {
 	resp := &API{}
 
 	for i := uint32(0); i < ml; i++ {
-		k, err := ad.ReadBytes(nil)
+		k, err := ad.ReadString()
 		if err != nil {
 			return nil, errors.Annotate(err, "Could not decode key of top level api map")
 		}
@@ -79,7 +79,7 @@ func GetAPI(ad *msgp.Reader) (*API, error) {
 			features := make([]APIFeature, ml)
 
 			for i := range features {
-				fn, err := ad.ReadBytes(nil)
+				fn, err := ad.ReadString()
 				if err != nil {
 					return nil, errors.Annotate(err, "Could not decode feature name")
 				}
@@ -94,7 +94,7 @@ func GetAPI(ad *msgp.Reader) (*API, error) {
 				features[i].Methods = make([]string, meths)
 
 				for j := range features[i].Methods {
-					mn, err := ad.ReadBytes(nil)
+					mn, err := ad.ReadString()
 					if err != nil {
 						return nil, errors.Annotatef(err, "Could not decode feature method name at index %v", j)
 					}
@@ -115,7 +115,7 @@ func GetAPI(ad *msgp.Reader) (*API, error) {
 
 func decodeAPIClass(d *msgp.Reader) (APIClass, error) {
 	resp := APIClass{}
-	cn, err := d.ReadBytes(nil)
+	cn, err := d.ReadString()
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode class name")
 	}
@@ -129,7 +129,7 @@ func decodeAPIClass(d *msgp.Reader) (APIClass, error) {
 		return resp, errors.Errorf("Expected map length of 1; got %v", ml)
 	}
 
-	mk, err := d.ReadBytes(nil)
+	mk, err := d.ReadString()
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode ID key")
 	}
@@ -174,14 +174,14 @@ func decodeAPIFunction(d *msgp.Reader) (APIFunction, error) {
 	}
 
 	for i := uint32(0); i < ml; i++ {
-		k, err := d.ReadBytes(nil)
+		k, err := d.ReadString()
 		if err != nil {
 			return resp, errors.Annotate(err, "Could not decode function property key")
 		}
 
 		switch string(k) {
 		case "name":
-			s, err := d.ReadBytes(nil)
+			s, err := d.ReadString()
 			if err != nil {
 				return resp, errors.Annotate(err, "Could not decode function name")
 			}
@@ -205,7 +205,7 @@ func decodeAPIFunction(d *msgp.Reader) (APIFunction, error) {
 			}
 			resp.Async = b
 		case "return_type":
-			s, err := d.ReadBytes(nil)
+			s, err := d.ReadString()
 			if err != nil {
 				return resp, errors.Annotate(err, "Could not decode function return type")
 			}
@@ -267,12 +267,12 @@ func decodeAPIFunctionParameter(d *msgp.Reader) (APIFunctionParameter, error) {
 		return resp, errors.Errorf("Expected lenght to be 2; got %v", sl)
 	}
 
-	pt, err := d.ReadBytes(nil)
+	pt, err := d.ReadString()
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode class name")
 	}
 	resp.Type = string(pt)
-	pn, err := d.ReadBytes(nil)
+	pn, err := d.ReadString()
 	if err != nil {
 		return resp, errors.Annotate(err, "Could not decode class name")
 	}
