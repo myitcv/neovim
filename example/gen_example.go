@@ -34,7 +34,7 @@ type doSomethingAsyncWrapper struct {
 
 //msgp:tuple DoSomethingAsyncArgs
 type DoSomethingAsyncArgs struct {
-	Arg0 []byte
+	Arg0 string
 }
 
 func (g *doSomethingAsyncWrapper) Run() error {
@@ -86,7 +86,7 @@ type GetTwoNumbersArgs struct {
 //msgp:tuple GetTwoNumbersResults
 type GetTwoNumbersResults struct {
 	Ret0 int64
-	Ret1 []byte
+	Ret1 string
 }
 
 func (g *getTwoNumbersWrapper) Run() (error, error) {
@@ -101,7 +101,7 @@ func (g *getTwoNumbersWrapper) Run() (error, error) {
 	}
 
 	res.Ret0 = int64(retVal0)
-	res.Ret1 = []byte(retVal1)
+	res.Ret1 = string(retVal1)
 
 	g.results = res
 

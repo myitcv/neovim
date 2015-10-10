@@ -228,7 +228,7 @@ func (c *Client) doListen() error {
 				c.log.Fatalf("Could not decode request id: %v", err)
 			}
 
-			reqMeth, err := dec.ReadBytes(nil)
+			reqMeth, err := dec.ReadString()
 			if err == io.EOF {
 				break
 			} else if err != nil {
@@ -333,7 +333,7 @@ func (c *Client) doListen() error {
 			rh.ch <- resp
 		case 2:
 			// handle notification
-			topic, err := dec.ReadBytes(nil)
+			topic, err := dec.ReadString()
 			if err == io.EOF {
 				break
 			} else if err != nil {

@@ -16,4 +16,4 @@ go:
 env:
   - GOMAXPROCS=4
 
-script: ./run_build.sh
+script: ./scripts/run_build.sh
