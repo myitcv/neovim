@@ -16,7 +16,8 @@ import (
 	"sort"
 	"strings"
 	"text/template"
-	"unicode"
+
+	"bitbucket.org/pkg/inflect"
 
 	"github.com/juju/errors"
 	"github.com/myitcv/neovim/apidef"
@@ -182,15 +183,6 @@ func getType(s string) _type {
 }
 
 func genMethodTemplates(fs []apidef.APIFunction) []methodTemplate {
-	// TODO make this cleaner - remove vim_get_api_info
-	var fs_copy []apidef.APIFunction
-	for _, f := range fs {
-		if f.Name != "vim_get_api_info" && f.Name != "vim_call_function" && f.Name != "vim_get_color_map" {
-			fs_copy = append(fs_copy, f)
-		}
-	}
-	fs = fs_copy
-
 	res := make([]methodTemplate, len(fs))
 
 	for i, f := range fs {
@@ -203,7 +195,7 @@ func genMethodTemplates(fs []apidef.APIFunction) []methodTemplate {
 
 		// name
 		m.RawName = f.Name
-		m.Name = camelize(splits[1])
+		m.Name = inflect.Camelize(splits[1])
 
 		m.ID = f.ID
 
@@ -214,7 +206,7 @@ func genMethodTemplates(fs []apidef.APIFunction) []methodTemplate {
 		case "vim":
 			recType = getType("Client")
 		case "buffer", "window", "tabpage":
-			recType = getType(camelize(recID))
+			recType = getType(inflect.Camelize(recID))
 		default:
 			log.Fatalf("Do not know how to deal with receiver type %v\n", recID)
 		}
@@ -247,7 +239,7 @@ func genMethodTemplates(fs []apidef.APIFunction) []methodTemplate {
 		m.Params = make([]variable, len(ofInterest))
 		for i, v := range ofInterest {
 			p := getType(v.Type)
-			m.Params[i].name = camelize(v.Name)
+			m.Params[i].name = inflect.Camelize(v.Name)
 			m.Params[i].name = strings.ToLower(string(m.Params[i].name[0])) + m.Params[i].name[1:]
 			m.Params[i].Type = p
 		}
@@ -301,7 +293,7 @@ func genAPI(a *apidef.API) {
 	}
 
 	fm := make(template.FuncMap)
-	fm["camelize"] = camelize
+	fm["camelize"] = inflect.Camelize
 	fm["to_lower"] = strings.ToLower
 
 	// generate the API
@@ -538,20 +530,15 @@ func (c *Client) encode{{.Name}}(b {{.Name}}) error {
 var typeMap = map[string]_type{
 	"String": {
 		name:      "string",
-		enc:       "encodeString",
-		dec:       "decodeString",
+		enc:       "WriteString",
+		dec:       "ReadString",
+		primitive: true,
 		genHelper: true,
 	},
 	"ArrayOf(String)": {
 		name: "[]string",
 		enc:  "encodeStringSlice",
 		dec:  "decodeStringSlice",
-	},
-	"Position": {
-		name:      "uint32",
-		enc:       "EncodeUint32",
-		dec:       "ReadUint32",
-		primitive: true,
 	},
 	"ArrayOf(Integer, 2)": {
 		name: "[]int",
@@ -570,6 +557,17 @@ var typeMap = map[string]_type{
 		enc:       "WriteBool",
 		dec:       "ReadBool",
 		primitive: true,
+	},
+	"Array": {
+		name:      "[]interface{}",
+		enc:       "WriteIntf",
+		dec:       "ReadIntf",
+		primitive: true,
+	},
+	"Dictionary": {
+		name: "map[string]interface{}",
+		enc:  "encodeDictionary",
+		dec:  "decodeDictionary",
 	},
 	"Object": {
 		name:      "interface{}",
@@ -613,20 +611,4 @@ var typeMap = map[string]_type{
 	"Client": {
 		name: "Client",
 	},
-}
-
-func camelize(s string) string {
-	var buf bytes.Buffer
-	sk := false
-	for i, v := range s {
-		if v == '_' {
-			sk = true
-		} else if sk || i == 0 {
-			buf.WriteRune(unicode.ToUpper(v))
-			sk = false
-		} else {
-			buf.WriteRune(v)
-		}
-	}
-	return buf.String()
 }

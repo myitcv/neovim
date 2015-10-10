@@ -380,6 +380,13 @@ func (t *NeovimTest) BenchmarkGetBufferContents(c *C) {
 	}
 }
 
+func (t *NeovimTest) TestClientGetApiInfo(c *C) {
+	i, _ := t.client.GetApiInfo()
+	c.Assert(i, NotNil)
+}
+
+func (t *NeovimTest) BenchmarkClientGetApiInfo(c *C) {}
+
 // func (t *NeovimTest) TestMultiClientSubscribe(c *C) {
 // 	topic := "event1"
 // 	var subDone, unsubDone, doneDone sync.WaitGroup
@@ -485,6 +492,10 @@ func (t *NeovimTest) TestClientEval(c *C)                 {}
 func (t *NeovimTest) BenchmarkClientEval(c *C)            {}
 func (t *NeovimTest) TestClientFeedkeys(c *C)             {}
 func (t *NeovimTest) BenchmarkClientFeedkeys(c *C)        {}
+func (t *NeovimTest) TestClientCallFunction(c *C)         {}
+func (t *NeovimTest) BenchmarkClientCallFunction(c *C)    {}
+func (t *NeovimTest) TestClientGetColorMap(c *C)          {}
+func (t *NeovimTest) BenchmarkClientGetColorMap(c *C)     {}
 
 // func (t *NeovimTest) TestClientGetBuffers(c *C)             {}
 func (t *NeovimTest) BenchmarkClientGetBuffers(c *C) {}

@@ -34,6 +34,7 @@ const (
 	tabpageGetWindows       = "tabpage_get_windows"
 	tabpageIsValid          = "tabpage_is_valid"
 	tabpageSetVar           = "tabpage_set_var"
+	clientCallFunction      = "vim_call_function"
 	clientChangeDirectory   = "vim_change_directory"
 	clientCommand           = "vim_command"
 	clientCommandOutput     = "vim_command_output"
@@ -41,7 +42,9 @@ const (
 	clientErrWrite          = "vim_err_write"
 	clientEval              = "vim_eval"
 	clientFeedkeys          = "vim_feedkeys"
+	clientGetApiInfo        = "vim_get_api_info"
 	clientGetBuffers        = "vim_get_buffers"
+	clientGetColorMap       = "vim_get_color_map"
 	clientGetCurrentBuffer  = "vim_get_current_buffer"
 	clientGetCurrentLine    = "vim_get_current_line"
 	clientGetCurrentTabpage = "vim_get_current_tabpage"
@@ -152,7 +155,7 @@ func (b *Buffer) GetLine(index int) (string, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.decodeString()
+		_i, _err = b.client.dec.ReadString()
 
 		return
 	}
@@ -250,7 +253,7 @@ func (b *Buffer) GetMark(name string) ([]int, error) {
 			return
 		}
 
-		_err = b.client.encodeString(name)
+		_err = b.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -299,7 +302,7 @@ func (b *Buffer) GetName() (string, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = b.client.decodeString()
+		_i, _err = b.client.dec.ReadString()
 
 		return
 	}
@@ -373,7 +376,7 @@ func (b *Buffer) GetOption(name string) (interface{}, error) {
 			return
 		}
 
-		_err = b.client.encodeString(name)
+		_err = b.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -418,7 +421,7 @@ func (b *Buffer) GetVar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = b.client.encodeString(name)
+		_err = b.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -597,7 +600,7 @@ func (b *Buffer) SetLine(index int, line string) error {
 			return
 		}
 
-		_err = b.client.encodeString(line)
+		_err = b.client.enc.WriteString(line)
 
 		if _err != nil {
 			return
@@ -709,7 +712,7 @@ func (b *Buffer) SetName(name string) error {
 			return
 		}
 
-		_err = b.client.encodeString(name)
+		_err = b.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -753,7 +756,7 @@ func (b *Buffer) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = b.client.encodeString(name)
+		_err = b.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -803,7 +806,7 @@ func (b *Buffer) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = b.client.encodeString(name)
+		_err = b.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -854,7 +857,7 @@ func (t *Tabpage) GetVar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = t.client.encodeString(name)
+		_err = t.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -1016,7 +1019,7 @@ func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = t.client.encodeString(name)
+		_err = t.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -1053,6 +1056,52 @@ func (t *Tabpage) SetVar(name string, value interface{}) (interface{}, error) {
 
 }
 
+// CallFunction waiting for documentation from Neovim
+func (c *Client) CallFunction(fname string, args []interface{}) (interface{}, error) {
+	var retVal interface{}
+	enc := func() (_err error) {
+		_err = c.enc.WriteArrayHeader(2)
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.WriteString(fname)
+
+		if _err != nil {
+			return
+		}
+
+		_err = c.enc.WriteIntf(args)
+
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.ReadIntf()
+
+		return
+	}
+	respChan, err := c.makeCall(clientCallFunction, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.CallFunction"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(interface{})
+	return retVal, nil
+
+}
+
 // ChangeDirectory waiting for documentation from Neovim
 func (c *Client) ChangeDirectory(dir string) error {
 
@@ -1062,7 +1111,7 @@ func (c *Client) ChangeDirectory(dir string) error {
 			return
 		}
 
-		_err = c.encodeString(dir)
+		_err = c.enc.WriteString(dir)
 
 		if _err != nil {
 			return
@@ -1101,7 +1150,7 @@ func (c *Client) Command(str string) error {
 			return
 		}
 
-		_err = c.encodeString(str)
+		_err = c.enc.WriteString(str)
 
 		if _err != nil {
 			return
@@ -1140,7 +1189,7 @@ func (c *Client) CommandOutput(str string) (string, error) {
 			return
 		}
 
-		_err = c.encodeString(str)
+		_err = c.enc.WriteString(str)
 
 		if _err != nil {
 			return
@@ -1150,7 +1199,7 @@ func (c *Client) CommandOutput(str string) (string, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.decodeString()
+		_i, _err = c.dec.ReadString()
 
 		return
 	}
@@ -1213,7 +1262,7 @@ func (c *Client) ErrWrite(str string) error {
 			return
 		}
 
-		_err = c.encodeString(str)
+		_err = c.enc.WriteString(str)
 
 		if _err != nil {
 			return
@@ -1252,7 +1301,7 @@ func (c *Client) Eval(str string) (interface{}, error) {
 			return
 		}
 
-		_err = c.encodeString(str)
+		_err = c.enc.WriteString(str)
 
 		if _err != nil {
 			return
@@ -1292,13 +1341,13 @@ func (c *Client) Feedkeys(keys string, mode string, escapeCsi bool) error {
 			return
 		}
 
-		_err = c.encodeString(keys)
+		_err = c.enc.WriteString(keys)
 
 		if _err != nil {
 			return
 		}
 
-		_err = c.encodeString(mode)
+		_err = c.enc.WriteString(mode)
 
 		if _err != nil {
 			return
@@ -1334,6 +1383,40 @@ func (c *Client) Feedkeys(keys string, mode string, escapeCsi bool) error {
 
 }
 
+// GetApiInfo waiting for documentation from Neovim
+func (c *Client) GetApiInfo() ([]interface{}, error) {
+	var retVal []interface{}
+	enc := func() (_err error) {
+		_err = c.enc.WriteArrayHeader(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.dec.ReadIntf()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetApiInfo, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetApiInfo"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.([]interface{})
+	return retVal, nil
+
+}
+
 // GetBuffers waiting for documentation from Neovim
 func (c *Client) GetBuffers() ([]Buffer, error) {
 	var retVal []Buffer
@@ -1364,6 +1447,40 @@ func (c *Client) GetBuffers() ([]Buffer, error) {
 	}
 
 	retVal = resp.obj.([]Buffer)
+	return retVal, nil
+
+}
+
+// GetColorMap waiting for documentation from Neovim
+func (c *Client) GetColorMap() (map[string]interface{}, error) {
+	var retVal map[string]interface{}
+	enc := func() (_err error) {
+		_err = c.enc.WriteArrayHeader(0)
+		if _err != nil {
+			return
+		}
+
+		return
+	}
+	dec := func() (_i interface{}, _err error) {
+
+		_i, _err = c.decodeDictionary()
+
+		return
+	}
+	respChan, err := c.makeCall(clientGetColorMap, enc, dec)
+	if err != nil {
+		return retVal, c.panicOrReturn(errors.Annotate(err, "Could not make call to Client.GetColorMap"))
+	}
+	resp := <-respChan
+	if resp == nil {
+		return retVal, c.panicOrReturn(errors.New("We got a nil response on respChan"))
+	}
+	if resp.err != nil {
+		return retVal, c.panicOrReturn(errors.Annotate(err, "We got a non-nil error in our response"))
+	}
+
+	retVal = resp.obj.(map[string]interface{})
 	return retVal, nil
 
 }
@@ -1415,7 +1532,7 @@ func (c *Client) GetCurrentLine() (string, error) {
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.decodeString()
+		_i, _err = c.dec.ReadString()
 
 		return
 	}
@@ -1513,7 +1630,7 @@ func (c *Client) GetOption(name string) (interface{}, error) {
 			return
 		}
 
-		_err = c.encodeString(name)
+		_err = c.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -1587,7 +1704,7 @@ func (c *Client) GetVar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = c.encodeString(name)
+		_err = c.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -1627,7 +1744,7 @@ func (c *Client) GetVvar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = c.encodeString(name)
+		_err = c.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -1701,7 +1818,7 @@ func (c *Client) Input(keys string) (int, error) {
 			return
 		}
 
-		_err = c.encodeString(keys)
+		_err = c.enc.WriteString(keys)
 
 		if _err != nil {
 			return
@@ -1775,7 +1892,7 @@ func (c *Client) NameToColor(name string) (int, error) {
 			return
 		}
 
-		_err = c.encodeString(name)
+		_err = c.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -1815,7 +1932,7 @@ func (c *Client) OutWrite(str string) error {
 			return
 		}
 
-		_err = c.encodeString(str)
+		_err = c.enc.WriteString(str)
 
 		if _err != nil {
 			return
@@ -1854,7 +1971,7 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 			return
 		}
 
-		_err = c.encodeString(str)
+		_err = c.enc.WriteString(str)
 
 		if _err != nil {
 			return
@@ -1882,7 +1999,7 @@ func (c *Client) ReplaceTermcodes(str string, fromPart bool, doLt bool, special 
 	}
 	dec := func() (_i interface{}, _err error) {
 
-		_i, _err = c.decodeString()
+		_i, _err = c.dec.ReadString()
 
 		return
 	}
@@ -1912,7 +2029,7 @@ func (c *Client) ReportError(str string) error {
 			return
 		}
 
-		_err = c.encodeString(str)
+		_err = c.enc.WriteString(str)
 
 		if _err != nil {
 			return
@@ -1990,7 +2107,7 @@ func (c *Client) SetCurrentLine(line string) error {
 			return
 		}
 
-		_err = c.encodeString(line)
+		_err = c.enc.WriteString(line)
 
 		if _err != nil {
 			return
@@ -2107,7 +2224,7 @@ func (c *Client) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = c.encodeString(name)
+		_err = c.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -2152,7 +2269,7 @@ func (c *Client) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = c.encodeString(name)
+		_err = c.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -2198,7 +2315,7 @@ func (c *Client) Strwidth(str string) (int, error) {
 			return
 		}
 
-		_err = c.encodeString(str)
+		_err = c.enc.WriteString(str)
 
 		if _err != nil {
 			return
@@ -2238,7 +2355,7 @@ func (c *Client) Subscribe(event string) error {
 			return
 		}
 
-		_err = c.encodeString(event)
+		_err = c.enc.WriteString(event)
 
 		if _err != nil {
 			return
@@ -2277,7 +2394,7 @@ func (c *Client) Unsubscribe(event string) error {
 			return
 		}
 
-		_err = c.encodeString(event)
+		_err = c.enc.WriteString(event)
 
 		if _err != nil {
 			return
@@ -2438,7 +2555,7 @@ func (w *Window) GetOption(name string) (interface{}, error) {
 			return
 		}
 
-		_err = w.client.encodeString(name)
+		_err = w.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -2561,7 +2678,7 @@ func (w *Window) GetVar(name string) (interface{}, error) {
 			return
 		}
 
-		_err = w.client.encodeString(name)
+		_err = w.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -2772,7 +2889,7 @@ func (w *Window) SetOption(name string, value interface{}) error {
 			return
 		}
 
-		_err = w.client.encodeString(name)
+		_err = w.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -2822,7 +2939,7 @@ func (w *Window) SetVar(name string, value interface{}) (interface{}, error) {
 			return
 		}
 
-		_err = w.client.encodeString(name)
+		_err = w.client.enc.WriteString(name)
 
 		if _err != nil {
 			return
@@ -3127,7 +3244,7 @@ func (c *Client) encodeStringSlice(s []string) error {
 
 	for i := 0; i < len(s); i++ {
 
-		err := c.encodeString(s[i])
+		err := c.enc.WriteString(s[i])
 
 		if err != nil {
 			return errors.Annotatef(err, "Could not encode string at index %v", i)
@@ -3148,7 +3265,7 @@ func (c *Client) decodeStringSlice() ([]string, error) {
 	var i uint32
 	for i = 0; i < l; i++ {
 
-		b, err := c.decodeString()
+		b, err := c.dec.ReadString()
 
 		if err != nil {
 			return nil, errors.Annotatef(err, "Could not decode string at index %v", i)
