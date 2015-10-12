@@ -3,7 +3,10 @@
 set -e
 set -x
 
-eval "$(curl -Ss https://raw.githubusercontent.com/myitcv/bot-ci/temp_nightly/scripts/travis-setup.sh) nightly-x64";
+# backup nightly builds
+# eval "$(curl -Ss https://raw.githubusercontent.com/myitcv/bot-ci/temp_nightly/scripts/travis-setup.sh) nightly-x64";
+
+eval "$(curl -Ss https://raw.githubusercontent.com/neovim/bot-ci/master/scripts/travis-setup.sh) nightly-x64";
 
 # check that the generated API matches what we have committed
 # (this ensures that the Neovim API hasn't moved on without us
